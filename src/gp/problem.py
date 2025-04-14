@@ -16,7 +16,9 @@ from dataclasses import dataclass
 from abc import ABC
 from src.benchmark.policy_search.policy_evaluation import GPAgent
 from src.gp.tinyverse import GPModel
-
+import ioh
+import atexit
+from typing import Any
 
 class Problem(ABC):
     """
@@ -24,7 +26,59 @@ class Problem(ABC):
     Provides a skeleton for the child classes that provide actual
     implementations of problems.
     """
+    __protected_attributes__ = (
+        "logger",
+        "num_evaluations",
+        "reset",
+        "meta_data",
+        "log_evaluation"
+    )
     ideal: float
+    logger: ioh.logger.AbstractLogger
+
+    def __init__(self, fid, name, minimizing: bool = True, logger: ioh.logger.AbstractLogger = None):
+        self.logger = logger
+        self.minimizing = minimizing
+        self.num_evaluations = 0
+        if logger is None:
+            return
+        self.meta_data = ioh.MetaData(
+            fid,
+            1,
+            name,
+            1,
+            ioh.OptimizationType.MIN if minimizing else ioh.OptimizationType.MAX,
+        )
+        self.logger.attach_problem(self.meta_data)
+        atexit.register(self.logger.close)
+
+
+    def log_evaluation(self, f1, x):
+            self.num_evaluations += 1
+            if self.logger is None:
+                return
+            info = ioh.LogInfo(
+                self.num_evaluations,
+                f1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                [0], #If we want to log the genome, we need to log an ID here, and store the {ID, genome}-pairs in a separate file (or think of a better solution)
+                [],
+                [],
+                ioh.iohcpp.RealSolution([], 0),
+                True,
+            )
+            self.logger.call(info)
+
+    def reset(self):
+        self.num_evaluations = 0
+        if self.logger is None:
+            return
+        self.logger.reset()
+        self.logger.attach_problem(self.meta_data)
 
     def is_ideal(self, fitness: float) -> bool:
         """
@@ -58,6 +112,9 @@ class Problem(ABC):
         :param model: The respective GP model that is used
         """
         pass
+    
+    def __del__(self, *args, **kwargs):
+        self.logger.close()
 
 @dataclass
 class BlackBox(Problem):
@@ -68,13 +125,14 @@ class BlackBox(Problem):
     observations: list
     actual: list
 
-    def __init__(self, observations_: list, actual_: list, loss_: callable,
-                 ideal_: float, minimizing_: bool):
+    def __init__(self,  observations_: list, actual_: list, loss_: callable,
+                 ideal_: float, minimizing_: bool, fid: int = 1, name: str = "None", logger: ioh.logger.AbstractLogger = None):
+        super().__init__(fid, name, minimizing_, logger=logger)
+        # self.__super__().__init__(fid, name, minimizing_)
         self.observations = observations_
         self.actual = actual_
         self.loss = loss_
         self.ideal = ideal_
-        self.minimizing = minimizing_
         self.unidim = True if isinstance(self.actual[0], float) or isinstance(self.actual[0], int)  else False
 
     def evaluate(self, genome, model:GPModel) -> float:
@@ -94,7 +152,9 @@ class BlackBox(Problem):
         for observation in self.observations:
             prediction = model.predict(genome, observation)
             predictions.append(prediction)
-        return self.cost(predictions)
+        result = self.cost(predictions)
+        self.log_evaluation(result, genome)
+        return result
 
     def cost(self, predictions: list) -> float:
         """
@@ -120,16 +180,19 @@ class PolicySearch(Problem):
     agent: GPAgent
     num_episodes: int
 
-    def __init__(self, env: gym.Env, ideal_: float, minimizing_: bool, num_episodes_: int = 100):
+    def __init__(self, env: gym.Env, ideal_: float, minimizing_: bool, num_episodes_: int = 100,
+                 fid: int = 1, name: str = "None", logger: ioh.logger.AbstractLogger = None):
+        self.__super__().__init__(fid, name, minimizing_, logger)
         self.agent = GPAgent(env)
         self.ideal = ideal_
-        self.minimizing = minimizing_
         self.num_episodes = num_episodes_
 
     def evaluate(self, genome, model:GPModel, num_episodes:int = None, wait_key:bool = False) -> float:
         if num_episodes is None:
             num_episodes = self.num_episodes
-        return self.agent.evaluate_policy(genome, model, num_episodes, wait_key)
+        result = self.agent.evaluate_policy(genome, model, num_episodes, wait_key)
+        self.log_evaluation(result, genome)
+        return result
 
 
 class ProgramSynthesis(Problem):
@@ -141,9 +204,9 @@ class ProgramSynthesis(Problem):
     is based on the hamming distance between the binary predictions and the actual values in the
     dataset.
     """
-    def __init__(self, dataset_, minimizing_: bool = False):
+    def __init__(self, dataset_, minimizing_: bool = False, fid: int = 1, name: str = "None", logger: ioh.logger.AbstractLogger = None):
+        self.__super__().__init__(fid, name, minimizing_, logger)
         self.dataset = dataset_
-        self.minimizing = minimizing_
 
     def is_ideal(self, fitness):
         return fitness == len(self.dataset)
@@ -160,7 +223,9 @@ class ProgramSynthesis(Problem):
             prediction = model.predict(genome, observation)
             prediction = self.binary_step(prediction[0])
             predictions.append(prediction)
-        return self.cost(predictions)
+        result = self.cost(predictions)
+        self.log_evaluation(result, genome)
+        return result
 
     def cost(self, predictions):
         cost = 0
