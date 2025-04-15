@@ -12,8 +12,34 @@ import random
 import time
 from dataclasses import dataclass
 from enum import Enum
-from src.gp.tinyverse import GPModel, Hyperparameters, GPConfig, Var
+from src.gp.tinyverse import GPModel, GPConfig, GPIndividual, Var, Hyperparameters
 from src.gp.problem import Problem
+
+class CGPIndividual(GPIndividual):
+    """
+    Class that is used to represent a CGP individual.
+    Formally a GP individual can be represented as a tuple consisting of
+    the genome and the fitness value.
+
+    Additionally, the CGP individual can store the path that are encoded in the genotype to
+    avoid unnecessary evaluation costs by re-evaluating and re-visiting nodes in the
+    decoding routine.
+    """
+
+    def __init__(self, genome_: list[int], fitness_: float = None, paths_=None):
+        super().__init__(genome_, fitness_)
+        self.genome = genome_
+        self.fitness = fitness_
+        self.paths = paths_
+
+    def __str__(self):
+        return str(self.genome) + ";" + str(self.fitness)
+
+    def genome_to_str(self):
+        return str(self.genome)
+
+    def str_to_genome(self, genome):
+        self.genome = genome.split(separator = '')
 
 
 @dataclass
@@ -46,23 +72,6 @@ class CGPConfig(GPConfig):
     def init(self):
         self.genes_per_node = self.max_arity + 1
         self.num_genes = (self.genes_per_node * self.num_function_nodes) + self.num_outputs
-
-
-class CGPIndividual:
-    """
-    Class that is used to represent a CGP individual.
-    Formally a GP individual can be represented as a tuple consisting of
-    the genome and the fitness value.
-
-    Additionally, the CGP individual can store the path that are encoded in the genotype to
-    avoid unnecessary evaluation costs by re-evaluating and re-visiting nodes in the
-    decoding routine.
-    """
-
-    def __init__(self, genome_: list[int], fitness_: float = None, paths_ = None):
-        self.genome = genome_
-        self.fitness = fitness_
-        self.paths = paths_
 
 
 class TinyCGP(GPModel):

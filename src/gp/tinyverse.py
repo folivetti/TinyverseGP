@@ -20,6 +20,28 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import List, Any
 
+class GPIndividual(ABC):
+    genome: any
+    fitness: any
+
+    """
+    Class that is used to represent a GP individual.
+    Formally a GP individual can be represented as a tuple consisting of
+    the genome and the fitness value.
+    """
+
+    def __init__(self, genome_: list[int], fitness_: any = None):
+        self.genome = genome_
+        self.fitness = fitness_
+
+    @abstractmethod
+    def genome_to_str(self):
+        pass
+
+    @abstractmethod
+    def str_to_genome(self):
+        pass
+
 class GPModel(ABC):
     """
     Abstract based class for tiny GP representation modules.
@@ -109,9 +131,10 @@ class Config(ABC):
 class GPConfig(Config):
     """
     Configuration class for GP models.
-    This class contains the common configuration parameters for GP models related to 
+    This class contains the common configuration parameters for GP models related to
     execution and output of a run.
     """
+    seed: int
     num_jobs: int
     max_generations: int
     stopping_criteria: float
@@ -121,8 +144,11 @@ class GPConfig(Config):
     silent_evolver: bool
     minimalistic_output: bool
     num_outputs: int
-    report_interval:int
-    max_time:int
+    report_interval: int
+    checkpoint_interval: int
+    checkpoint_dir: str
+    max_time: int
+    erc: list
 
 @dataclass
 class Hyperparameters(ABC):
