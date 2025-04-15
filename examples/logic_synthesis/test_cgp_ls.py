@@ -17,8 +17,9 @@ from src.gp.problem import BlackBox
 from src.gp.functions import *
 from src.gp.loss import *
 from src.gp.tinyverse import Var
+import os
 
-benchmark = LSBenchmark('../../data/logic_synthesis/plu/add3.plu')
+benchmark = LSBenchmark(os.path.join(os.path.dirname(__file__),'../../data/logic_synthesis/plu/add3.plu'))
 benchmark.generate()
 truth_table = benchmark.get_truth_table()
 num_inputs = benchmark.benchmark.num_inputs
@@ -41,7 +42,7 @@ config = CGPConfig(
     num_inputs=len(terminals),
     num_outputs=num_outputs,
     num_function_nodes=10,
-    report_interval=1,
+    report_interval=1000,
     max_time=60
 )
 

@@ -16,8 +16,9 @@ from src.gp.tiny_tgp import *
 from src.gp.functions import *
 from src.gp.loss import *
 from src.gp.problem import BlackBox
+import os
 
-benchmark = LSBenchmark('../../data/logic_synthesis/plu/add3.plu')
+benchmark = LSBenchmark(os.path.join(os.path.dirname(__file__),'../../data/logic_synthesis/plu/add3.plu'))
 benchmark.generate()
 truth_table = benchmark.get_truth_table()
 num_inputs = benchmark.benchmark.num_inputs
