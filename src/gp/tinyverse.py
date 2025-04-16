@@ -21,16 +21,15 @@ from dataclasses import dataclass
 from typing import List, Any
 
 class GPIndividual(ABC):
-    genome: any
     fitness: any
-
+    genome_: any
     """
     Class that is used to represent a GP individual.
     Formally a GP individual can be represented as a tuple consisting of
     the genome and the fitness value.
     """
 
-    def __init__(self, genome_: list[int], fitness_: any = None):
+    def __init__(self, genome_: any, fitness_: any = None):
         self.genome = genome_
         self.fitness = fitness_
 
@@ -134,7 +133,6 @@ class GPConfig(Config):
     This class contains the common configuration parameters for GP models related to
     execution and output of a run.
     """
-    seed: int
     num_jobs: int
     max_generations: int
     stopping_criteria: float
@@ -145,10 +143,12 @@ class GPConfig(Config):
     minimalistic_output: bool
     num_outputs: int
     report_interval: int
-    checkpoint_interval: int
-    checkpoint_dir: str
     max_time: int
-    erc: list
+    # Parameters needed for checkpointing, will be used at a later point
+    # seed: int
+    # checkpoint_interval: int
+    # checkpoint_dir: str
+    # erc: list
 
 @dataclass
 class Hyperparameters(ABC):

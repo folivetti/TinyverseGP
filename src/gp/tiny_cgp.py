@@ -16,6 +16,8 @@ from src.gp.tinyverse import GPModel, GPConfig, GPIndividual, Var, Hyperparamete
 from src.gp.problem import Problem
 
 class CGPIndividual(GPIndividual):
+    genome: list[int]
+
     """
     Class that is used to represent a CGP individual.
     Formally a GP individual can be represented as a tuple consisting of
@@ -26,10 +28,8 @@ class CGPIndividual(GPIndividual):
     decoding routine.
     """
 
-    def __init__(self, genome_: list[int], fitness_: float = None, paths_=None):
-        super().__init__(genome_, fitness_)
-        self.genome = genome_
-        self.fitness = fitness_
+    def __init__(self, genome_: list[int], fitness_: float = None, paths_ = None):
+        GPIndividual.__init__(self, genome_, fitness_)
         self.paths = paths_
 
     def __str__(self):
