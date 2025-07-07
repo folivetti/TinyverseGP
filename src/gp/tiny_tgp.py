@@ -21,23 +21,34 @@ class Node:
         self.function = function
         self.children = children
 
-@dataclass
+@dataclass(kw_only=True)
 class TGPHyperparameters(GPHyperparameters):
     """
     Specialized hyperparameter configuration space for TGP.
     """
     max_size: int
     max_depth: int
+    erc: bool
 
     def __post_init__(self):
         GPHyperparameters.__post_init__(self)
 
+class TGPConfig(GPConfig):
+    def __post_init__(self):
+        GPConfig.__post_init__(self)
+
 class TGPIndividual(GPIndividual):
-    genome: list[Node]
+    genome: Node
     fitness: any
 
-    def __init__(self, genome_: list[int], fitness_: any = None):
+    def __init__(self, genome_: Node, fitness_: any = None):
         GPIndividual.__init__(self,genome_, fitness_)
+
+    def serialize_genome(self):
+        return self.genome
+
+    def deserialize_genome(self, genome_):
+        self.genome = genome_
 
 def node_size(node: Node) -> int:
     '''
@@ -58,21 +69,21 @@ class TinyTGP(GPModel):
     problem: Problem
     functions: list[Function]
 
-    def __init__(self, problem_: Problem, functions_: list[Function], terminals_: list[Function],
-                 config: GPConfig, hyperparameters: TGPHyperparameters):
+    def __init__(self, functions_: list[Function], terminals_: list[Function],
+                 config_: GPConfig, hyperparameters_: TGPHyperparameters):
+        super().__init__(config_, hyperparameters_)
         self.functions = functions_ # the list of available functions
         self.terminals = terminals_ # the list of terminal nodes
-        self.problem = problem_ # an instance to a problem. This allows us to handle different problems transparently
-        self.hyperparameters = hyperparameters # hyperparameters
-        self.config = config # overall configuration
+        #self.hyperparameters = hyperparameters_ # hyperparameters
+        #self.config = config_ # overall configuration
         self.best_individual = None  # to keep the best program found so far
         self.num_evaluations = 0 # conter of number of evaluations
         # initial population using ramped half-and-half
-        self.population = [TGPIndividual(genome, 0.0)
+        self.population = [TGPIndividual(genome, None)
                             for genome in self.init_ramped_half_half(self.hyperparameters.pop_size, 1,
                                                                      self.hyperparameters.max_depth,
                                                                      self.hyperparameters.max_size)]
-        self.evaluate() # evaluates the initial population
+        #self.best_individual = self.evaluate() # evaluates the initial population
 
 
     def tree_random_full(self, max_depth: int, size: int) -> Node:
@@ -84,7 +95,10 @@ class TinyTGP(GPModel):
         # if we reached the maximum depth or there are only two or less nodes available
         # according to size, we sample a terminal node.
         if max_depth == 0 or size < 2:
-            return Node(random.choice(self.terminals), [])
+            if self.hyperparameters.erc and random.random() < 0.5:
+                return Node(Const(random.uniform(-100, 100)), [])
+            else:
+                return Node(random.choice(self.terminals), [])
         # otherwise we sample a non-terminal node and generate the children recursively,
         # reducing the depth by one and splitting the maximum size available by all children
         n = random.choice(self.functions)
@@ -99,10 +113,16 @@ class TinyTGP(GPModel):
         """
         # if we cannot add more non-terminals, sample a terminal
         if max_depth <= 1 or size < 2:
-            return Node(random.choice(self.terminals), [])
+            if self.hyperparameters.erc and random.random() < 0.5:
+                return Node(Const(random.uniform(-100, 100)), [])
+            else:
+                return Node(random.choice(self.terminals), [])
         # if we are already at the minimum depth, sample a terminal with 50% chance                 
         if min_depth <= 0 and random.random() < 0.5:
-            return Node(random.choice(self.terminals), [])
+            if self.hyperparameters.erc and random.random() < 0.5:
+                return Node(Const(random.uniform(-100, 100)), [])
+            else:
+                return Node(random.choice(self.terminals), [])
         else:
             # Let's sample a non-terminal and generate
             # n.arity children calling `tree_random_grow` recursively and adjusting the maximum depth and size.
@@ -143,37 +163,33 @@ class TinyTGP(GPModel):
                 grow = not grow
         return pop
 
-    def evaluate(self) -> float:
-        '''
-        Triggers the evaluation of the whole population.
-
-        :return: a `float` value of the best fitness
-        '''
-        best = None
-        # For each individual in the population 
-        for ix, individual in enumerate(self.population):
-            genome = individual.genome  # extract the genome
-            fitness = self.evaluate_individual(genome) # evaluate it
-            self.population[ix] = TGPIndividual(genome, fitness) # assign the fitness
-            # update the population best solution
-            if best is None or self.problem.is_better(fitness, best):
-                best = fitness
-            # update the best solution of all time
-            if self.best_individual is None or self.problem.is_better(fitness, self.best_individual.fitness):
-                self.best_individual = TGPIndividual(genome, fitness)
-        return best
-
-    def evaluate_individual(self, genome:list[int]) -> float:
+    def evaluate_individual(self, genome:list[int], problem) -> float:
         '''
         Evaluate a single individual `genome`.
 
         :return: a `float` representing the fitness of that individual.
         '''
         self.num_evaluations += 1  # update the evaluation counter
-        f = self.problem.evaluate(genome, self) # evaluate the solution using the problem instance
-        if self.best_individual is None or self.problem.is_better(f, self.best_individual.fitness):
+        f = problem.evaluate(genome, self) # evaluate the solution using the problem instance
+        if self.best_individual is None or problem.is_better(f, self.best_individual.fitness):
             self.best_individual = TGPIndividual(genome, f)
         return f
+
+    def eval_complexity(self, genome: list[Node]) -> int:
+        '''
+        Returns the complexity of the genome.
+
+        :return: an integer representing the number of nodes in the genome.
+        '''
+        return sum([node_size(g) for g in genome])
+
+    def is_valid(self, genome: list[Node]) -> bool:
+        '''
+        Check if the genome is valid. A genome is valid if it has the same number of outputs as the problem.
+
+        :return: a boolean indicating whether the genome is valid or not.
+        '''
+        return len(genome) == self.config.num_outputs
 
     def predict(self, genome: Node, observation: list) -> list:
         '''
@@ -232,7 +248,7 @@ class TinyTGP(GPModel):
         # samples `self.hyperparameters.tournament_size` solutions completely at random
         parents = [random.choice(self.population) for _ in range(self.hyperparameters.tournament_size)]
         # return the best of this sample whether it is a minimization or maximization problem     
-        if self.problem.minimizing:
+        if self.config.minimizing_fitness:
             return min(parents, key=lambda ind: ind.fitness).genome
         else:
             return max(parents, key=lambda ind: ind.fitness).genome
@@ -362,8 +378,15 @@ class TinyTGP(GPModel):
         """
         Prints information about a single individual.
         """
-        print("Genome: " + ";".join(self.expression(individual[0])) + " : Fitness: " + str(individual[1]))
+        print("Genome: " + ";".join(self.expression(individual.genome)) + " : Fitness: " + str(individual.fitness))
 
+    def pipeline(self, problem):
+        """
+        Single step of TGP
+        """
+        self.breed()
+        return self.evaluate(problem)
+    '''
     def evolve(self):
         """
         Runs the evolution steps.
@@ -383,7 +406,8 @@ class TinyTGP(GPModel):
                 # breed     
                 self.breed()
                 # evaluate the new population
-                best_fitness = self.evaluate()
+                best_gen = self.evaluate()
+                best_fitness = best_gen.fitness
                 # `report_generation` will handle the reporting of every generation according to the config     
                 self.report_generation(silent_algorithm= self.config.silent_algorithm,
                                        generation=generation,
@@ -411,4 +435,5 @@ class TinyTGP(GPModel):
                             minimalistic_output=self.config.minimalistic_output)
             if terminate:
                 break
-        return self.best_individual.genome
+        return self.best_individual
+        '''

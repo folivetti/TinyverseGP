@@ -21,10 +21,12 @@ import json
 from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass, field, fields
-from typing import List, Any, Generic
+from typing import List, Any, Generic, Callable, Dict
+import copy
+
 from src.gp.types import HPType
 import yaml
-
+import dill
 
 class GPIndividual(ABC):
     genome: any
@@ -65,13 +67,14 @@ class Config(ABC):
     def as_dict(self) -> dict:
         return self.__dict__
 
+
     @classmethod
     def from_dict(cls, d: dict):
         names = {field.name for field in fields(cls)}
         return cls(**{k: v for k, v in d.items() if k in names})
 
 
-@dataclass
+@dataclass(kw_only=True)
 class GPConfig(Config):
     """
     Configuration class for GP models.
@@ -90,10 +93,10 @@ class GPConfig(Config):
     num_outputs: int
     report_interval: int
     max_time: int
+    constraints: Callable[[Any], float] = lambda x: 0.0
     checkpoint_interval: int
     checkpoint_dir: str
     experiment_name: str
-
 
 @dataclass
 class Hyperparameter(ABC, Generic[HPType]):
@@ -108,11 +111,16 @@ class HyperparameterSpace(ABC):
     space: list[Hyperparameter]
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Hyperparameters(ABC):
     """
     Base class for the GP hyperparamters.
     """
+    penalization_complexity_factor : float = 0.0
+    penalization_feasibility_factor : float = 0.0
+    penalization_validity_factor : float = 0.0
+    discard_invalid : bool = True
+    discard_infeasible : bool = False 
 
     def __post_init__(self):
         self.space = dict()
@@ -120,6 +128,7 @@ class Hyperparameters(ABC):
     def to_yaml(self):
         with open("hp.yml", "w") as file:
             yaml.dump(self.space, file, default_flow_style=False)
+
 
     def as_dict(self):
         return self.__dict__
@@ -130,7 +139,7 @@ class Hyperparameters(ABC):
         return cls(**{k: v for k, v in d.items() if k in names})
 
 
-@dataclass
+@dataclass(kw_only=True)
 class GPHyperparameters(Hyperparameters):
     """
     Hyperparameters class for Genetic Programming models.
@@ -147,6 +156,11 @@ class GPHyperparameters(Hyperparameters):
         self.space["mutation_rate"] = (0.0, 1.0)
         self.space["cx_rate"] = (0.0, 1.0)
         self.space["tournament_size"] = (2, 9)
+        self.space["penalization_complexity_factor"] = (0.0, 1.0)
+        self.space["penalization_feasibility_factor"] = (0.0, 1.0)
+        self.space["penalization_validity_factor"] = (0.0, 1.0)
+        self.space["discard_invalid"] = (False, True)
+        self.space["discard_infeasible"] = (False, True)
 
 
 @dataclass
@@ -224,7 +238,7 @@ class Checkpointer:
                 l.append([ind.serialize_genome(), ind.fitness])
             return l
 
-        file_path = self.path + "/checkpoint_gen_" + str(state.generation) + ".json"
+        file_path = self.path + "/checkpoint_gen_" + str(state.generation) + ".dill"
 
         checkpoint = {"generation": state.generation,
                       "evaluations": state.evaluations,
@@ -234,11 +248,11 @@ class Checkpointer:
                       "population": dump_population(state.population)}
 
         outfile = os.open(file_path, flags=os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
-        os.write(outfile, json.dumps(checkpoint).encode())
+        os.write(outfile, dill.dumps(checkpoint))
 
     def load(self, file):
         with open(file) as infile:
-            checkpoint = json.load(infile)
+            checkpoint = dill.load(infile)
         if not self.config.silent_evolver:
             print(f"Checkpoint {file} successfully loaded")
         return checkpoint
@@ -290,22 +304,66 @@ class GPModel(ABC):
             self.num_evaluations += 1
             genome = individual.genome
             if individual.fitness is None:
-                individual.fitness = self.evaluate_individual(genome, problem)
+                individual.fitness = self.penalize(self.evaluate_individual(genome, problem), genome)
             fitness = individual.fitness
 
             if problem.is_ideal(fitness):
                 return individual
 
             if best is None:
-                best = individual
+                best = copy.copy(individual)
                 best_fitness = fitness
 
             if problem.is_better(fitness, best_fitness):
-                best = individual
+                best = copy.copy(individual)
                 best_fitness = fitness
-        self.best_individual = best
+        self.best_individual = copy.copy(best)
 
         return best
+
+    def penalize(self, fitness : float, genome:GPIndividual) -> float:
+        """
+        Penalizes the fitness of a genome.
+        This method is used to penalize genomes that are
+        invalid, do not satisfy the constraints of the problem, or are too complex.
+        """
+        valid = self.is_valid(genome)
+        if self.hyperparameters.discard_invalid and not valid:
+            if self.config.minimizing_fitness:
+                return float("inf")
+            else:
+                return float("-inf")
+        violations = self.config.constraints(genome)
+        if self.hyperparameters.discard_infeasible and violations > 0:
+            if self.config.minimizing_fitness:
+                return float("inf")
+            else:
+                return float("-inf")
+        complexity = self.eval_complexity(genome)
+        
+        penalty = self.hyperparameters.penalization_complexity_factor * complexity + \
+                  self.hyperparameters.penalization_feasibility_factor * violations + \
+                  self.hyperparameters.penalization_validity_factor * (1.0 - valid)
+        
+        if self.config.minimizing_fitness:
+            fitness += penalty 
+        else:
+            fitness -= penalty
+        return fitness
+       
+    @abstractmethod
+    def is_valid(self, genome:GPIndividual) -> bool:
+        """
+        Checks if the genome is valid.
+        """
+        pass
+
+    @abstractmethod
+    def eval_complexity(self, genome:GPIndividual) -> float:
+        """
+        Evaluates the complexity of the genome.
+        """
+        pass
 
     @abstractmethod
     def evaluate_individual(self, genome: GPIndividual) -> float:
@@ -358,7 +416,7 @@ class GPModel(ABC):
                                        best_fitness=best_fitness,
                                        report_interval=self.config.report_interval)
 
-                if self.generation_number % self.config.checkpoint_interval == 0:
+                if self.generation_number > 0 and self.generation_number % self.config.checkpoint_interval == 0:
                     self.checkpointer.write(self.state())
 
                 if problem.is_ideal(best_gen_fitness):
@@ -389,6 +447,7 @@ class GPModel(ABC):
 
         return best_individual
 
+    @abstractmethod
     def selection(self) -> Any:
         """
         Implementation of the selection mechanism.
