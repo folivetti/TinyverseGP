@@ -268,3 +268,16 @@ class TinyGE(GPModel):
             if terminate:
                 break
         return self.best_individual.genome
+    
+
+    def eval_complexity(self, genome:GPIndividual) -> float:
+        """
+        Evaluates the complexity of the genome.
+        """
+        pass
+
+    def is_valid(self, genome:GPIndividual) -> bool:
+        """
+        Checks if the genome is valid.
+        """
+        pass
