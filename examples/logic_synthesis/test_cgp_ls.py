@@ -42,7 +42,7 @@ config = CGPConfig(
     num_outputs=num_outputs,
     num_function_nodes=10,
     report_interval=1,
-    max_time=60
+    max_time=60,
 )
 
 hyperparameters = CGPHyperparameters(
@@ -51,7 +51,7 @@ hyperparameters = CGPHyperparameters(
     population_size=2,
     levels_back=100,
     mutation_rate=0.05,
-    strict_selection=False
+    strict_selection=False,
 )
 config.init()
 

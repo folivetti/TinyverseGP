@@ -12,8 +12,14 @@ import random
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from src.gp.tinyverse import GPModel, Hyperparameters, GPConfig, Var, GPIndividual, GPHyperparameters
-from src.gp.problem import Problem
+from gp.tinyverse import (
+    GPModel,
+    Hyperparameters,
+    GPConfig,
+    Var,
+    GPIndividual,
+    GPHyperparameters,
+)
 
 
 @dataclass(kw_only=True)
@@ -21,6 +27,7 @@ class CGPHyperparameters(Hyperparameters):
     """
     Specialized hyperparameter configuration space for CGP.
     """
+
     mu: int
     lmbda: int
     population_size: int
@@ -43,11 +50,13 @@ class CGPHyperparameters(Hyperparameters):
         self.space["tournament_size"] = (2, 9)
         self.space["num_function_nodes"] = (10, 100)
 
+
 @dataclass(kw_only=True)
 class CGPConfig(GPConfig):
     """
     Specialized GP configuration that is needed to run CGP.
     """
+
     num_inputs: int
     num_outputs: int
     num_functions: int
@@ -69,6 +78,7 @@ class CGPIndividual(GPIndividual):
     avoid unnecessary evaluation costs by re-evaluating and re-visiting nodes in the
     decoding routine.
     """
+
     genome: list[int]
     fitness: any
     paths: list
@@ -97,6 +107,7 @@ class TinyCGP(GPModel):
         """
         Enum for the gene type that are used for the CGP encoding.
         """
+
         FUNCTION = 0
         CONNECTION = 1
         OUTPUT = 2
@@ -105,11 +116,17 @@ class TinyCGP(GPModel):
         """
         Enum used to specify the type of terminal symbols.
         """
+
         VARIABLE = 0
         CONSTANT = 1
 
-    def __init__(self,functions_: list, terminals_: list,
-                 config_: CGPConfig, hyperparameters_: CGPHyperparameters):
+    def __init__(
+        self,
+        functions_: list,
+        terminals_: list,
+        config_: CGPConfig,
+        hyperparameters_: CGPHyperparameters,
+    ):
         super().__init__(config_, hyperparameters_)
         self.num_evaluations = 0
         self.population = []
@@ -194,8 +211,11 @@ class TinyCGP(GPModel):
         if position >= self.hyperparameters.num_function_nodes * (self.config.max_arity + 1):
             return self.GeneType.OUTPUT
         else:
-            return self.GeneType.FUNCTION if position % (self.config.max_arity + 1) == 0 \
+            return (
+                self.GeneType.FUNCTION
+                if position % (self.config.max_arity + 1) == 0
                 else self.GeneType.CONNECTION
+            )
 
     def input_value(self, index: int) -> any:
         """
@@ -214,7 +234,11 @@ class TinyCGP(GPModel):
         :return:input name
         """
         idx = self.input_value(index)()
-        return f'{self.input_value(index).name}({idx})' if idx is not None else self.input_value(index).name
+        return (
+            f"{self.input_value(index).name}({idx})"
+            if idx is not None
+            else self.input_value(index).name
+        )
 
     def input_type(self, index: int) -> TerminalType:
         """
@@ -232,7 +256,9 @@ class TinyCGP(GPModel):
         :param position: position of the gene in the genome
         :return: node number where the gene belongs to
         """
-        return math.floor(position / (self.config.max_arity + 1)) + self.config.num_inputs
+        return (
+            math.floor(position / (self.config.max_arity + 1)) + self.config.num_inputs
+        )
 
     def node_position(self, node_num: int) -> int:
         """
@@ -263,7 +289,7 @@ class TinyCGP(GPModel):
         :return: List connection gene values
         """
         position = self.node_position(node_num)
-        return genome[position + 1: position + self.config.max_arity + 1]
+        return genome[position + 1 : position + self.config.max_arity + 1]
 
     def get_outputs(self, genome: list[int]) -> list[int]:
         """
@@ -272,7 +298,7 @@ class TinyCGP(GPModel):
         :param genome: Genome of an individual
         :return: List of output genes
         """
-        return genome[len(genome) - self.config.num_outputs: len(genome)]
+        return genome[len(genome) - self.config.num_outputs : len(genome)]
 
     def max_gene(self, position: int):
         """
@@ -338,9 +364,7 @@ class TinyCGP(GPModel):
         return len(active_nodes)
 
     def is_valid(self, genome: list[int]) -> bool:
-        """
-
-        """
+        """ """
         return True
 
     def predict(self, genome: list[int], observation: list) -> list:
@@ -360,7 +384,7 @@ class TinyCGP(GPModel):
         node_map = dict()
         prediction = []
 
-        #if self.current_paths is None:
+        # if self.current_paths is None:
         self.current_paths = self.decode_optimized(genome)
 
         for path in self.current_paths:
@@ -375,8 +399,15 @@ class TinyCGP(GPModel):
                     else:
                         node_pos = self.node_position(node_num)
                         function = genome[node_pos]
-                        connections = [gene for gene in genome[node_pos + 1:node_pos
-                                                                            + self.function2arity[function] + 1]]
+                        connections = [
+                            gene
+                            for gene in genome[
+                                node_pos
+                                + 1 : node_pos
+                                + self.function2arity[function]
+                                + 1
+                            ]
+                        ]
                         args = [node_map[connection] for connection in connections]
                         node_map[node_num] = self.functions[function](*args)
                 cost = node_map[node_num]
@@ -407,11 +438,18 @@ class TinyCGP(GPModel):
         n_idx = self.config.num_inputs
         for node_num in range(0, max_idx, step):
             function = genome[node_num]
-            args = [node_values[i] for i in genome[node_num + 1:node_num + self.function2arity[function] + 1]]
+            args = [
+                node_values[i]
+                for i in genome[
+                    node_num + 1 : node_num + self.function2arity[function] + 1
+                ]
+            ]
             node_values[n_idx] = self.functions[function](*args)
             n_idx += 1
 
-        return [node_values[genome[max_idx + i]] for i in range(self.config.num_outputs)]
+        return [
+            node_values[genome[max_idx + i]] for i in range(self.config.num_outputs)
+        ]
 
     def active_nodes(self, genome: list[int], reverse=False) -> list[int]:
         """
@@ -438,8 +476,10 @@ class TinyCGP(GPModel):
             node_num = self.node_number(position)
             # Continue only if the current position is a connection genes
             # and when the node is already known to be active
-            if (node_num in nodes_active.keys()
-                    and self.phenotype(position) == self.GeneType.CONNECTION):
+            if (
+                node_num in nodes_active.keys()
+                and self.phenotype(position) == self.GeneType.CONNECTION
+            ):
                 gene = genome[position]
                 # Store only node numbers of active function nodes
                 if gene >= self.config.num_inputs:
@@ -456,7 +496,7 @@ class TinyCGP(GPModel):
         """
         paths = []
         node_map = dict()
-        step = - self.config.genes_per_node
+        step = -self.config.genes_per_node
 
         # Iterate over the outputs of the genome
         for node_num in self.get_outputs(genome):
@@ -565,8 +605,11 @@ class TinyCGP(GPModel):
 
         :return: parent individual
         """
-        sorted_pop = sorted(self.population, key=lambda ind: ind.fitness,
-                            reverse=not self.config.minimizing_fitness)
+        sorted_pop = sorted(
+            self.population,
+            key=lambda ind: ind.fitness,
+            reverse=not self.config.minimizing_fitness,
+        )
         count = 0
         if not self.hyperparameters.strict_selection:
             best_fitness = sorted_pop[0].fitness
@@ -793,10 +836,11 @@ class TinyCGP(GPModel):
         # Evaluation of the offspring
         return self.evaluate(problem)
 
+
 def print_population(self):
     for individual in self.population:
         self.print_individual(individual)
 
 
 def print_individual(self, individual):
-    print(f'Genome: {individual.genome} Fitness: {individual.fitness}')
+    print(f"Genome: {individual.genome} Fitness: {individual.fitness}")

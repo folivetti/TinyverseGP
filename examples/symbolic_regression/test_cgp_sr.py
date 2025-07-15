@@ -36,7 +36,7 @@ config = CGPConfig(
     num_inputs=1,
     num_outputs=1,
     report_interval=1,
-    max_time=60
+    max_time=60,
 )
 
 hyperparameters = CGPHyperparameters(
@@ -54,7 +54,7 @@ config.init()
 
 loss = absolute_distance
 benchmark = SRBenchmark()
-data, actual = benchmark.generate('KOZA3')
+data, actual = benchmark.generate("KOZA3")
 
 problem = BlackBox(data, actual, loss, 1e-6, True)
 
