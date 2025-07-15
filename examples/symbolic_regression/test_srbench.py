@@ -7,7 +7,7 @@ https://cavalab.org/srbench/
 https://github.com/cavalab/srbench/tree/master
 """
 
-from src.benchmark.symbolic_regression.srbench import SRBench
+from benchmark.symbolic_regression.srbench import SRBench
 import numpy as np
 from pmlb import fetch_data
 from sklearn.model_selection import train_test_split
