@@ -49,6 +49,25 @@ class Node:
         self.NT = symbol
         self.children = children
 
+    # for testing purposes to see the structure of the node (tree)
+    def __repr__(self):
+        """
+        String representation of the node.
+        
+        :return: A string representation of the node.
+        """
+
+        return f"Node(NT={self.NT}, children={self.children})"
+
+class TreeGEIndividual(GPIndividual):
+    genome: list[Node]
+    lin_genome: list[int]  # linear representation of the genome (representation format like in tinyGE)
+    fitness: any
+
+    def __init__(self, genome: list[Node], lin_genome: list[int], fitness: any = None):
+        GPIndividual.__init__(self, genome, fitness)
+        lin_genome = lin_genome
+        print(self.genome)
 
 class Tiny3GE(GPModel):
 
@@ -75,9 +94,15 @@ class Tiny3GE(GPModel):
         self.best_individual = None
         self.best_fitness = None
 
-        self.population = [] # List of individuals in the population - derivation tree representation (Node as elements).
+        self.population = [TreeGEIndividual(deriv_tree, [], 0.0) for deriv_tree in self.init_random_tree_pop(self.hyperparameters.pop_size, 8, list(self.grammar.keys())[0])] # We assume that the first key in the grammar is the start symbol.
 
-    def is_non_terminal(symbol: str) -> bool:
+
+    def init_random_tree_pop(self, num_pop: int, max_depth: int, start_symbol: str):
+
+        return [self.init_random_tree(max_depth, start_symbol) for _ in range(num_pop)]
+
+
+    def is_non_terminal(self, symbol: str) -> bool:
         return symbol.startswith('<') and symbol.endswith('>')  # Terminals are not enclosed in angle brackets
     
 
