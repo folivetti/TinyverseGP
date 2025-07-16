@@ -78,37 +78,49 @@ class Tiny3GE(GPModel):
         self.population = [] # List of individuals in the population - derivation tree representation (Node as elements).
 
     def is_non_terminal(symbol: str) -> bool:
-        return symbol.startswith('<') and symbol.endswith('>')
+        return symbol.startswith('<') and symbol.endswith('>')  # Terminals are not enclosed in angle brackets
     
 
-    def get_minimum_derivation_steps(self, NT, grammar: dict) -> int:
+    def get_minimum_derivation_steps(self, NT: str, grammar: dict, cache=None, visited=None) -> int:
         """
         Returns the minimum number of derivation steps required to derive a non-terminal NT
-        """
-        # Check if NT is in grammar (is a non-terminal)
-        if NT not in grammar:
-            # If not in grammar, assume it's a terminal - 0 steps needed
-            return 0
-            
-        min_steps = float('inf')    # Initialize to infinity 
-        possible_productions = self.grammar[symbol]   # Get all possible productions for the non-terminal NT that remain in the depth
 
-        for production in possible_productions:
-            # Parse the production to get symbols
+        :param NT: The non-terminal symbol to derive.
+        :param grammar: The grammar in BNF format.
+        :param cache: A dictionary to cache results for previously computed non-terminals.
+        :param visited: A set to track visited non-terminals to avoid cycles - especially important to prevent endless recursion.
+        """
+
+        if cache is None:
+            cache = {}   # use memoization to cache results 
+        if visited is None:
+            visited = set()
+        # Terminal symbol → 0 steps
+        if NT not in grammar:   # Check if NT is a key in the grammar dictionary - if not it is a terminal
+            return 0
+        # If we’ve already computed this, return cached result
+        if NT in cache:
+            return cache[NT]
+
+        # Detect visited non-terminals to avoid cycles
+        if NT in visited:
+            return float('inf')  # Avoid cycles, this path is invalid
+
+        visited.add(NT)  # Mark as visited
+
+        min_steps = float('inf')    # Initialize minimum steps to infinity
+        for production in grammar[NT]:  # Get all productions for the current non-terminal
             symbols = self.parse_production(production)
 
-            if not symbols:   # If the production is empty, it means this production is terminal
-                # This production is terminal → 1 step
-                min_steps = min(min_steps, 1)
-            else:
-                # Recursively compute derivation steps for each non-terminal in this production
-                max_child_steps = 0
-                for symbol in symbols:
-                    child_steps = self.get_minimum_derivation_steps(symbol, grammar)
-                    max_child_steps = max(max_child_steps, child_steps)     # Find the maximum steps needed among all children
-                steps = 1 + max_child_steps
-                min_steps = min(min_steps, steps)
+            max_child_steps = 0
+            for sym in symbols:
+                steps = self.get_minimum_derivation_steps(sym, grammar, cache, visited.copy())
+                max_child_steps = max(max_child_steps, steps)
 
+            total_steps = 1 + max_child_steps
+            min_steps = min(min_steps, total_steps)
+
+        cache[NT] = min_steps    # Cache the result for the current non-terminal
         return min_steps 
     
     def filter_valid_productions(self, productions: list[str], max_depth: int) -> list[str]:
@@ -127,10 +139,11 @@ class Tiny3GE(GPModel):
             can_complete = True
 
             for sym in symbols:
-                min_steps = self.get_minimum_derivation_steps(sym, self.grammar)
-                if min_steps >= max_depth:      # if the minimum steps to derive this symbol is greater than or equal to the remaining depth
-                    can_complete = False
-                    break
+                if self.is_non_terminal(sym):   # Check if the symbol is a non-terminal 
+                    min_steps = self.get_minimum_derivation_steps(sym, self.grammar)
+                    if min_steps >= max_depth:      # if the minimum steps to derive this symbol is greater than or equal to the remaining depth
+                        can_complete = False
+                        break
             
             if can_complete:
                 valid_productions.append(production)
@@ -157,6 +170,8 @@ class Tiny3GE(GPModel):
         # Check if we've reached maximum depth
         if max_depth <= 1:
             # At maximum depth, return terminal node with empty children
+
+            # make sure that cur_NT is a terminal - its not the case right now !!!!
             return Node(cur_NT, [])
 
 
@@ -222,30 +237,30 @@ class Tiny3GE(GPModel):
         return self.population
 
     
-    """ Initialization methods for derivation trees"""
+    
 
-
+    # abstract
     def is_valid(self, genome:GPIndividual) -> bool:
         """
         Checks if the genome is valid.
         """
         pass
 
-
+    # abstract
     def eval_complexity(self, genome:GPIndividual) -> float:
         """
         Evaluates the complexity of the genome.
         """
         pass
 
-
+    # abstract
     def evaluate_individual(self,genome:GPIndividual) -> float:
         """
         Fitness function that evaluates a single individual.
         """
         pass
     
-
+    # abstract
     def evolve(self)  -> Any:
         """
         Main evolution loop that is used to run instances
@@ -253,7 +268,7 @@ class Tiny3GE(GPModel):
         """
         pass
 
-
+    # abstract
     def selection(self) -> Any:
         """
         Implementation of the selection mechanism.
@@ -262,14 +277,14 @@ class Tiny3GE(GPModel):
         """
         pass
 
-
+    # abstract    
     def predict(self) -> Any:
         """
         The respective prediction method is implemented here.
         """
         pass
 
-
+    # abstract 
     def expression(self) -> Any:
         """
         Returns a human-readable solution of a evolved candidate solution.
@@ -283,16 +298,17 @@ class Tiny3GE(GPModel):
         
         :param production: The production string to parse.
         :return: List of symbols in the production.
+        example: parse_production("<expr> + <term>") -> ['<expr>', '+', '<term>']
         """
         # This is a basic implementation - you may need to adapt this
         # based on your specific grammar format
         
         # If production is empty or just whitespace, return empty list
+        # There are no productions to parse
         if not production or not production.strip():
             return []
         
-        # Simple split by whitespace - adjust based on your grammar format
-        # You might need more sophisticated parsing for complex grammars
+        # Simple split by whitespace 
         symbols = production.strip().split()
         
         # Filter out empty strings
