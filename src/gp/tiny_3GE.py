@@ -49,15 +49,20 @@ class Node:
         self.NT = symbol
         self.children = children
 
-    # for testing purposes to see the structure of the node (tree)
-    def __repr__(self):
-        """
-        String representation of the node.
+    # for testing purposes to see the structure of the node (tree) 
+    def __repr__(self, level=0):
+        indent = "  " * level
+        if not self.children:
+            # This is a leaf node (terminal)
+            return f"{indent}Leaf(NT={self.NT})\n"
         
-        :return: A string representation of the node.
-        """
-
-        return f"Node(NT={self.NT}, children={self.children})"
+        repr_str = f"{indent}Node(NT={self.NT})\n"
+        for child in self.children:
+            if isinstance(child, Node):
+                repr_str += child.__repr__(level + 1)
+            else:
+                repr_str += f"{'  ' * (level + 1)}Leaf(Terminal={child})\n"
+        return repr_str
 
 class TreeGEIndividual(GPIndividual):
     genome: list[Node]
@@ -94,16 +99,12 @@ class Tiny3GE(GPModel):
         self.best_individual = None
         self.best_fitness = None
 
-        self.population = [TreeGEIndividual(deriv_tree, [], 0.0) for deriv_tree in self.init_random_tree_pop(self.hyperparameters.pop_size, 8, list(self.grammar.keys())[0])] # We assume that the first key in the grammar is the start symbol.
+        self.population = [TreeGEIndividual(deriv_tree, [], 0.0) for deriv_tree in self.init_random_tree_pop(self.hyperparameters.pop_size, 2, list(self.grammar.keys())[0])] # We assume that the first key in the grammar is the start symbol.
 
 
     def init_random_tree_pop(self, num_pop: int, max_depth: int, start_symbol: str):
 
         return [self.init_random_tree(max_depth, start_symbol) for _ in range(num_pop)]
-
-
-    def is_non_terminal(self, symbol: str) -> bool:
-        return symbol.startswith('<') and symbol.endswith('>')  # Terminals are not enclosed in angle brackets
     
 
     def get_minimum_derivation_steps(self, NT: str, grammar: dict, cache=None, visited=None) -> int:
@@ -174,13 +175,17 @@ class Tiny3GE(GPModel):
                 valid_productions.append(production)
 
         return valid_productions
+    
+
+    def generate_codon(self, symbol: str) -> int:
+        pass
 
     
 
     """ Initialization methods for derivation trees """
 
     
-
+    
     def init_random_tree(self, max_depth: int, symbol: str):
         """
         Generates a single derivation tree using the random tree method.
@@ -190,22 +195,20 @@ class Tiny3GE(GPModel):
         :return: A single derivation tree (Node).
         """
 
-        cur_NT = symbol     # current non-terminal to derive from
-        
-        # Check if we've reached maximum depth
-        if max_depth <= 1:
-            # At maximum depth, return terminal node with empty children
-
-            # make sure that cur_NT is a terminal - its not the case right now !!!!
-            return Node(cur_NT, [])
-
-
-        # cur_NT = '<expr>'
-        # grammar.get(cur_NT, [])  # → ['<expr> + <term>', '<term>']    
+        cur_NT = symbol     # current non-terminal to derive from   
         possible_productions = self.grammar.get(cur_NT, [])  # Get all possible productions for the current non-terminal
+        if max_depth <= 1:      # Check if we've reached maximum depth
+            # At maximum depth, return terminal node with empty children
+            if not self.is_non_terminal(cur_NT):
+                return Node(cur_NT, [])
+            
+            terminal_productions = [p for p in possible_productions if all(not self.is_non_terminal(s) for s in self.parse_production(p))]  # filter productions to only include those that are terminal because we are already at maximum depth
+            # if there are no terminal productions, return None
+            # This means that we cannot derive a valid tree from this non-terminal at maximum depth
+            # The algorithm retries to build a valid tree
+            if not terminal_productions:
+                return None
         
-
-
         # Check if the current non-terminal has productions
         if not possible_productions:    # check if cur_NT is a terminal (productions are empty)
             # If there are no productions, return a terminal node (leaf node)
@@ -213,27 +216,25 @@ class Tiny3GE(GPModel):
         
         # Filter productions that can fit within remaining depth
         valid_productions = self.filter_valid_productions(possible_productions, max_depth)
-        
-        # If no valid productions, return terminal node
-        if not valid_productions:
+
+        if not valid_productions: # If no valid productions, return terminal node
             return Node(cur_NT, [])
             
         production = random.choice(valid_productions)   # Randomly select a production from the valid productions
-
-        # Parse the production to get individual symbols
-        symbols = self.parse_production(production)
+        symbols = self.parse_production(production)     # Parse the production to get individual symbols
         
         # Recursively create child nodes for each symbol in the production
         children = []
-        for symbol in symbols:
-            child = self.init_random_tree(max_depth - 1, symbol)    # max_depth - 1 to ensure we don't exceed the maximum depth
-            children.append(child)
+        for sym in symbols:
+            child = self.init_random_tree(max_depth - 1, sym)    # max_depth - 1 to ensure we don't exceed the maximum depth
+            if not child:
+                self.init_random_tree(max_depth, cur_NT) 
+            else:
+                children.append(child)
+        return Node(cur_NT, children)        # Create node with the computed children
 
-        # Create node with the computed children
-        return Node(cur_NT, children)
-        
-
-
+    
+    
     def init_ramped_half_half(self, num_pop: int, min_depth: int, max_depth: int, max_size: int):
         """
         Generates a population of individuals using the Ramped Half and Half method.
@@ -261,8 +262,6 @@ class Tiny3GE(GPModel):
             self.population.append(tree)
         return self.population
 
-    
-    
 
     # abstract
     def is_valid(self, genome:GPIndividual) -> bool:
@@ -317,6 +316,9 @@ class Tiny3GE(GPModel):
         """
         pass
 
+    def is_non_terminal(self, symbol: str) -> bool:
+        return symbol.startswith('<') and symbol.endswith('>')  # non-terminals are enclosed in angle brackets
+
     def parse_production(self, production: str) -> list:
         """
         Parses a production string to extract individual symbols.
@@ -332,13 +334,9 @@ class Tiny3GE(GPModel):
         # There are no productions to parse
         if not production or not production.strip():
             return []
-        
-        # Simple split by whitespace 
-        symbols = production.strip().split()
-        
-        # Filter out empty strings
-        symbols = [s for s in symbols if s]
+        symbols = production.strip().split()    # Simple split by whitespace  
+        symbols = [s for s in symbols if s]    # Filter out empty strings
+
         
         return symbols
-
-
+    
