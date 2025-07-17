@@ -18,6 +18,7 @@ import copy
 import time
 import re
 from src.gp.problem import *
+from src.gp.tiny_ge import *
 from src.gp.tinyverse import *
 
 
@@ -38,7 +39,7 @@ class TreeGEHyperparameters(GPHyperparameters):
 
 class Node:
 
-    def __init__(self, symbol, children):
+    def __init__(self, symbol, children, production_rule=None):
         """
         Initialise an instance of the tree class.
         
@@ -48,6 +49,7 @@ class Node:
         """
         self.NT = symbol
         self.children = children
+        self.production_rule = production_rule
 
     # for testing purposes to see the structure of the node (tree) 
     def __repr__(self, level=0):
@@ -71,8 +73,10 @@ class TreeGEIndividual(GPIndividual):
 
     def __init__(self, genome: list[Node], lin_genome: list[int], fitness: any = None):
         GPIndividual.__init__(self, genome, fitness)
-        lin_genome = lin_genome
+        self.lin_genome = lin_genome
         print(self.genome)
+        print("linear_genome:", self.lin_genome)
+
 
 class Tiny3GE(GPModel):
 
@@ -80,7 +84,6 @@ class Tiny3GE(GPModel):
     Main class of the tiny3GE module that derives from GPModel and
     implements all related fundamental mechanisms to run GE.
     '''
-
     config: Config
     hyperparameters: Hyperparameters
     problem: Problem
@@ -99,8 +102,15 @@ class Tiny3GE(GPModel):
         self.best_individual = None
         self.best_fitness = None
 
-        self.population = [TreeGEIndividual(deriv_tree, [], 0.0) for deriv_tree in self.init_random_tree_pop(self.hyperparameters.pop_size, 2, list(self.grammar.keys())[0])] # We assume that the first key in the grammar is the start symbol.
-
+        self.population = [TreeGEIndividual(deriv_tree, self.generate_linear_genome(deriv_tree, self.hyperparameters.codon_size), 0.0) 
+                           for deriv_tree in self.init_random_tree_pop(self.hyperparameters.pop_size, 4, list(self.grammar.keys())[0])] # We assume that the first key in the grammar is the start symbol.
+        # self.population = []
+        
+        #for deriv_tree in self.init_random_tree_pop(self.hyperparameters.pop_size, 4, list(self.grammar.keys())[0]):
+        #    lin_genome = self.generate_linear_genome(deriv_tree, self.hyperparameters.codon_size)
+        #    self.population.append(TreeGEIndividual(deriv_tree, lin_genome, 0.0))
+        
+        print(len(self.population))
 
     def init_random_tree_pop(self, num_pop: int, max_depth: int, start_symbol: str):
 
@@ -109,46 +119,37 @@ class Tiny3GE(GPModel):
 
     def get_minimum_derivation_steps(self, NT: str, grammar: dict, cache=None, visited=None) -> int:
         """
-        Returns the minimum number of derivation steps required to derive a non-terminal NT
+        Returns the minimum number of derivation steps required to derive a non-terminal NT until only terminal symbols are left.
 
         :param NT: The non-terminal symbol to derive.
         :param grammar: The grammar in BNF format.
-        :param cache: A dictionary to cache results for previously computed non-terminals.
+        :param cache: A dictionary to cache results for previously computed non-terminals - reference to memoization.
         :param visited: A set to track visited non-terminals to avoid cycles - especially important to prevent endless recursion.
         """
 
-        if cache is None:
-            cache = {}   # use memoization to cache results 
-        if visited is None:
-            visited = set()
+        if cache is None: cache = {}   # use memoization to cache results 
+        if visited is None: visited = set()
         # Terminal symbol → 0 steps
-        if NT not in grammar:   # Check if NT is a key in the grammar dictionary - if not it is a terminal
-            return 0
+        if NT not in grammar: return 0 # Check if NT is a key in the grammar dictionary - if not it is a terminal
         # If we’ve already computed this, return cached result
-        if NT in cache:
-            return cache[NT]
-
-        # Detect visited non-terminals to avoid cycles
-        if NT in visited:
-            return float('inf')  # Avoid cycles, this path is invalid
-
+        if NT in cache: return cache[NT]
+        
+        if NT in visited: return float('inf')  # Avoid cycles, this path is invalid
         visited.add(NT)  # Mark as visited
+        min_steps = float('inf')    
 
-        min_steps = float('inf')    # Initialize minimum steps to infinity
         for production in grammar[NT]:  # Get all productions for the current non-terminal
             symbols = self.parse_production(production)
-
             max_child_steps = 0
             for sym in symbols:
                 steps = self.get_minimum_derivation_steps(sym, grammar, cache, visited.copy())
                 max_child_steps = max(max_child_steps, steps)
-
             total_steps = 1 + max_child_steps
             min_steps = min(min_steps, total_steps)
-
         cache[NT] = min_steps    # Cache the result for the current non-terminal
         return min_steps 
     
+
     def filter_valid_productions(self, productions: list[str], max_depth: int) -> list[str]:
         """
         Filters a list of productions to include only those that can be completed
@@ -161,27 +162,56 @@ class Tiny3GE(GPModel):
         valid_productions = []
 
         for production in productions:
-            symbols = self.parse_production(production)
-            can_complete = True
-
+            symbols = self.parse_production(production)     # extract individual symbols from the production
+            can_complete = True     # flag to check if the production can be completed within the remaining depth
             for sym in symbols:
                 if self.is_non_terminal(sym):   # Check if the symbol is a non-terminal 
-                    min_steps = self.get_minimum_derivation_steps(sym, self.grammar)
+                    min_steps = self.get_minimum_derivation_steps(sym, self.grammar)    # recursively compute minimum steps to derive this symbol
                     if min_steps >= max_depth:      # if the minimum steps to derive this symbol is greater than or equal to the remaining depth
                         can_complete = False
                         break
-            
             if can_complete:
                 valid_productions.append(production)
 
         return valid_productions
+
+
+    def generate_codon(self, node: Node, codon_size) -> int:
+        """
+        Generates a linear representation of the derivation tree (genome) as a list of integers.
+        
+        :param tree: The derivation tree to convert into a linear representation.
+        :return: A list of integers representing the genome.
+        """
+        # [no. choices, no. choices, codon_size] - [start, step, stop]
+        num_choices = len(self.grammar[node.NT])
+        production_index = self.grammar[node.NT].index(node.production_rule) # Get the index of the production rule in the grammar for the current non-terminal
+        offset = random.randrange(0, codon_size - num_choices + 1, num_choices) 
+
+        return offset+production_index
+    
+    def generate_linear_genome(self, tree_root: Node, codon_size: int) -> list[int]:
+        """
+        Recursively generates a linear genome from a derivation tree.
+
+        :param root: The root node of the derivation tree
+        :param codon_size: Max codon value
+        :return: List of integers representing the genome
+        """
+        genome = []
+
+        # Recursive function to traverse the tree and generate the genome
+        def build_genome(node: Node):
+            if node.children:  # Only generate codons for non-terminal expansions
+                genome.append(self.generate_codon(node, codon_size))
+            for child in node.children:
+                build_genome(child)
+
+        build_genome(tree_root)
+        return genome
     
 
-    def generate_codon(self, symbol: str) -> int:
-        pass
-
     
-
     """ Initialization methods for derivation trees """
 
     
@@ -201,21 +231,17 @@ class Tiny3GE(GPModel):
             # At maximum depth, return terminal node with empty children
             if not self.is_non_terminal(cur_NT):
                 return Node(cur_NT, [])
-            
             terminal_productions = [p for p in possible_productions if all(not self.is_non_terminal(s) for s in self.parse_production(p))]  # filter productions to only include those that are terminal because we are already at maximum depth
             # if there are no terminal productions, return None
             # This means that we cannot derive a valid tree from this non-terminal at maximum depth
             # The algorithm retries to build a valid tree
             if not terminal_productions:
                 return None
-        
-        # Check if the current non-terminal has productions
         if not possible_productions:    # check if cur_NT is a terminal (productions are empty)
             # If there are no productions, return a terminal node (leaf node)
             return Node(cur_NT, [])
         
-        # Filter productions that can fit within remaining depth
-        valid_productions = self.filter_valid_productions(possible_productions, max_depth)
+        valid_productions = self.filter_valid_productions(possible_productions, max_depth)  # Filter productions that can fit within remaining depth
 
         if not valid_productions: # If no valid productions, return terminal node
             return Node(cur_NT, [])
@@ -226,15 +252,14 @@ class Tiny3GE(GPModel):
         # Recursively create child nodes for each symbol in the production
         children = []
         for sym in symbols:
-            child = self.init_random_tree(max_depth - 1, sym)    # max_depth - 1 to ensure we don't exceed the maximum depth
-            if not child:
-                self.init_random_tree(max_depth, cur_NT) 
-            else:
-                children.append(child)
-        return Node(cur_NT, children)        # Create node with the computed children
+            child = self.init_random_tree(max_depth - 1, sym)  
+            while child is None:    # init_random_tree(...) returns None if it cannot derive a valid tree from the current non-terminal
+                child = self.init_random_tree(max_depth, cur_NT) # Retry with the current non-terminal if child is None
+            children.append(child)
 
-    
-    
+        return Node(cur_NT, children, production)    
+
+
     def init_ramped_half_half(self, num_pop: int, min_depth: int, max_depth: int, max_size: int):
         """
         Generates a population of individuals using the Ramped Half and Half method.
@@ -260,6 +285,9 @@ class Tiny3GE(GPModel):
         for _ in range(num_pop):
             tree = self.init_random_tree(max_depth, start_symbol)
             self.population.append(tree)
+
+        for element in self.population:
+            self.generate_linear_genome(element, self.hyperparameters.codon_size)  # Generate linear genome for each individual in the population
         return self.population
 
 
@@ -327,15 +355,13 @@ class Tiny3GE(GPModel):
         :return: List of symbols in the production.
         example: parse_production("<expr> + <term>") -> ['<expr>', '+', '<term>']
         """
-        # This is a basic implementation - you may need to adapt this
-        # based on your specific grammar format
         
         # If production is empty or just whitespace, return empty list
         # There are no productions to parse
         if not production or not production.strip():
             return []
         symbols = production.strip().split()    # Simple split by whitespace  
-        symbols = [s for s in symbols if s]    # Filter out empty strings
+        symbols = [s for s in symbols if s]    # Filter out empty strings and return as list
 
         
         return symbols
