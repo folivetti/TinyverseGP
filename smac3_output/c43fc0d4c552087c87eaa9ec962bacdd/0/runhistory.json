@@ -1,0 +1,83 @@
+{
+  "stats": {
+    "submitted": 4,
+    "finished": 3,
+    "running": 1
+  },
+  "data": [
+    {
+      "config_id": 1,
+      "instance": null,
+      "seed": 209652396,
+      "budget": null,
+      "cost": 0.8095436876664459,
+      "time": 21.690648794174194,
+      "cpu_time": 21.288066,
+      "status": 1,
+      "starttime": 1758141686.43696,
+      "endtime": 1758141708.1290329,
+      "additional_info": {}
+    },
+    {
+      "config_id": 1,
+      "instance": null,
+      "seed": 398764591,
+      "budget": null,
+      "cost": 0.8095436876664459,
+      "time": 16.416752815246582,
+      "cpu_time": 16.111073,
+      "status": 1,
+      "starttime": 1758141708.1323662,
+      "endtime": 1758141724.550326,
+      "additional_info": {}
+    },
+    {
+      "config_id": 2,
+      "instance": null,
+      "seed": 209652396,
+      "budget": null,
+      "cost": 0.8095436876664459,
+      "time": 18.58635377883911,
+      "cpu_time": 18.129492999999997,
+      "status": 1,
+      "starttime": 1758141724.5564969,
+      "endtime": 1758141743.146816,
+      "additional_info": {}
+    },
+    {
+      "config_id": 2,
+      "instance": null,
+      "seed": 398764591,
+      "budget": null,
+      "cost": 2147483647.0,
+      "time": 0.0,
+      "cpu_time": 0.0,
+      "status": 0,
+      "starttime": 0.0,
+      "endtime": 0.0,
+      "additional_info": {}
+    }
+  ],
+  "configs": {
+    "1": {
+      "cx_rate": 0.2668785210699,
+      "lmbda": 636,
+      "mu": 1,
+      "mutation_rate": 0.2117762370035,
+      "strict_selection": false,
+      "tournament_size": 5
+    },
+    "2": {
+      "cx_rate": 0.6414948515594,
+      "lmbda": 111,
+      "mu": 4,
+      "mutation_rate": 0.8203387865797,
+      "strict_selection": true,
+      "tournament_size": 8
+    }
+  },
+  "config_origins": {
+    "1": "Initial Design: Sobol",
+    "2": "Initial Design: Sobol"
+  }
+}

@@ -1,0 +1,179 @@
+{
+  "stats": {
+    "submitted": 10,
+    "finished": 10,
+    "running": 0
+  },
+  "data": [
+    {
+      "config_id": 1,
+      "instance": null,
+      "seed": 209652396,
+      "budget": null,
+      "cost": 8.97587747567343,
+      "time": 0.000843048095703125,
+      "cpu_time": 0.0008420000000004535,
+      "status": 1,
+      "starttime": 1758321679.071863,
+      "endtime": 1758321679.073445,
+      "additional_info": {}
+    },
+    {
+      "config_id": 1,
+      "instance": null,
+      "seed": 398764591,
+      "budget": null,
+      "cost": 8.97587747567343,
+      "time": 0.0007040500640869141,
+      "cpu_time": 0.0007029999999996761,
+      "status": 1,
+      "starttime": 1758321679.074754,
+      "endtime": 1758321679.0760279,
+      "additional_info": {}
+    },
+    {
+      "config_id": 2,
+      "instance": null,
+      "seed": 209652396,
+      "budget": null,
+      "cost": 8.97587747567343,
+      "time": 0.0007269382476806641,
+      "cpu_time": 0.0007260000000002265,
+      "status": 1,
+      "starttime": 1758321679.077086,
+      "endtime": 1758321679.078408,
+      "additional_info": {}
+    },
+    {
+      "config_id": 2,
+      "instance": null,
+      "seed": 398764591,
+      "budget": null,
+      "cost": 8.97587747567343,
+      "time": 0.0006399154663085938,
+      "cpu_time": 0.0006380000000003605,
+      "status": 1,
+      "starttime": 1758321679.079335,
+      "endtime": 1758321679.080517,
+      "additional_info": {}
+    },
+    {
+      "config_id": 1,
+      "instance": null,
+      "seed": 924231285,
+      "budget": null,
+      "cost": 8.97587747567343,
+      "time": 0.0007009506225585938,
+      "cpu_time": 0.000700000000000145,
+      "status": 1,
+      "starttime": 1758321679.0816488,
+      "endtime": 1758321679.0829198,
+      "additional_info": {}
+    },
+    {
+      "config_id": 3,
+      "instance": null,
+      "seed": 209652396,
+      "budget": null,
+      "cost": 8.97587747567343,
+      "time": 0.0006780624389648438,
+      "cpu_time": 0.0006779999999997344,
+      "status": 1,
+      "starttime": 1758321679.4295738,
+      "endtime": 1758321679.430839,
+      "additional_info": {}
+    },
+    {
+      "config_id": 3,
+      "instance": null,
+      "seed": 398764591,
+      "budget": null,
+      "cost": 8.97587747567343,
+      "time": 0.0006401538848876953,
+      "cpu_time": 0.0006400000000006401,
+      "status": 1,
+      "starttime": 1758321679.4319282,
+      "endtime": 1758321679.433099,
+      "additional_info": {}
+    },
+    {
+      "config_id": 3,
+      "instance": null,
+      "seed": 924231285,
+      "budget": null,
+      "cost": 8.97587747567343,
+      "time": 0.0006458759307861328,
+      "cpu_time": 0.0006460000000005905,
+      "status": 1,
+      "starttime": 1758321679.4340081,
+      "endtime": 1758321679.435182,
+      "additional_info": {}
+    },
+    {
+      "config_id": 4,
+      "instance": null,
+      "seed": 209652396,
+      "budget": null,
+      "cost": 8.97587747567343,
+      "time": 0.0007050037384033203,
+      "cpu_time": 0.0007010000000002847,
+      "status": 1,
+      "starttime": 1758321679.436468,
+      "endtime": 1758321679.4377768,
+      "additional_info": {}
+    },
+    {
+      "config_id": 4,
+      "instance": null,
+      "seed": 398764591,
+      "budget": null,
+      "cost": 8.97587747567343,
+      "time": 0.0008649826049804688,
+      "cpu_time": 0.0008359999999996148,
+      "status": 1,
+      "starttime": 1758321679.438944,
+      "endtime": 1758321679.440373,
+      "additional_info": {}
+    }
+  ],
+  "configs": {
+    "1": {
+      "cx_rate": 0.2668785210699,
+      "levels_back": 62,
+      "mutation_rate": 0.1075078817084,
+      "num_function_nodes": 29,
+      "population_size": 438,
+      "tournament_size": 5
+    },
+    "2": {
+      "cx_rate": 0.6414948515594,
+      "levels_back": 12,
+      "mutation_rate": 0.9892357727513,
+      "num_function_nodes": 84,
+      "population_size": 226,
+      "tournament_size": 8
+    },
+    "3": {
+      "cx_rate": 0.556145473045,
+      "levels_back": 83,
+      "mutation_rate": 0.7974607612759,
+      "num_function_nodes": 66,
+      "population_size": 200,
+      "tournament_size": 5
+    },
+    "4": {
+      "cx_rate": 0.1128062516646,
+      "levels_back": 72,
+      "mutation_rate": 0.6233943971703,
+      "num_function_nodes": 52,
+      "population_size": 232,
+      "tournament_size": 4
+    }
+  },
+  "config_origins": {
+    "1": "Initial Design: Sobol",
+    "2": "Initial Design: Sobol",
+    "3": "Acquisition Function Maximizer: Local Search",
+    "4": "Acquisition Function Maximizer: Local Search"
+  }
+}
