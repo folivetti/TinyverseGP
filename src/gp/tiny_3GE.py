@@ -1,4 +1,3 @@
-
 """
 Tiny3GE: A minimalistic implementation of derivation tree based Grammatical Evolution (GE) for tinyverseGP.
 This module extends the TinyGE class to support a derivation tree representation of individuals.
@@ -46,11 +45,11 @@ class Node:
 
     def __init__(self, symbol, children, production_rule=None):
         """
-        Initialise an instance of the tree class.
+        Represents a node in the derivation tree.
         
-        :param expr: A non-terminal from the underlying grammar in BNF.
-        :param parent: The parent of the current node. None if node is tree root.
-        :param production_rule: The production rule that will be used to derive the current node.
+        :param symbol: The symbol of the node (non-terminal or terminal).
+        :param children: List of child nodes.
+        :param production_rule: The production rule used to create this node (optional).
         """
         self.NT = symbol
         self.children = children
@@ -58,7 +57,7 @@ class Node:
 
 
 class TreeGEIndividual(GPIndividual):
-    genome: list[Node]
+    genome: Node
     lin_genome: list[int]  # linear representation of the genome (representation format like in tinyGE)
     fitness: any
 
@@ -84,14 +83,14 @@ class Tiny3GE(GPModel):
         self.grammar = grammar_     # BNF grammar in dictionary format
         self.arguments = arguments_
         self.config = config
-        self.hyperparameters = hyperparameters
+        self.hyperparameters: TreeGEHyperparameters = hyperparameters
         self.num_evaluations = 0
         self.best_individual = None
 
         self.population: list[TreeGEIndividual] = [TreeGEIndividual(deriv_tree,
                                                 self.generate_linear_genome(deriv_tree, self.hyperparameters.codon_size), 0.0) 
                                                 for deriv_tree in self.init_random_tree_pop(self.hyperparameters.pop_size, self.hyperparameters.max_depth, list(self.grammar.keys())[0])]     # We assume that the first key in the grammar is the start symbol.
-        
+
         self.geModel = TinyGE(problem_, functions_, grammar_, arguments_, config, hyperparameters)  # Initialize the TinyGE model to use evolve() method and other functionalities on the linear genomes
         for i in range(self.hyperparameters.pop_size):
             self.geModel.population[i] = GEIndividual(  # linear genome of the derivation tree as genome of GE instance
@@ -99,7 +98,6 @@ class Tiny3GE(GPModel):
                 self.population[i].fitness
             )
 
-        # self.print_population(self.population)
         self.evaluate()
         
 
@@ -168,7 +166,6 @@ class Tiny3GE(GPModel):
     def filter_recursive_productions(self, productions: list[str], cur_NT: str) -> list[str]:
         """
         Filters a list of productions to include only those that are recursive.
-        
         A production is considered recursive if the left-hand non-terminal appears in its own right-hand side.
         
         :param productions: List of production strings to evaluate.
@@ -219,17 +216,7 @@ class Tiny3GE(GPModel):
         
         return genome
     
-
-    def generate_derivation_tree(self, lin_genome: list[int]) -> Node:
-        """
-        Generates a derivation tree from a linear genome.
-        
-        :param lin_genome: The linear genome to convert into a derivation tree.
-        :return: A Node representing the root of the derivation tree.
-        """
-        pass
                
-
     def evaluate(self) -> float:
         """
         Triggers the evaluation of the whole population.
@@ -239,7 +226,6 @@ class Tiny3GE(GPModel):
         self.geModel.evaluate() # Use the TinyGE model's evaluate method to evaluate the linear genomes
         
 
-    
     def evolve(self):
         """
         Main evolution loop that is used to run instances
@@ -282,8 +268,7 @@ class Tiny3GE(GPModel):
 
         return Node(cur_NT, children, production)    
     
-    
-    
+
     def init_random_tree_full(self, remaining_depth: int, symbol: str) -> Node:
         """
         Generates a derivation tree using the FULL method, where all branches extend to exactly max_depth.
@@ -295,7 +280,7 @@ class Tiny3GE(GPModel):
         possible_productions = self.grammar.get(cur_NT, [])
 
         # If we're at the last depth level, pick only terminal productions
-        if remaining_depth <= 2:
+        if remaining_depth <= self.get_minimum_derivation_steps(cur_NT):
             if not possible_productions:    # check if cur_NT is a terminal (productions are empty)
                 return Node(cur_NT, [], None)
             
@@ -333,12 +318,12 @@ class Tiny3GE(GPModel):
         :param max_depth: Maximum depth of the derivation tree.
         :return: A list of individuals (derivation trees).
         """
-        generation_method = random.randrange(min_depth, max_depth+1 )  # Randomly choose a depth for the generation method
+        depth = random.randrange(min_depth, max_depth+1)  # Randomly choose a depth for the generation method
         method = random.choice(["full", "grow"])      # Randomly choose between full and grow method for tree generation
         if method == "grow":
-            return self.init_random_tree_grow(max_depth, list(self.grammar.keys())[0])
+            return self.init_random_tree_grow(depth, list(self.grammar.keys())[0])
         else:   # use Full method
-            return self.init_random_tree_full(max_depth, list(self.grammar.keys())[0])
+            return self.init_random_tree_full(depth, list(self.grammar.keys())[0])
         
         
 
@@ -378,9 +363,45 @@ class Tiny3GE(GPModel):
                 return []
             # pattern = re.compile(r'<[^<> ]+>|[A-Za-z_]+|[(),.]')
             pattern = re.compile(r'<[^<> ]+>|\d+|[A-Za-z_]+|[(),.]')
-            return pattern.findall(production)
+            return pattern.findall(production)        
+           
     
-    
+    # abstract
+    def selection(self) -> Any:
+        """
+        Implementation of the selection mechanism.
+        Commonly returns an individual object or the position
+        of an individual in the population.
+        """
+        pass
+    # @abstractmethod
+    def evaluate_individual(self,genome:GPIndividual) -> float:
+        """
+        Fitness function that evaluates a single individual.
+        """
+        pass
+    # @abstractmethod
+    def selection(self) -> Any:
+        """
+        Implementation of the selection mechanism.
+        Commonly returns an individual object or the position
+        of an individual in the population.
+        """
+        pass
+    # @abstractmethod
+    def predict(self) -> Any:
+        """
+        The respective prediction method is implemented here.
+        """
+        pass
+    # @abstractmethod
+    def expression(self) -> Any:
+        """
+        Returns a human-readable solution of a evolved candidate solution.
+        Return value can be a string or a list of strings.
+        """
+        pass
+
     # abstract
     def is_valid(self, genome:GPIndividual) -> bool:
         """
@@ -393,42 +414,59 @@ class Tiny3GE(GPModel):
         Evaluates the complexity of the genome.
         """
         pass
-    # abstract
-    def selection(self) -> Any:
-        """
-        Implementation of the selection mechanism.
-        Commonly returns an individual object or the position
-        of an individual in the population.
-        """
-        pass
 
-    # @abstractmethod
-    def evaluate_individual(self,genome:GPIndividual) -> float:
+    # 
+    
+    def mutation(self, individual: TreeGEIndividual) -> TreeGEIndividual:
         """
-        Fitness function that evaluates a single individual.
-        """
-        pass
+        Mutates an individual by replacing a random subtree with a new random subtree.
 
-    # @abstractmethod
-    def selection(self) -> Any:
+        :param individual: The individual to mutate.
+        :return: A new mutated individual.
         """
-        Implementation of the selection mechanism.
-        Commonly returns an individual object or the position
-        of an individual in the population.
-        """
-        pass
+        # Deepcopy to avoid in-place mutation
+        mutated_tree = deepcopy(individual.genome)
+        depth = 0
+        # Collect all mutable (non-terminal) nodes with their parents and child indices
+        mutable_nodes = []
 
-    # @abstractmethod
-    def predict(self) -> Any:
-        """
-        The respective prediction method is implemented here.
-        """
-        pass
+        def collect_nodes(node: Node, parent=None, child_index=None, depth=0):
+            if self.is_non_terminal(node.NT) and parent is not None:  # Only consider non-terminal nodes that have a parent 
+                mutable_nodes.append((node, parent, child_index, depth))
+            for i, child in enumerate(node.children):
+                collect_nodes(child, node, i, depth+1)
 
-    # @abstractmethod
-    def expression(self) -> Any:
-        """
-        Returns a human-readable solution of a evolved candidate solution.
-        Return value can be a string or a list of strings.
-        """
-        pass
+        collect_nodes(mutated_tree)     # call the function on the root node to collect all mutable nodes
+
+        # If no mutable nodes, return original individual
+        if not mutable_nodes:
+            return deepcopy(individual)
+
+        # Randomly select a node to mutate
+        selected_node, parent, child_index, depth = random.choice(mutable_nodes)   
+        print("selected_node: ---------------------------------------------------------------------------------------------------------------------")
+        self.print_individual(selected_node, level=1)
+        print("parent: ---------------------------------------------------------------------------------------------------------------------")
+        self.print_individual(parent, level=1)
+        print(child_index)
+        print("depth:", depth)
+
+        # Generate a new subtree using the same symbol (non-terminal)
+        # max_depth = self.hyperparameters.max_depth
+        new_subtree = self.init_random_tree_grow(self.hyperparameters.max_depth - depth, selected_node.NT)
+
+        # Replace the selected subtree in the parent
+        if parent is None:
+            # Mutating the root node
+            mutated_tree = new_subtree
+        else:
+            parent.children[child_index] = new_subtree
+
+        # Rebuild linear genome
+        new_linear_genome = self.generate_linear_genome(mutated_tree, self.hyperparameters.codon_size)
+
+        # Create new individual
+        mutated_individual = TreeGEIndividual(mutated_tree, new_linear_genome)
+
+        return mutated_individual
+    
