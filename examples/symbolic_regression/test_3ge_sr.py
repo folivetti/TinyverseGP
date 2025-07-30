@@ -13,7 +13,7 @@ domain for TinyverseGP:
 """
 
 from src.gp.tiny_ge import *
-from src.gp.tiny_3GE import *
+from src.gp.tiny_3ge import *
 from src.gp.test import *
 from src.gp.functions import *
 from src.gp.loss import *
@@ -35,13 +35,13 @@ config = GPConfig(
 )
 
 hyperparameters = TreeGEHyperparameters(
-    pop_size=200,
+    pop_size=100,
     genome_length=60,
     codon_size=1000,
-    max_depth= 30,
+    max_depth=6,
     cx_rate=0.9,
     mutation_rate=0.1,
-    tournament_size=2,
+    tournament_size=4,
     penalty_value=99999
 )
 
@@ -63,10 +63,25 @@ grammar = {
     '<var>': ['x']
 }
 
+
+
 problem = BlackBox(data, actual, loss, 1e-6, True)
 
 ge = Tiny3GE(problem, functions, grammar, arguments, config, hyperparameters)
 
+
+# print("initial tree:--------------------------------------------------------------------------------------------------------------------")
+# ge.print_individual(ge.population[0].genome, level=1)
+# print("second tree:--------------------------------------------------------------------------------------------------------------------")
+# ge.print_individual(ge.population[1].genome,level=1)
+# print("mutated tree:--------------------------------------------------------------------------------------------------------------------")
+# ge.print_individual(ge.crossover(ge.population[0],ge.population[1]).genome, level=1)
+
 ge.print_population(ge.population)
-ge.geModel.evolve()
-ge.geModel.print_individual(ge.geModel.best_individual)
+
+ge.evolve()
+
+ge.print_individual_tree(ge.best_individual.genome, level=0)
+print(ge.best_individual.lin_genome)
+print(ge.best_individual.fitness)
+ge.print_individual(ge.best_individual)
