@@ -91,13 +91,6 @@ class Tiny3GE(GPModel):
                                                 self.generate_linear_genome(deriv_tree, self.hyperparameters.codon_size), 0.0) 
                                                 for deriv_tree in self.init_random_tree_pop(self.hyperparameters.pop_size, self.hyperparameters.max_depth, list(self.grammar.keys())[0])]     # We assume that the first key in the grammar is the start symbol.
 
-        self.geModel = TinyGE(problem_, functions_, grammar_, arguments_, config, hyperparameters)  # Initialize the TinyGE model to use evolve() method and other functionalities on the linear genomes
-        for i in range(self.hyperparameters.pop_size):
-            self.geModel.population[i] = GEIndividual(  # linear genome of the derivation tree as genome of GE instance
-                self.population[i].lin_genome, 
-                self.population[i].fitness
-            )
-
         self.evaluate()
         
 
@@ -216,158 +209,70 @@ class Tiny3GE(GPModel):
         
         return genome
     
-               
+
     def evaluate(self) -> float:
-        """
+        '''
         Triggers the evaluation of the whole population.
 
         :return: a `float` value of the best fitness
-        """
-        self.geModel.evaluate() # Use the TinyGE model's evaluate method to evaluate the linear genomes
-        
-
-    def evolve(self):
-        """
-        Main evolution loop that is used to run instances
-        of a GP model.
-        
-        :return: the best individual in the population.
-        """
-        return self.geModel.evolve()
-        
-
+        '''
+        best = None
+        # For each individual in the population 
+        for ix, individual in enumerate(self.population):
+            lin_genome = individual.lin_genome   # extract the genome
+            fitness = self.evaluate_individual(individual.genome, lin_genome) # evaluate it
+            self.population[ix] = TreeGEIndividual(individual.genome, lin_genome, fitness) # assign the fitness
+            # update the population best solution
+            if best is None or self.problem.is_better(fitness, best):
+                best = fitness
+            # update the best solution of all time
+            if self.best_individual is None or self.problem.is_better(fitness, self.best_individual.fitness):
+                self.best_individual = GEIndividual(individual.genome, lin_genome, fitness)
+        return best
     
-    """ Initialization methods for derivation trees """
+    def evaluate_individual(self, deriv_tree, lin_genome:list[int]) -> float:
+        '''
+        Evaluate a single individual `genome`.
 
+        :return: a `float` representing the fitness of that individual.
+        '''
+        self.num_evaluations += 1  # update the evaluation counter
+        f = None
+        tmp_expr = self.expression(lin_genome)
+        if '<' in tmp_expr or '>' in tmp_expr:
+            f = self.hyperparameters.penalty_value 
+        else:
+            f = self.problem.evaluate(lin_genome, self) # evaluate the solution using the problem instance
+        if self.best_individual is None or self.problem.is_better(f, self.best_individual.fitness):
+            self.best_individual = TreeGEIndividual(deriv_tree, lin_genome, f)
+        return f
     
+    def predict(self, lin_genome: list, observation: list) -> list:
+        '''
+        Predict the output of the `genome` given a single `observation`.
+
+        :return: a list of the outputs for that observation
+        '''
+        def evaluate_expression(expr: str, func_dict: list, args: list[str], values: list) -> any:
+            local_vars = dict(zip(args, values))
+            return [eval(expr, func_dict, local_vars)]
+
+        tmp_expr = self.expression(lin_genome)    # TODO: expression already generated in evaluate_individual() -> prevent double execution
+        return evaluate_expression(tmp_expr, self.functions, self.arguments, observation)
     
-    def init_random_tree_grow(self, max_depth: int, symbol: str):
-        """
-        Generates a single derivation tree using the random tree method.
-        
-        :param max_depth: Maximum depth of the derivation tree.
-        :param symbol: The symbol to start the derivation tree with (usually a non-terminal).
-        :return: A derivation tree generated using the GROW method.
-        """
-        cur_NT = symbol      
-        possible_productions = self.grammar.get(cur_NT, [])  
+    def perturb(self, parent1: TreeGEIndividual, parent2: TreeGEIndividual) -> TreeGEIndividual:
+        '''
+        Applies the crossover and mutation operators to the parents.
 
-        if not possible_productions:    # check if cur_NT is a terminal (productions are empty)
-            return Node(cur_NT, [], None)
-        
-        valid_productions = self.filter_valid_productions(possible_productions, max_depth)      # filter all the productions to those that can be derived within the remaining depth 
-            
-        production = random.choice(valid_productions)
-        symbols = self.parse_production(production)     
-        
-        # Recursively create child nodes for each symbol in the production
-        children = []
-        for sym in symbols:
-            child = self.init_random_tree_grow(max_depth - 1, sym) 
-            children.append(child)
-
-        return Node(cur_NT, children, production)    
+        :return: a list of the `genome` and `None` representing the unevaluated fitness.
+        '''
+        # applies the crossover with `self.hyperparameters.cx_rate` probability, otherwise return the first parent
+        offspring_genome = self.crossover(parent1, parent2) if random.random() <= self.hyperparameters.cx_rate else parent1
+        # applies mutation with `self.hyperparameters.mutation_rate`
+        offspring_mutated = self.mutation(offspring_genome, self.hyperparameters.mutation_rate)
+        return offspring_mutated
     
-
-    def init_random_tree_full(self, remaining_depth: int, symbol: str) -> Node:
-        """
-        Generates a derivation tree using the FULL method, where all branches extend to exactly max_depth.
-
-        :param remaining_depth: The remaining depth allowed for the derivation tree.
-        :param symbol: The current symbol to expand.
-        :return: A derivation tree generated using the FULL method.
-        """
-        cur_NT = symbol
-        possible_productions = self.grammar.get(cur_NT, [])
-
-        # If we're at the last depth level, pick only terminal productions
-        if remaining_depth <= self.get_minimum_derivation_steps(cur_NT):
-            if not possible_productions:    # check if cur_NT is a terminal (productions are empty)
-                return Node(cur_NT, [], None)
-            
-            valid_productions = self.filter_valid_productions(possible_productions, remaining_depth)      # filter all the productions to those that can be derived within the remaining depth    
-            production = random.choice(valid_productions)
-            symbols = self.parse_production(production)     
-            
-            # Recursively create child nodes for each symbol in the production
-            children = []
-            for sym in symbols:
-                child = self.init_random_tree_grow(remaining_depth - 1, sym)  
-                children.append(child)
-            return Node(cur_NT, children, production) 
-                    
-        if not possible_productions:  # check if cur_NT is a terminal (productions are empty)
-            return Node(cur_NT, [], None)
-        
-        recursive_productions = self.filter_recursive_productions(possible_productions, cur_NT)     # We're not at max_depth: choose only recursive productions
-        production = random.choice(recursive_productions)
-        symbols = self.parse_production(production)
-
-        children = []
-        for sym in symbols:
-            child = self.init_random_tree_full(remaining_depth - 1, sym)
-            children.append(child)
-
-        return Node(cur_NT, children, production)
-
-
-    def init_ramped_half_half(self, min_depth: int, max_depth: int):
-        """
-        Generates a population of individuals using the Ramped Half and Half method.
-        
-        :param min_depth: Minimum depth of the derivation tree.
-        :param max_depth: Maximum depth of the derivation tree.
-        :return: A derivation either generated by Grow or Full.
-        """
-        depth = random.randrange(min_depth, max_depth+1)  # Randomly choose a depth for the generation method
-        method = random.choice(["full", "grow"])      # Randomly choose between full and grow method for tree generation
-        if method == "grow":
-            return self.init_random_tree_grow(depth, list(self.grammar.keys())[0])
-        else:   # use Full method
-            return self.init_random_tree_full(depth, list(self.grammar.keys())[0])
-        
-        
-
-    def print_population(self, population: list[TreeGEIndividual]):
-        for ind in population:
-            self.print_individual(ind.genome, level=1)
-            print(f"Linear genome: {ind.lin_genome}\n")
-
-    
-    def print_individual(self, node: Node, level=0):
-        indent = "  " * level
-        rule_info = f" [rule: {node.production_rule}]" if node.production_rule else ""
-
-        if not self.is_non_terminal(node.NT):  # If the node is a terminal, print it as a leaf
-            print(f"{indent}Leaf(Terminal='{node.NT}'){rule_info}")
-            return
-        print(f"{indent}Node(NT='{node.NT}'){rule_info}")
-        for child in node.children:
-            if isinstance(child, Node):
-                self.print_individual(child, level + 1)
-            else:
-                print(f"{'  ' * (level + 1)}Leaf(Terminal='{child}')")
-
-
-    def is_non_terminal(self, symbol: str) -> bool:
-        return symbol.startswith('<') and symbol.endswith('>')  # non-terminals are enclosed in angle brackets
-
-
-    def parse_production(self, production: str) -> list:
-            """
-            Parses a production rule into its components (terminals and non-terminals).
-
-            :param production: A string representing a production rule in the grammar.
-            :return: A list of symbols (terminals and non-terminals) parsed from the production rule.
-            """
-            if not production or not production.strip():
-                return []
-            # pattern = re.compile(r'<[^<> ]+>|[A-Za-z_]+|[(),.]')
-            pattern = re.compile(r'<[^<> ]+>|\d+|[A-Za-z_]+|[(),.]')
-            return pattern.findall(production)        
-
-    
-    def mutation(self, individual: TreeGEIndividual) -> TreeGEIndividual:
+    def mutation(self, individual: TreeGEIndividual, mutation_rate: float) -> TreeGEIndividual:
         """
         Mutates an individual by replacing a random subtree with a new random subtree.
 
@@ -375,6 +280,10 @@ class Tiny3GE(GPModel):
         :return: A new mutated individual.
         """
         # Deepcopy to avoid in-place mutation
+
+        if random.random() > mutation_rate:  # If mutation is not applied, return the original individual
+            return deepcopy(individual)
+        
         mutated_tree = deepcopy(individual.genome)
         mutable_nodes = []      # Collect all mutable (non-terminal) nodes with [selected_node, parent, child_index, depth] information
 
@@ -454,44 +363,236 @@ class Tiny3GE(GPModel):
             
             return offspring_individual
         
-        return deepcopy(parent1)    
+        return deepcopy(parent1)
+    
+    def selection(self) -> list:            
+        '''
+        Select a parent from the population using the tournament selection method.
+
+        :return: a selected genome.
+        '''
+        # samples `self.hyperparameters.tournament_size` solutions completely at random
+        parents = [random.choice(self.population) for _ in range(self.hyperparameters.tournament_size)]
+        # return the best of this sample whether it is a minimization or maximization problem     
+        if self.problem.minimizing:
+            return min(parents, key=lambda ind: ind.fitness)
+        else:
+            return max(parents, key=lambda ind: ind.fitness)
+        
+    def expression(self, lin_genome: list) -> str:
+        '''
+        Convert a genome into string format with the help of the grammar.
+
+        :return: expression as `str`.
+        '''
+        return self.genotype_phenotype_mapping(self.grammar, lin_genome, '<expr>')
+    
+    def genotype_phenotype_mapping(self, grammar, lin_genome, expression='<expr>'):
+            '''
+                Maps the genotype to its phenotype.
+                
+                :return: a string representation of the genome.
+            '''
+            tmp_genome = copy.deepcopy(lin_genome)
+            while '<' in expression and len(tmp_genome) > 0:
+                next_non_terminal = re.search(r'<(.*?)>', expression).group(0)
+                choice = grammar[next_non_terminal][(tmp_genome.pop(0) % len(grammar[next_non_terminal]))]
+                expression = expression.replace(next_non_terminal, choice, 1)
+            return expression
+    
+    def breed(self):
+        '''
+        Breed the population by first selecting a set of pair of parents and then
+        applying crossover and mutation operators.
+        '''
+        # Select n pairs of parents using tournament selection, n is the population size minus 1 (so we have space for the best individual)
+        parents = [[self.selection(), self.selection()] for _ in range(self.hyperparameters.pop_size-1)]
+        # replace the current population by perturbing the sampled parents     
+        self.population = [self.perturb(*parent) for parent in parents]
+        # keep the best solution in the population 
+        self.population.append(TreeGEIndividual(self.best_individual.genome, self.best_individual.lin_genome, self.best_individual.fitness))
+    
+    def evolve(self):
+        """
+        Runs the evolution steps.
+
+        TODO: implement this in the base class as a default for every algorithm.
+        """
+        # measure the current time     
+        t0 = time.time()
+        elapsed = 0
+        terminate = False
+        best_fitness_job = None
+        # for each job, if running parallel executions     
+        for job in range(self.config.num_jobs):
+            best_fitness = None
+            # run for a maximum of generations     
+            for generation in range(self.config.max_generations):
+                # breed     
+                self.breed()
+                # evaluate the new population
+                best_fitness = self.evaluate()
+                # `report_generation` will handle the reporting of every generation according to the config     
+                self.report_generation(silent_algorithm= self.config.silent_algorithm,
+                                       generation=generation,
+                                       best_fitness=best_fitness,
+                                       report_interval=self.config.report_interval)
+                t1 = time.time()
+                delta = t1-t0
+                t0 = t1
+                elapsed += delta
+                # if elapsed time is larger than the maximum time, terminate 
+                if elapsed + delta >= self.config.max_time:
+                    terminate = True
+                    break
+                # if we found the ideal fitness, terminate         
+                elif self.problem.is_ideal(best_fitness):
+                    terminate = True
+                    break
+            # update the current best between runs and report             
+            if best_fitness_job is None or self.problem.is_better(best_fitness, best_fitness_job):
+                    best_fitness_job = best_fitness
+            self.report_job(job = job,
+                            num_evaluations=self.num_evaluations,
+                            best_fitness=best_fitness_job,
+                            silent_evolver=self.config.silent_evolver,
+                            minimalistic_output=self.config.minimalistic_output)
+            if terminate:
+                break
+        return self.best_individual.genome
+        
+
+    
+    """ Initialization methods for derivation trees """
+
+
+    def init_ramped_half_half(self, min_depth: int, max_depth: int):
+        """
+        Generates a population of individuals using the Ramped Half and Half method.
+        
+        :param min_depth: Minimum depth of the derivation tree.
+        :param max_depth: Maximum depth of the derivation tree.
+        :return: A derivation either generated by Grow or Full.
+        """
+        depth = random.randrange(min_depth, max_depth+1)  # Randomly choose a depth for the generation method
+        method = random.choice(["full", "grow"])      # Randomly choose between full and grow method for tree generation
+        if method == "grow":
+            return self.init_random_tree_grow(depth, list(self.grammar.keys())[0])
+        else:   # use Full method
+            return self.init_random_tree_full(depth, list(self.grammar.keys())[0])
+        
+    
+    def init_random_tree_grow(self, max_depth: int, symbol: str):
+        """
+        Generates a single derivation tree using the random tree method.
+        
+        :param max_depth: Maximum depth of the derivation tree.
+        :param symbol: The symbol to start the derivation tree with (usually a non-terminal).
+        :return: A derivation tree generated using the GROW method.
+        """
+        cur_NT = symbol      
+        possible_productions = self.grammar.get(cur_NT, [])  
+
+        if not possible_productions:    # check if cur_NT is a terminal (productions are empty)
+            return Node(cur_NT, [], None)
+        
+        valid_productions = self.filter_valid_productions(possible_productions, max_depth)      # filter all the productions to those that can be derived within the remaining depth 
+            
+        production = random.choice(valid_productions)
+        symbols = self.parse_production(production)     
+        
+        # Recursively create child nodes for each symbol in the production
+        children = []
+        for sym in symbols:
+            child = self.init_random_tree_grow(max_depth - 1, sym) 
+            children.append(child)
+
+        return Node(cur_NT, children, production)    
     
 
-    # abstract
-    def selection(self) -> Any:
+    def init_random_tree_full(self, remaining_depth: int, symbol: str) -> Node:
         """
-        Implementation of the selection mechanism.
-        Commonly returns an individual object or the position
-        of an individual in the population.
+        Generates a derivation tree using the FULL method, where all branches extend to exactly max_depth.
+
+        :param remaining_depth: The remaining depth allowed for the derivation tree.
+        :param symbol: The current symbol to expand.
+        :return: A derivation tree generated using the FULL method.
         """
-        pass
-    # @abstractmethod
-    def evaluate_individual(self,genome:GPIndividual) -> float:
+        cur_NT = symbol
+        possible_productions = self.grammar.get(cur_NT, [])
+
+        # If we're at the last depth level, pick only terminal productions
+        if remaining_depth <= self.get_minimum_derivation_steps(cur_NT):
+            if not possible_productions:    # check if cur_NT is a terminal (productions are empty)
+                return Node(cur_NT, [], None)
+            
+            valid_productions = self.filter_valid_productions(possible_productions, remaining_depth)      # filter all the productions to those that can be derived within the remaining depth    
+            production = random.choice(valid_productions)
+            symbols = self.parse_production(production)     
+            
+            # Recursively create child nodes for each symbol in the production
+            children = []
+            for sym in symbols:
+                child = self.init_random_tree_grow(remaining_depth - 1, sym)  
+                children.append(child)
+            return Node(cur_NT, children, production) 
+                    
+        if not possible_productions:  # check if cur_NT is a terminal (productions are empty)
+            return Node(cur_NT, [], None)
+        
+        recursive_productions = self.filter_recursive_productions(possible_productions, cur_NT)     # We're not at max_depth: choose only recursive productions
+        production = random.choice(recursive_productions)
+        symbols = self.parse_production(production)
+
+        children = []
+        for sym in symbols:
+            child = self.init_random_tree_full(remaining_depth - 1, sym)
+            children.append(child)
+
+        return Node(cur_NT, children, production)        
+        
+
+    def print_population(self, population: list[TreeGEIndividual]):
+        for ind in population:
+            self.print_individual_tree(ind.genome, level=1)
+            print(f"Linear genome: {ind.lin_genome}\n")
+
+    def print_individual_tree(self, node: Node, level=0):
+        indent = "  " * level
+        rule_info = f" [rule: {node.production_rule}]" if node.production_rule else ""
+
+        if not self.is_non_terminal(node.NT):  # If the node is a terminal, print it as a leaf
+            print(f"{indent}Leaf(Terminal='{node.NT}'){rule_info}")
+            return
+        print(f"{indent}Node(NT='{node.NT}'){rule_info}")
+        for child in node.children:
+            if isinstance(child, Node):
+                self.print_individual_tree(child, level + 1)
+            else:
+                print(f"{'  ' * (level + 1)}Leaf(Terminal='{child}')")
+
+    def print_individual(self, individual: TreeGEIndividual):
         """
-        Fitness function that evaluates a single individual.
+        Prints information about a single individual.
         """
-        pass
-    # @abstractmethod
-    def selection(self) -> Any:
-        """
-        Implementation of the selection mechanism.
-        Commonly returns an individual object or the position
-        of an individual in the population.
-        """
-        pass
-    # @abstractmethod
-    def predict(self) -> Any:
-        """
-        The respective prediction method is implemented here.
-        """
-        pass
-    # @abstractmethod
-    def expression(self) -> Any:
-        """
-        Returns a human-readable solution of a evolved candidate solution.
-        Return value can be a string or a list of strings.
-        """
-        pass
+        expression_str = self.expression(individual.lin_genome)
+        print(f"Expression: {' '.join(expression_str)} : Fitness: {individual.fitness}")
+
+    def is_non_terminal(self, symbol: str) -> bool:
+        return symbol.startswith('<') and symbol.endswith('>')  # non-terminals are enclosed in angle brackets
+
+    def parse_production(self, production: str) -> list:
+            """
+            Parses a production rule into its components (terminals and non-terminals).
+
+            :param production: A string representing a production rule in the grammar.
+            :return: A list of symbols (terminals and non-terminals) parsed from the production rule.
+            """
+            if not production or not production.strip():
+                return []
+            # pattern = re.compile(r'<[^<> ]+>|[A-Za-z_]+|[(),.]')
+            pattern = re.compile(r'<[^<> ]+>|\d+|[A-Za-z_]+|[(),.]')
+            return pattern.findall(production)        
 
     # abstract
     def is_valid(self, genome:GPIndividual) -> bool:
