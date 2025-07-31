@@ -53,8 +53,11 @@ config = CGPConfig(
     num_function_nodes=50,
     report_interval=1,
     max_time=60,
+    global_seed=42,
+    checkpoint_interval=10,
+    checkpoint_dir='examples/checkpoint',
+    experiment_name='pl_ge'
 )
-config.init()
 
 hyperparameters = CGPHyperparameters(
     mu=1,
@@ -66,8 +69,8 @@ hyperparameters = CGPHyperparameters(
 )
 
 problem = PolicySearch(env=env, ideal_=100, minimizing_=False)
-cgp = TinyCGP(problem, functions, terminals, config, hyperparameters)
-policy = cgp.evolve()
+cgp = TinyCGP(functions, terminals, config, hyperparameters)
+policy = cgp.evolve(problem)
 
 env.close()
 
