@@ -94,9 +94,11 @@ class GPConfig(Config):
     num_outputs: int
     report_interval: int
     max_time: int
-    checkpoint_interval: int
-    checkpoint_dir: str
-    experiment_name: str
+    constraints: Callable[[Any], float] = lambda x: 0.0
+    checkpointing: bool = False
+    checkpoint_interval: int = 0
+    checkpoint_dir: str = ""
+    experiment_name: str = ""
 
     constraints: Callable[[Any], float] = lambda x: 0.0
 
@@ -219,7 +221,6 @@ class GPState:
 
 
 class Checkpointer:
-    """ """
 
     hyperparameters: Hyperparameters
     config: GPConfig
@@ -267,7 +268,7 @@ class Checkpointer:
         path = os.path.join(self.config.checkpoint_dir, dir_name)
 
         if not os.path.exists(path):
-            os.mkdir(path)
+            os.makedirs(path)
 
         return path
 
@@ -422,11 +423,12 @@ class GPModel(ABC):
                     report_interval=self.config.report_interval,
                 )
 
-                if (
-                    self.generation_number > 0
-                    and self.generation_number % self.config.checkpoint_interval == 0
-                ):
-                    self.checkpointer.write(self.state())
+                if self.config.checkpointing:
+                    if (
+                        self.generation_number > 0
+                        and self.generation_number % self.config.checkpoint_interval == 0
+                    ):
+                        self.checkpointer.write(self.state())
 
                 if problem.is_ideal(best_gen_fitness):
                     if not self.config.silent_algorithm:
@@ -493,8 +495,7 @@ class GPModel(ABC):
             evaluations=self.num_evaluations,
         )
 
-    def resume(self, checkpoint_file, problem):
-        checkpoint = self.checkpointer.load(checkpoint_file)
+    def resume(self, checkpoint, problem):
         self.generation_number = checkpoint["generation"]
         self.num_evaluations = checkpoint["evaluations"]
         population = checkpoint["population"]
