@@ -39,7 +39,7 @@ config = CGPConfig(
     max_time=60,
     global_seed=42,
     checkpoint_interval=10,
-    checkpoint_dir='examples/checkpoint',
+    checkpoint_dir='checkpoint',
     experiment_name='sr_cgp'
 )
 
@@ -47,6 +47,7 @@ hyperparameters = CGPHyperparameters(
     mu=1,
     lmbda=32,
     population_size=33,
+    num_function_nodes=10,
     levels_back=len(terminals),
     mutation_rate=0.1,
     strict_selection=True,
