@@ -12,13 +12,12 @@ no serious benchmark. It only serves as an example for SR as an application
 domain for TinyverseGP:
 """
 
-from src.gp.tiny_ge import *
 from src.gp.tiny_3ge import *
-from src.gp.test import *
 from src.gp.functions import *
 from src.gp.loss import *
 from src.gp.problem import BlackBox
 from src.benchmark.symbolic_regression.sr_benchmark import SRBenchmark
+from src.gp.tinyverse import GPConfig
 
 config = GPConfig(
     num_jobs=1,
@@ -31,57 +30,53 @@ config = GPConfig(
     minimalistic_output=True,
     num_outputs=1,
     report_interval=1,
-    max_time=60
+    max_time=200,
+    global_seed=42,
+    checkpoint_interval=10,
+    checkpoint_dir='examples/checkpoint',
+    experiment_name='sr_3ge'
 )
 
 hyperparameters = TreeGEHyperparameters(
     pop_size=100,
-    genome_length=60,
+    min_depth=4,
+    max_depth=8,
     codon_size=1000,
-    max_depth=6,
     cx_rate=0.9,
     mutation_rate=0.1,
-    tournament_size=4,
-    penalty_value=99999
+    tournament_size=2,
+    penalty_value=99999,
 )
 
 loss = absolute_distance
 benchmark = SRBenchmark()
-data, actual = benchmark.generate('KOZA1')
+data, actual = benchmark.generate("KOZA1")
 functions = [ADD, SUB, MUL, DIV]
-arguments = ['x']
+arguments = ["x"]
 # grammar = {
-#     '<expr>': ['<expr> + <expr>', '<expr> - <expr>', '<expr> * <expr>', '(<expr>)', '<d>', '<d>.<d><d>', 'x'],    # Also possible 
+#     '<expr>': ['<expr> + <expr>', '<expr> - <expr>', '<expr> * <expr>', '(<expr>)', '<d>', '<d>.<d><d>', 'x'],    # Also possible
 #     '<d>': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 # }
 grammar = {
-    '<expr>': [
-        'ADD(<expr>, <expr>)', 'SUB(<expr>, <expr>)', 'MUL(<expr>, <expr>)', 'DIV(<expr>, <expr>)', 
-        '<d>', '<d>.<d><d>', '<var>'
+    "<expr>": [
+        "ADD(<expr>, <expr>)",
+        "SUB(<expr>, <expr>)",
+        "MUL(<expr>, <expr>)",
+        "DIV(<expr>, <expr>)",
+        "<d>",
+        "<d>.<d><d>",
+        "<var>",
     ],
-    '<d>': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-    '<var>': ['x']
-}
-
+    "<d>": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+    "<var>": ["x"],
+    }
 
 
 problem = BlackBox(data, actual, loss, 1e-6, True)
 
-ge = Tiny3GE(problem, functions, grammar, arguments, config, hyperparameters)
+tree_ge = Tiny3GE(functions, grammar, arguments, config, hyperparameters)
 
+tree_ge.evolve(problem)
 
-# print("initial tree:--------------------------------------------------------------------------------------------------------------------")
-# ge.print_individual(ge.population[0].genome, level=1)
-# print("second tree:--------------------------------------------------------------------------------------------------------------------")
-# ge.print_individual(ge.population[1].genome,level=1)
-# print("mutated tree:--------------------------------------------------------------------------------------------------------------------")
-# ge.print_individual(ge.crossover(ge.population[0],ge.population[1]).genome, level=1)
-
-ge.print_population(ge.population)
-
-ge.evolve()
-
-ge.print_individual_tree(ge.best_individual.genome, level=0)
-print(ge.best_individual.lin_genome)
-print(ge.best_individual.fitness)
-ge.print_individual(ge.best_individual)
+tree_ge.print_individual_tree(tree_ge.best_individual.genome)
+tree_ge.print_individual(tree_ge.best_individual)
