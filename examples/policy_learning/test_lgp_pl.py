@@ -18,7 +18,7 @@ Observation space: Box([ -2.5 -2.5 -10. -10. -6.2831855 -10. -0. -0. ],
 from math import sqrt, pi
 from gymnasium.wrappers import FlattenObservation
 
-from src.gp.tiny_tgp import *
+from src.gp.tiny_lgp import *
 from src.gp.functions import *
 from src.gp.problem import PolicySearch
 import warnings
@@ -40,38 +40,38 @@ terminals = [Var(i) for i in range(NUM_INPUTS)] + [
     Const(0.5),
 ]
 
-config = GPConfig(
-    num_jobs=1,
-    max_generations=10,
-    stopping_criteria=300,
-    minimizing_fitness=False,
-    ideal_fitness=300,
-    silent_algorithm=False,
-    silent_evolver=False,
-    minimalistic_output=True,
-    num_outputs=4,
-    report_interval=1,
-    max_time=60,
-    global_seed=42,
-    checkpoint_interval=100,
-    checkpoint_dir='examples/checkpoint',
-    experiment_name='pl_tgp'
-)
-
-hyperparameters = TGPHyperparameters(
-    pop_size=10,
-    max_size=25,
-    max_depth=5,
-    cx_rate=0.9,
-    mutation_rate=0.3,
-    tournament_size=2,
-    erc=False
+hyperparameters = LGPHyperparameters(
+        mu=30,
+        probability_mutation=0.3,
+        branch_probability=0.0,
+        p_register=0.5,
+        max_len = 30,
+        erc = False,
+        default_value = 0.0
+    )
+config = LGPConfig(
+        num_jobs=1,
+        max_generations=300 - hyperparameters.mu,
+        stopping_criteria=100,
+        minimizing_fitness=False,
+        ideal_fitness=100,
+        silent_algorithm=False,
+        silent_evolver=False,
+        minimalistic_output=True,
+        report_interval=5,
+        max_time=500,
+        num_outputs=4,
+        num_registers=6,
+        global_seed=13,
+        checkpoint_interval=100,
+        checkpoint_dir="checkpoints",
+        experiment_name="my_experiment",
 )
 
 problem = PolicySearch(env=env, ideal_=300, minimizing_=False)
-tgp = TinyTGP(functions, terminals, config, hyperparameters)
-policy = tgp.evolve(problem)
+lgp = TinyLGP(functions, terminals, config, hyperparameters)
+policy = lgp.evolve(problem)
 
 env = gym.make("LunarLander-v3", render_mode="human")
 problem = PolicySearch(env=env, ideal_=100, minimizing_=False)
-problem.evaluate(policy.genome, tgp, num_episodes=1, wait_key=True)
+problem.evaluate(policy.genome, lgp, num_episodes=1, wait_key=True)

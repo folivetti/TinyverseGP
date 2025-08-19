@@ -17,15 +17,20 @@ from src.gp.functions import *
 from src.gp.loss import *
 from src.gp.problem import BlackBox
 from src.benchmark.symbolic_regression.sr_benchmark import SRBenchmark
+from src.gp.tinyverse import GPConfig, Var, Const
+
 
 def number_divs(individual):
     """Count the number of divisions in an individual."""
     return len([count_divs(node) for node in individual])
+
+
 def count_divs(node):
     """Count the number of divisions in an individual."""
     if node.function == DIV:
         return 1 + sum(count_divs(child) for child in node.children)
     return sum(count_divs(child) for child in node.children)
+
 
 config = GPConfig(
     num_jobs=1,
@@ -40,6 +45,10 @@ config = GPConfig(
     report_interval=1,
     max_time=60,
     constraints = lambda x: max(0, number_divs(x) - 1),
+    global_seed=42,
+    checkpoint_interval=10,
+    checkpoint_dir='checkpoint',
+    experiment_name='sr_tgp'
 )
 
 hyperparameters = TGPHyperparameters(
@@ -50,16 +59,17 @@ hyperparameters = TGPHyperparameters(
     mutation_rate=0.3,
     tournament_size=2,
     penalization_complexity_factor=0.1,
+    erc=False
 )
 
 loss = absolute_distance
 benchmark = SRBenchmark()
-data, actual = benchmark.generate('KOZA1')
+data, actual = benchmark.generate("KOZA1")
 functions = [ADD, SUB, MUL, DIV]
 terminals = [Var(0), Const(1)]
 
 problem = BlackBox(data, actual, loss, 1e-6, True)
 
-tgp = TinyTGP(problem, functions, terminals, config, hyperparameters)
-best = tgp.evolve()
+tgp = TinyTGP(functions, terminals, config, hyperparameters)
+best = tgp.evolve(problem)
 tgp.print_individual(tgp.best_individual)

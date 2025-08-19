@@ -12,7 +12,7 @@ https://dl.acm.org/doi/10.1145/3594805.3607131
 """
 
 from src.benchmark.logic_synthesis.ls_benchmark import LSBenchmark
-from src.gp.tiny_tgp import *
+from src.gp.tiny_lgp import *
 from src.gp.functions import *
 from src.gp.loss import *
 from src.gp.problem import BlackBox
@@ -26,32 +26,32 @@ num_outputs = benchmark.benchmark.num_outputs
 functions = [AND, OR, NAND, NOR]
 terminals = [Var(i) for i in range(num_inputs)]
 
-config = GPConfig(
-    num_jobs=1,
-    max_generations=100,
-    stopping_criteria=1e-6,
-    minimizing_fitness=True,  # this should be used from the problem instance
-    ideal_fitness=1e-6,  # this should be used from the problem instance
-    silent_algorithm=False,
-    silent_evolver=False,
-    minimalistic_output=True,
-    num_outputs=num_outputs,
-    report_interval=1,
-    max_time=60,
-    global_seed=42,
-    checkpoint_interval=10,
-    checkpoint_dir='examples/checkpoint',
-    experiment_name='logic_tgp'
+hyperparameters = LGPHyperparameters(
+    mu=1000,
+    probability_mutation=0.3,
+    branch_probability=0.2,
+    max_len = 8,
+    p_register = 0.5,
+    erc = False,
+    default_value = 0.0
 )
-
-hyperparameters = TGPHyperparameters(
-    pop_size=100,
-    max_size=25,
-    max_depth=5,
-    cx_rate=0.9,
-    mutation_rate=0.3,
-    tournament_size=2,
-    erc=False
+config = LGPConfig(
+        num_jobs=1,
+        max_generations=10000 - hyperparameters.mu,
+        stopping_criteria=1e-6,
+        minimizing_fitness=True,
+        ideal_fitness=1e-6,
+        silent_algorithm=False,
+        silent_evolver=False,
+        minimalistic_output=True,
+        report_interval=hyperparameters.mu,
+        max_time=500,
+        num_outputs=num_outputs,
+        num_registers=num_outputs+4,
+        global_seed=42,
+        checkpoint_interval=100,
+        checkpoint_dir="checkpoints",
+        experiment_name="logic_lgp",
 )
 
 loss = hamming_distance_bitwise
@@ -59,5 +59,5 @@ data = truth_table.inputs
 actual = truth_table.outputs
 problem = BlackBox(data, actual, loss, 0, True)
 
-tgp = TinyTGP(functions, terminals, config, hyperparameters)
+tgp = TinyLGP(functions, terminals, config, hyperparameters)
 tgp.evolve(problem)

@@ -38,7 +38,11 @@ config = GPConfig(
     minimalistic_output=True,
     num_outputs=4,
     report_interval=1,
-    max_time=60
+    max_time=60,
+    global_seed=42,
+    checkpoint_interval=10,
+    checkpoint_dir='examples/checkpoint',
+    experiment_name='pl_ge'
 )
 
 hyperparameters = GEHyperparameters(
@@ -48,26 +52,46 @@ hyperparameters = GEHyperparameters(
     cx_rate=0.9,
     mutation_rate=0.1,
     tournament_size=2,
-    penalty_value=-99999
+    penalty_value=-99999,
 )
 
 problem = PolicySearch(env=env, ideal_=300, minimizing_=False)
 
 functions = [ADD, SUB, MUL, DIV, AND, OR, NAND, NOR, NOT, IF, LT, GT]
-arguments = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']  # Inputs for the functions
+arguments = ["a", "b", "c", "d", "e", "f", "g", "h"]  # Inputs for the functions
 grammar = {
-    '<expr>': [
-        'ADD(<expr>, <expr>)', 'SUB(<expr>, <expr>)', 'MUL(<expr>, <expr>)', 'DIV(<expr>, <expr>)',
-        'AND(<expr>, <expr>)', 'OR(<expr>, <expr>)', 'NAND(<expr>, <expr>)', 'NOR(<expr>, <expr>)', 
-        'NOT(<expr>)', 'IF(<expr>, <expr>, <expr>)', 'LT(<expr>, <expr>)', 'GT(<expr>, <expr>)',
-        '<d>', '<d>.<d><d>', '1.414', '3.141', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'
+    "<expr>": [
+        "ADD(<expr>, <expr>)",
+        "SUB(<expr>, <expr>)",
+        "MUL(<expr>, <expr>)",
+        "DIV(<expr>, <expr>)",
+        "AND(<expr>, <expr>)",
+        "OR(<expr>, <expr>)",
+        "NAND(<expr>, <expr>)",
+        "NOR(<expr>, <expr>)",
+        "NOT(<expr>)",
+        "IF(<expr>, <expr>, <expr>)",
+        "LT(<expr>, <expr>)",
+        "GT(<expr>, <expr>)",
+        "<d>",
+        "<d>.<d><d>",
+        "1.414",
+        "3.141",
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
     ],
-    '<d>': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
+    "<d>": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
 }
 
-ge = TinyGE(problem, functions, grammar, arguments, config, hyperparameters)
-policy = ge.evolve()
+ge = TinyGE(functions, grammar, arguments, config, hyperparameters)
+policy = ge.evolve(problem)
 
 env = gym.make("LunarLander-v3", render_mode="human")
 problem = PolicySearch(env=env, ideal_=100, minimizing_=False)
-problem.evaluate(policy, ge, num_episodes=1, wait_key=True)
+problem.evaluate(policy.genome, ge, num_episodes=1, wait_key=True)

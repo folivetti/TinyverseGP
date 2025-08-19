@@ -17,6 +17,7 @@ from src.gp.functions import *
 from src.gp.loss import *
 from src.gp.problem import BlackBox
 from src.benchmark.symbolic_regression.sr_benchmark import SRBenchmark
+from src.gp.tinyverse import GPConfig
 from src.hpo.hpo import SMACInterface
 
 
@@ -31,7 +32,11 @@ config = GPConfig(
     minimalistic_output=True,
     num_outputs=1,
     report_interval=1,
-    max_time=60
+    max_time=60,
+    global_seed=42,
+    checkpoint_interval=10,
+    checkpoint_dir='examples/checkpoint',
+    experiment_name='sr_cgp'
 )
 
 hyperparameters = TGPHyperparameters(
@@ -40,25 +45,27 @@ hyperparameters = TGPHyperparameters(
     max_depth=5,
     cx_rate=0.9,
     mutation_rate=0.3,
-    tournament_size=2
+    tournament_size=2,
+    erc=True
 )
 
 loss = absolute_distance
 benchmark = SRBenchmark()
-data, actual = benchmark.generate('KOZA1')
+data, actual = benchmark.generate("KOZA1")
 functions = [ADD, SUB, MUL, DIV]
 terminals = [Var(0), Const(1)]
 trials = 25
 
 problem = BlackBox(data, actual, loss, 1e-6, True)
-cgp = TinyTGP(problem, functions, terminals, config, hyperparameters)
+tgp = TinyTGP(functions, terminals, config, hyperparameters)
+
 interface = SMACInterface()
 
 ## Perform HPO via SMAC
-opt_hyperparameters = interface.optimise(cgp,trials)
+opt_hyperparameters = interface.optimise(tgp,trials)
 print(opt_hyperparameters)
 
 config.silent_algorithm=False
 config.silent_evolver=False
-cgp = TinyTGP(problem, functions, terminals, config, opt_hyperparameters)
-cgp.evolve()
+tgp = TinyTGP(functions, terminals, config, opt_hyperparameters)
+tgp.evolve(problem)
