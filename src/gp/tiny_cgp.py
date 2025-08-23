@@ -28,6 +28,9 @@ class CGPHyperparameters(Hyperparameters):
     strict_selection: bool
     mutation_rate: float = None
     mutation_rate_genes: int = None
+    crossover_rate: float = 0.9
+    operator: str = "subgraph_crossover"
+    tournament_size: int = 9
 
     def __post_init__(self):
         Hyperparameters.__post_init__(self)
@@ -498,7 +501,7 @@ class TinyCGP(GPModel):
             paths.append(path)
         return paths
 
-    def breed(self, parent: CGPIndividual = None):
+    def breed(self, best_individual: CGPIndividual):
         """
         Breeds lambda individuals with point mutation
         and adds them to the population.
@@ -509,12 +512,29 @@ class TinyCGP(GPModel):
 
         :param parent: Individual selected to be the parent
         """
-        self.population.clear()
-        self.population.append(parent)
-        for _ in range(self.hyperparameters.lmbda):
-            offspring = CGPIndividual(parent.genome.copy())
-            self.mutation(offspring.genome)
-            self.population.append(offspring)
+        parent = best_individual
+
+        if self.hyperparameters.operator == "mutation":
+            # Selection of a parent if necessary
+            if not self.hyperparameters.strict_selection:
+                parent = self.selection()
+
+            self.population.clear()
+            self.population.append(parent)
+            for _ in range(self.hyperparameters.lmbda):
+                offspring = CGPIndividual(parent.genome.copy())
+                self.mutation(offspring.genome)
+                self.population.append(offspring)
+        elif self.hyperparameters.operator == "subgraph_crossover":
+            parents = [[self.tournament_selection(), self.tournament_selection()] for i in range(self.hyperparameters.population_size-1)]
+            self.population = [self.subgraph_crossover(par[0], par[1]) if random.random() <= self.hyperparameters.crossover_rate else CGPIndividual(par[0].copy()) for par in parents]
+            for ind in self.population:
+                self.mutation(ind.genome)
+            self.population.append(CGPIndividual(best_individual.genome, best_individual.fitness))
+        else:
+            raise ValueError(f"Unknown operator: {self.hyperparameters.operator}")
+
+
 
     def selection(self) -> list:
         """
@@ -540,6 +560,19 @@ class TinyCGP(GPModel):
         else:
             parent = 0
         return sorted_pop[parent]
+    
+    def tournament_selection(self) -> list[int]:
+        """
+        Performs tournament selection to select a parent for crossover.
+
+        :return: Selected individual's genome
+        """
+
+        parents = [random.choice(self.population) for i in range(self.hyperparameters.tournament_size)]
+
+        if self.problem.minimizing:
+            return min(parents, key=lambda ind : ind.fitness).genome
+        return max(parents, key=lambda ind : ind.fitness).genome
 
     def mutation(self, genome: list[int]):
         """
@@ -556,6 +589,125 @@ class TinyCGP(GPModel):
                 genome[gene_pos] = self.init_gene(gene_pos)
         else:
             raise ValueError("The mutation_rate must be set")
+        
+    def subgraph_crossover(self, genome1: list[int], genome2: list[int]) -> CGPIndividual:
+        """
+        Performs subgraph crossover.
+
+        :param genome1: Genome of the first parent
+        :param genome2: Genome of the second parent
+        :return: Offspring
+        """
+        # Lists storing the node numbers of the active nodes of the first and second parent respectively
+        m_1 = self.active_nodes(genome1)
+        m_2 = self.active_nodes(genome2)
+        
+        if len(m_1) == 0 and len(m_2) != 0: return CGPIndividual(genome2.copy())
+        if len(m_2) == 0 and len(m_1) != 0: return CGPIndividual(genome1.copy())
+        if len(m_1) == 0 or len(m_2) != 0: return CGPIndividual(genome2.copy())
+        
+        # Randomly choose one crossover point in each parent in the range of the active nodes
+        c_1 = random.choice(m_1)
+        c_2 = random.choice(m_2)
+
+        # 1. Define a general crossover point
+        c = min(c_1, c_2)
+
+        # 2. Copy the genetic material in front of the crossover point
+        offspring = CGPIndividual(genome1[:self.node_position(c) + self.config.max_arity + 1])
+
+        # 3. Copy the genetic material behind the crossover point
+        offspring.genome.extend(genome2[self.node_position(c) + self.config.max_arity + 1:])
+
+        # print(f"offspring after step 3: {offspring.genome}")
+
+        # Active nodes of subgraph 1 and subgraph 2
+        s_1_active = []
+        s_2_active = []
+
+        ind = 0
+        while ind < len(m_1) and m_1[ind] <= c:
+            s_1_active.append(m_1[ind])
+            ind += 1
+
+        ind = len(m_2) - 1
+        while ind >= 0 and m_2[ind] > c:
+            s_2_active.insert(0, m_2[ind])
+            ind -= 1
+
+        if len(s_1_active) == 0 or len(s_2_active) == 0: return CGPIndividual(genome1) if random.choice([0, 1]) == 1 else CGPIndividual(genome2)
+
+        # 4.1 Neighborhood connect - Adjust the connection gene of the first active node behind the crossover point
+        if self.config.num_outputs == 1:
+            first_active_pos = self.node_position(s_2_active[0])
+            offspring.genome[first_active_pos + 1] = s_1_active[-1]
+
+        # 4.2 Random active connect - Adjust the remaining connection genes behind the crossover point
+        permissible_nodes = list(range(self.config.num_inputs))
+        permissible_nodes.extend(s_1_active)
+        permissible_nodes.extend(s_2_active)
+
+        # Iterate over all connection genes of active nodes of s2
+        for i, node in enumerate(s_2_active):
+            for j in range(self.config.max_arity):
+                offspring.genome[self.node_position(node) + 1 + j] = random.choice(permissible_nodes[:self.config.num_inputs + len(s_1_active) + i])
+
+        if self.config.num_outputs > 1:
+            for output in self.get_outputs(offspring.genome):
+                for i in range(self.config.max_arity):
+                    offspring.genome[self.node_position(node) + 1 + i] = random.choice(permissible_nodes)
+
+        # print(f"offspring after step 4: {offspring.genome}")
+
+        return offspring
+    
+    def discrete_recombination(self, genome1: list[int], genome2: list[int]) -> tuple[CGPIndividual, CGPIndividual]:
+        """
+        Performs discrete recombination.
+
+        :param genome1: Genome of the first parent
+        :param genome2: Genome of the second parent
+        :return: Two offspring individuals
+        """
+        offspring1 = CGPIndividual(genome1.copy())
+        offspring2 = CGPIndividual(genome2.copy())
+
+        # Lists storing each parent's active node numbers
+        m_1 = self.active_nodes(genome1)
+        m_2 = self.active_nodes(genome2)
+
+        # Number of active nodes in each parent
+        m_1_len = len(m_1)
+        m_2_len = len(m_2)
+
+        # Determine the min and max number of active function nodes
+        min_active = min(m_1_len, m_2_len)
+        max_active = max(m_1_len, m_2_len)
+
+        i = 0
+        while i < min_active:
+            if random.choice([0, 1]) == 1:
+                if i == min_active - 1 and m_1_len != m_2_len:
+                    random_offset = random.choice(range(0, max_active - i))
+                    if m_1_len < m_2_len:
+                        node1 = m_1[i]
+                        node2 = m_2[i + random_offset]
+                    else:
+                        node1 = m_1[i + random_offset]
+                        node2 = m_2[i]
+                else:
+                    node1 = m_1[i]
+                    node2 = m_2[i]
+                
+                #print(f"Before swap: {offspring1.genome}")
+                #print(f"Gene Type: {self.phenotype(offspring1.genome[self.node_position(node1)])}")
+                offspring1.genome[self.node_position(node1)], offspring2.genome[self.node_position(node2)] = self.node_function(node2, offspring2.genome), self.node_function(node1, offspring1.genome)
+
+                #print(f"After swap:  {offspring1.genome}\n")
+            i += 1
+
+        return offspring1, offspring2
+
 
     def expression(self, genome: list[int]) -> list[str]:
         """
@@ -631,13 +783,9 @@ class TinyCGP(GPModel):
             best_individual = self.evaluate()
             best_fitness = best_fitness_job = best_individual.fitness
             for generation in range(self.config.max_generations):
-                # Selection of a parent if necessary
-                parent = best_individual
-                if not self.hyperparameters.strict_selection:
-                    parent = self.selection()
 
                 # Population breeding
-                self.breed(parent)
+                self.breed(best_individual)
 
                 # Evaluation of the offspring
                 best_gen = self.evaluate()

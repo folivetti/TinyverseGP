@@ -68,5 +68,5 @@ env.close()
 
 env = gym.make("LunarLander-v3", render_mode="human")
 problem = PolicySearch(env=env, ideal_=100, minimizing_=False)
-problem.evaluate(policy, cgp, num_episodes=1, wait_key=True)
+problem.evaluate(policy.genome, cgp, num_episodes=1, wait_key=True)
 env.close()
