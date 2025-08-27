@@ -29,7 +29,7 @@ class CGPHyperparameters(Hyperparameters):
     mutation_rate: float = None
     mutation_rate_genes: int = None
     crossover_rate: float = 0.9
-    operator: str = "subgraph_crossover"
+    operator: str = "discrete_recombination"
     tournament_size: int = 9
 
     def __post_init__(self):
@@ -526,8 +526,18 @@ class TinyCGP(GPModel):
                 self.mutation(offspring.genome)
                 self.population.append(offspring)
         elif self.hyperparameters.operator == "subgraph_crossover":
-            parents = [[self.tournament_selection(), self.tournament_selection()] for i in range(self.hyperparameters.population_size-1)]
+            parents = [[self.tournament_selection(), self.tournament_selection()] for i in range(self.hyperparameters.population_size - 1)]
             self.population = [self.subgraph_crossover(par[0], par[1]) if random.random() <= self.hyperparameters.crossover_rate else CGPIndividual(par[0].copy()) for par in parents]
+            for ind in self.population:
+                self.mutation(ind.genome)
+            self.population.append(CGPIndividual(best_individual.genome, best_individual.fitness))
+        elif self.hyperparameters.operator == "discrete_recombination":
+            parents = [[self.tournament_selection(), self.tournament_selection()] for i in range(self.hyperparameters.population_size // 2)]
+            if self.hyperparameters.population_size % 2 != 0:
+                self.population = [self.discrete_recombination(par[0], par[1])[i] for par in parents for i in range(2)]
+            else:
+                self.population = [self.discrete_recombination(par[0], par[1])[i] for par in parents[:-1] for i in range(2)]
+                self.population.append(self.discrete_recombination(parents[-1][0], parents[-1][1])[0])
             for ind in self.population:
                 self.mutation(ind.genome)
             self.population.append(CGPIndividual(best_individual.genome, best_individual.fitness))
@@ -619,8 +629,6 @@ class TinyCGP(GPModel):
         # 3. Copy the genetic material behind the crossover point
         offspring.genome.extend(genome2[self.node_position(c) + self.config.max_arity + 1:])
 
-        # print(f"offspring after step 3: {offspring.genome}")
-
         # Active nodes of subgraph 1 and subgraph 2
         s_1_active = []
         s_2_active = []
@@ -656,8 +664,6 @@ class TinyCGP(GPModel):
             for output in self.get_outputs(offspring.genome):
                 for i in range(self.config.max_arity):
                     offspring.genome[self.node_position(node) + 1 + i] = random.choice(permissible_nodes)
-
-        # print(f"offspring after step 4: {offspring.genome}")
 
         return offspring
     
@@ -699,11 +705,8 @@ class TinyCGP(GPModel):
                     node1 = m_1[i]
                     node2 = m_2[i]
                 
-                #print(f"Before swap: {offspring1.genome}")
-                #print(f"Gene Type: {self.phenotype(offspring1.genome[self.node_position(node1)])}")
                 offspring1.genome[self.node_position(node1)], offspring2.genome[self.node_position(node2)] = self.node_function(node2, offspring2.genome), self.node_function(node1, offspring1.genome)
 
-                #print(f"After swap:  {offspring1.genome}\n")
             i += 1
 
         return offspring1, offspring2
