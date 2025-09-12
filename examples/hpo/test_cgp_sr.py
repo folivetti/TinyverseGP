@@ -37,7 +37,9 @@ hyperparameters = CGPHyperparameters(
     population_size=33,
     levels_back=len(terminals),
     mutation_rate=0.1,
-    strict_selection=True
+    strict_selection=True,
+    cx_rate = 0.9,
+    tournament_size = 7
 )
 config.init()
 

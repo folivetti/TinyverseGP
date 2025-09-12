@@ -28,9 +28,9 @@ class CGPHyperparameters(Hyperparameters):
     strict_selection: bool
     mutation_rate: float = None
     mutation_rate_genes: int = None
-    crossover_rate: float = 0.9
+    cx_rate: float
     operator: str = "discrete_recombination"
-    tournament_size: int = 9
+    tournament_size: int
 
     def __post_init__(self):
         Hyperparameters.__post_init__(self)
@@ -38,6 +38,8 @@ class CGPHyperparameters(Hyperparameters):
         self.space["lmbda"] = (1, 1024)
         self.space["strict_selection"] = [True, False]
         self.space["mutation_rate"] = (0.0, 1.0)
+        self.space["cx_rate"] = (0.0, 1.0)
+        self.space["tournament_size"] = (2, 9)
 
 @dataclass(kw_only=True)
 class CGPConfig(GPConfig):
@@ -527,7 +529,7 @@ class TinyCGP(GPModel):
                 self.population.append(offspring)
         elif self.hyperparameters.operator == "subgraph_crossover":
             parents = [[self.tournament_selection(), self.tournament_selection()] for i in range(self.hyperparameters.population_size - 1)]
-            self.population = [self.subgraph_crossover(par[0], par[1]) if random.random() <= self.hyperparameters.crossover_rate else CGPIndividual(par[0].copy()) for par in parents]
+            self.population = [self.subgraph_crossover(par[0], par[1]) if random.random() <= self.hyperparameters.cx_rate else CGPIndividual(par[0].copy()) for par in parents]
             for ind in self.population:
                 self.mutation(ind.genome)
             self.population.append(CGPIndividual(best_individual.genome, best_individual.fitness))
