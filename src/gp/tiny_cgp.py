@@ -43,10 +43,6 @@ class CGPHyperparameters(Hyperparameters):
 
     def __post_init__(self):
         Hyperparameters.__post_init__(self)
-        self.space["mu"] = (1, 4)
-        self.space["lmbda"] = (1, 1024)
-        self.space["num_function_nodes"] = (1, 10000)
-        self.space["strict_selection"] = [True, False]
         self.space["mutation_rate"] = (0.0, 1.0)
 
 
@@ -636,7 +632,7 @@ class TinyCGP(GPModel):
 
         parents = [random.choice(self.population) for i in range(self.hyperparameters.tournament_size)]
 
-        if self.problem.minimizing:
+        if self.config.minimizing_fitness:
             return min(parents, key=lambda ind : ind.fitness).genome
         return max(parents, key=lambda ind : ind.fitness).genome
 

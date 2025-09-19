@@ -56,6 +56,8 @@ hyperparameters = CGPHyperparameters(
     mutation_rate=0.1,
     num_function_nodes=30,
     strict_selection=False,
+    cx_rate=0.9,
+    tournament_size=7
 )
 
 data = truth_table.inputs

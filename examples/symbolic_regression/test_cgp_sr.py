@@ -52,8 +52,7 @@ hyperparameters = CGPHyperparameters(
     mutation_rate=0.1,
     strict_selection=True,
     cx_rate = 0.9,
-    tournament_size = 7,
-    num_function_nodes = 10
+    tournament_size = 7
 )
 
 loss = absolute_distance

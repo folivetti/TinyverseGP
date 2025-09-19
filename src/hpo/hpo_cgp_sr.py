@@ -22,7 +22,7 @@ X, y = fetch_data(dataset, return_X_y=True)
 
 cgp_config = CGPConfig(
     num_jobs=1,
-    max_generations=100,
+    max_generations=200,
     stopping_criteria=1e-6,
     minimizing_fitness=True,
     ideal_fitness=1e-6,
@@ -34,45 +34,47 @@ cgp_config = CGPConfig(
     num_inputs=X.shape[1],
     num_outputs=1,
     report_interval=1,
-    max_time=60
+    max_time=600,
+    global_seed=42,
+    checkpoint_interval=10,
+    checkpoint_dir='examples/checkpoint',
+    experiment_name='sr_cgp'
 )
 
 
 cgp_hyperparams = CGPHyperparameters(
     mu=1,
-    lmbda=32,
-    population_size=33,
-    levels_back=len(terminals),
+    lmbda=99,
+    population_size=100,
+    levels_back=100,
     mutation_rate=0.1,
     strict_selection=True,
     cx_rate = 0.9,
     tournament_size = 4,
-    num_function_nodes = 10
+    num_function_nodes = 100
 )
 
-cgp_config.init() # Set the number of genes per node and the total number of genes
-
-loss = absolute_distance
 train_X, test_X, train_y, test_y = train_test_split(X, y, train_size=0.75)
-n_trials = 50
+n_trials = 10
 
 cgp = SRBench('CGP', cgp_config, cgp_hyperparams, functions=functions, terminals=terminals, scaling_=False)
 cgp.fit(train_X, train_y)
+problem = BlackBox(train_X, train_y, cgp.loss, 1e-16, True)
 interface = SMACInterface()
 
-opt_hyperparameters = interface.optimise(cgp.model, n_trials)
+
+opt_hyperparameters = interface.optimise(cgp.model, problem, n_trials)
 print(opt_hyperparameters)
 
+print("="*50)
 cgp_old = SRBench('CGP', cgp_config, cgp_hyperparams, functions=functions, terminals=terminals, scaling_=False)
 cgp_old.fit(test_X, test_y)
-print(cgp_old.model.expression(cgp_old.model.best_individual.genome))
 print(f"old cgp train score: {cgp_old.score(train_X, train_y)}")
 print(f"old cgp test score: {cgp_old.score(test_X, test_y)}")
 print("="*50)
 
 cgp = SRBench('CGP', cgp_config, opt_hyperparameters, functions=functions, terminals=terminals, scaling_=False)
 cgp.fit(test_X, test_y)
-print(cgp.model.expression(cgp.model.best_individual.genome))
 print(f"cgp train score: {cgp.score(train_X, train_y)}")
 print(f"cgp test score: {cgp.score(test_X, test_y)}")
 print("="*50)

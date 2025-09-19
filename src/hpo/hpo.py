@@ -18,7 +18,7 @@ class HPOInterface(ABC):
 
 class SMACInterface(HPOInterface):
 
-    def optimise(self, gpmodel_: GPModel, n_trials_=10) -> GPHyperparameters:
+    def optimise(self, gpmodel_: GPModel, problem, n_trials_=10) -> GPHyperparameters:
         """
         Runs HPO with SMAC (https://github.com/automl/SMAC3)
 
@@ -35,7 +35,7 @@ class SMACInterface(HPOInterface):
             for c in config.keys():
                 setattr(gpmodel.hyperparameters, c, config[c])
             print("Config applied:", {key: getattr(gpmodel.hyperparameters, key) for key in config.keys()})
-            gpmodel.evolve()
+            gpmodel.evolve(problem)
             return gpmodel.best_individual.fitness
 
         # Obtain the hyperparameter (HP) space from the GP model
@@ -45,7 +45,7 @@ class SMACInterface(HPOInterface):
         configspace = ConfigurationSpace(paramspace)
 
         # Scenario object specifying the optimization environment
-        scenario = Scenario(configspace, deterministic=False, n_trials=n_trials_)
+        scenario = Scenario(configspace, deterministic=False, n_trials=n_trials_, seed=-1)
 
         # Use SMAC to find the best configuration/hyperparameters
         smac = HyperparameterOptimizationFacade(scenario, train, overwrite=True)
