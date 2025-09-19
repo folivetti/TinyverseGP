@@ -19,29 +19,35 @@ def b2f(input: bool):
     """
     return 1.0 if input else -1.0
 
-def pdiv(x, y):
-    """
-    Performs a protected division.
-    """
-    return x / y if y > 0 else 1.0
+def pdiv(x, y, eps=1e-8):
+    return np.divide(x, y + (np.abs(y) < eps) * eps)
 
-def square(x):
-    return x*x
-def cube(x):
-    return x*x*x
+def square(x, clip=1e6):
+    x = np.clip(x, -clip, clip)
+    return x
+
+def cube(x, clip=1e6):
+    x = np.clip(x, -clip, clip)
+    return x
+
+
 def plog(x):
     if x == 0.0:
         return 0.0
     return np.log(np.abs(x))
+
 def psqrt(x):
     return np.sqrt(np.abs(x))
+
+def pexp(x, clip=50.0):
+    return np.exp(np.clip(x, -clip, clip))
 
 # Arithmetic Functions
 ADD  = Function(2, 'Add', operator.add)
 SUB  = Function(2, 'Sub', operator.sub, lambda x, y: x-y)
 MUL  = Function(2, 'Mul', operator.mul)
 DIV  = Function(2, 'Div', pdiv, lambda x, y: x/y)
-EXP  = Function(1, 'EXP', np.exp)
+EXP  = Function(1, 'EXP', pexp)
 LOG  = Function(1, 'LOG', plog)
 SQRT = Function(1, 'SQRT', psqrt)
 SQR  = Function(1, 'SQR', square)

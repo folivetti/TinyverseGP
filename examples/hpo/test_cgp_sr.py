@@ -1,6 +1,6 @@
 """
 Example script to perform HPO via SMAC for CGP on a simple (toy) symbolic regression problem.
-"""
+""" 
 
 from src.gp.tiny_cgp import *
 from src.gp.problem import BlackBox

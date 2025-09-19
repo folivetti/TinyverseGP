@@ -34,6 +34,7 @@ class SMACInterface(HPOInterface):
             gpmodel = copy.deepcopy(gpmodel_)
             for c in config.keys():
                 setattr(gpmodel.hyperparameters, c, config[c])
+            print("Config applied:", {key: getattr(gpmodel.hyperparameters, key) for key in config.keys()})
             gpmodel.evolve()
             return gpmodel.best_individual.fitness
 
@@ -44,10 +45,10 @@ class SMACInterface(HPOInterface):
         configspace = ConfigurationSpace(paramspace)
 
         # Scenario object specifying the optimization environment
-        scenario = Scenario(configspace, deterministic=True, n_trials=n_trials_)
+        scenario = Scenario(configspace, deterministic=False, n_trials=n_trials_)
 
         # Use SMAC to find the best configuration/hyperparameters
-        smac = HyperparameterOptimizationFacade(scenario, train)
+        smac = HyperparameterOptimizationFacade(scenario, train, overwrite=True)
         incumbent = smac.optimize()
 
         inc_hp = copy.deepcopy(gpmodel_.hyperparameters)

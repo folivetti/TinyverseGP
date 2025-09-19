@@ -35,7 +35,6 @@ config = CGPConfig(
     max_arity=2,
     num_inputs=1,
     num_outputs=1,
-    num_function_nodes=10,
     report_interval=1,
     max_time=60
 )
@@ -48,7 +47,8 @@ hyperparameters = CGPHyperparameters(
     mutation_rate=0.1,
     strict_selection=True,
     cx_rate = 0.9,
-    tournament_size = 7
+    tournament_size = 7,
+    num_function_nodes = 10
 )
 config.init()
 

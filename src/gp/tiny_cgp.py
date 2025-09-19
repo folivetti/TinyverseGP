@@ -31,6 +31,7 @@ class CGPHyperparameters(Hyperparameters):
     cx_rate: float
     operator: str = "discrete_recombination"
     tournament_size: int
+    num_function_nodes: int
 
     def __post_init__(self):
         Hyperparameters.__post_init__(self)
@@ -40,6 +41,7 @@ class CGPHyperparameters(Hyperparameters):
         self.space["mutation_rate"] = (0.0, 1.0)
         self.space["cx_rate"] = (0.0, 1.0)
         self.space["tournament_size"] = (2, 9)
+        self.space["num_function_nodes"] = (10, 100)
 
 @dataclass(kw_only=True)
 class CGPConfig(GPConfig):
@@ -48,7 +50,6 @@ class CGPConfig(GPConfig):
     """
     num_inputs: int
     num_outputs: int
-    num_function_nodes: int
     num_functions: int
     max_arity: int
     max_time: int
@@ -56,7 +57,6 @@ class CGPConfig(GPConfig):
 
     def init(self):
         self.genes_per_node = self.max_arity + 1
-        self.num_genes = (self.genes_per_node * self.num_function_nodes) + self.num_outputs
 
 
 class CGPIndividual(GPIndividual):
@@ -112,6 +112,7 @@ class TinyCGP(GPModel):
         self.hyperparameters = hyperparameters_
         self.inputs = dict()
         self.current_paths = None
+        self.config.num_genes = (self.config.genes_per_node * self.hyperparameters.num_function_nodes) + self.config.num_outputs
         self.init_inputs(terminals_)
         self.init_population()
 
@@ -174,7 +175,7 @@ class TinyCGP(GPModel):
         elif gene_type == self.GeneType.FUNCTION:
             return random.randint(0, self.config.num_functions - 1)
         else:
-            rand = random.randint(0, self.config.num_inputs + self.config.num_function_nodes - 1)
+            rand = random.randint(0, self.config.num_inputs + self.hyperparameters.num_function_nodes - 1)
             return rand
 
     def phenotype(self, position: int) -> GeneType:
@@ -184,7 +185,7 @@ class TinyCGP(GPModel):
         :param position: gene position in the genome
         :return: gene type
         """
-        if position >= self.config.num_function_nodes * (self.config.max_arity + 1):
+        if position >= self.hyperparameters.num_function_nodes * (self.config.max_arity + 1):
             return self.GeneType.OUTPUT
         else:
             return self.GeneType.FUNCTION if position % (self.config.max_arity + 1) == 0 \
@@ -387,10 +388,10 @@ class TinyCGP(GPModel):
         :param paths: Decoded paths of the graph
         :return: Set of predicted values
         """
-        max_idx = self.config.genes_per_node * self.config.num_function_nodes
+        max_idx = self.config.genes_per_node * self.hyperparameters.num_function_nodes
         step = self.config.genes_per_node
 
-        node_values = [None for i in range(self.config.num_function_nodes + self.config.num_inputs)]
+        node_values = [None for i in range(self.hyperparameters.num_function_nodes + self.config.num_inputs)]
         for i in range(self.config.num_inputs):
             if not self.terminals[i].const:
                 node_values[i] = observation[i]
@@ -614,9 +615,9 @@ class TinyCGP(GPModel):
         m_1 = self.active_nodes(genome1)
         m_2 = self.active_nodes(genome2)
         
-        if len(m_1) == 0 and len(m_2) != 0: return CGPIndividual(genome2.copy())
-        if len(m_2) == 0 and len(m_1) != 0: return CGPIndividual(genome1.copy())
-        if len(m_1) == 0 or len(m_2) != 0: return CGPIndividual(genome2.copy())
+        if len(m_1) == 0 and len(m_2) == 0: return CGPIndividual(genome1.copy())
+        if len(m_1) == 0: return CGPIndividual(genome2.copy())
+        if len(m_2) == 0: return CGPIndividual(genome1.copy())
         
         # Randomly choose one crossover point in each parent in the range of the active nodes
         c_1 = random.choice(m_1)

@@ -17,7 +17,7 @@ import numpy as np
 strfun = {'+': ADD, '-': SUB, '*': MUL, '/': DIV, 'exp': EXP, 'log': LOG, 'square' : SQR, 'cube' : CUBE}
 
 class SRBench(RegressorMixin):
-    def __init__(self,  representation, config, hyperparameters, functions=['+','-','*','/','exp','log','square','cube'], terminals=[1,0.5,np.pi, np.sqrt(2)], scaling_=False):
+    def __init__(self,  representation, config, hyperparameters, functions=['+','-','*','/','exp','log','square','cube'], terminals=[1,0.5,np.pi, np.sqrt(2)], scaling_=False, optimized = False):
         self.representation = representation
         self.scaling = scaling_
         self.loss = linear_scaling_mse if self.scaling else mean_squared_error
@@ -27,6 +27,7 @@ class SRBench(RegressorMixin):
         self.fitted_ = False
         self.config = config
         self.hyperparameters = hyperparameters
+        self.optimized = optimized
 
     def fit(self, X, y):
         problem  = BlackBox(X, y, self.loss, 1e-16, True)
