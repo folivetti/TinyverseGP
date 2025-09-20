@@ -24,6 +24,7 @@ from abc import abstractmethod
 from dataclasses import dataclass, field, fields
 from typing import List, Any, Generic, Callable, Dict
 import copy
+import numpy as np
 
 from src.gp.types import HPType
 import yaml
@@ -303,6 +304,7 @@ class GPModel(ABC):
         self.num_evaluations = 0
         #if self.config.global_seed is not None:
         random.seed(self.config.global_seed)
+        np.random.seed(self.config.global_seed)
 
     def evaluate(self, problem) -> GPIndividual:
         """

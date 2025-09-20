@@ -43,11 +43,12 @@ class CGPHyperparameters(Hyperparameters):
 
     def __post_init__(self):
         Hyperparameters.__post_init__(self)
-        self.space["mu"] = (1, 4)
-        self.space["lmbda"] = (1, 1024)
-        self.space["num_function_nodes"] = (1, 10000)
-        self.space["strict_selection"] = [True, False]
+        self.space["num_function_nodes"] = (10, 100)
         self.space["mutation_rate"] = (0.0, 1.0)
+        self.space["cx_rate"] = (0.0, 1.0)
+        self.space["tournament_size"] = (2, 9)
+        self.space["levels-back"] = (1, 100)
+        self.space["population_size"] = (50, 500)
 
 
 @dataclass(kw_only=True)

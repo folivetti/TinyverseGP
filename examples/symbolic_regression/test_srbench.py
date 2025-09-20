@@ -19,7 +19,7 @@ MAXTIME = 3600  # 1 hour
 MAXGEN = 100
 POPSIZE = 100
 group_datasets = [
-    ["522_pm10", "678_visualizing_environmental", "192_vineyard", "1028_SWD"],
+    ["192_vineyard", "522_pm10", "678_visualizing_environmental", "1028_SWD"],
     ["1199_BNG_echoMonths", "210_cloud", "1089_USCrime", "1193_BNG_lowbwt"],
     [
         "557_analcatdata_apnea1",
@@ -49,6 +49,9 @@ cgp_hyperparams = CGPHyperparameters(
     mutation_rate=0.3,
     population_size=POPSIZE,
     levels_back=10,
+    num_function_nodes=10,
+    cx_rate=0.9,
+    tournament_size=4,
 )
 
 #   Set up configurations for TGP and CGP
@@ -82,7 +85,6 @@ cgp_config = CGPConfig(
     max_arity=2,
     num_inputs=1,
     num_outputs=1,
-    num_function_nodes=30,
     report_interval=10,
     max_time=MAXTIME,
     global_seed=42,
