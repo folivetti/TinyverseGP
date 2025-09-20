@@ -43,6 +43,10 @@ class CGPHyperparameters(Hyperparameters):
 
     def __post_init__(self):
         Hyperparameters.__post_init__(self)
+        self.space["mu"] = (1, 4)
+        self.space["lmbda"] = (1, 1024)
+        self.space["num_function_nodes"] = (1, 10000)
+        self.space["strict_selection"] = [True, False]
         self.space["mutation_rate"] = (0.0, 1.0)
 
 
@@ -61,7 +65,6 @@ class CGPConfig(GPConfig):
 
     def __post_init__(self):
         self.genes_per_node = self.max_arity + 1
-
 
 class CGPIndividual(GPIndividual):
     """
@@ -198,7 +201,9 @@ class TinyCGP(GPModel):
         elif gene_type == self.GeneType.FUNCTION:
             return random.randint(0, self.config.num_functions - 1)
         else:
-            rand = random.randint(0, self.config.num_inputs + self.hyperparameters.num_function_nodes - 1)
+            rand = random.randint(
+                0, self.config.num_inputs + self.hyperparameters.num_function_nodes - 1
+            )
             return rand
 
     def phenotype(self, position: int) -> GeneType:
@@ -428,7 +433,9 @@ class TinyCGP(GPModel):
         max_idx = self.config.genes_per_node * self.hyperparameters.num_function_nodes
         step = self.config.genes_per_node
 
-        node_values = [None for i in range(self.hyperparameters.num_function_nodes + self.config.num_inputs)]
+        node_values = [
+            None for i in range(self.hyperparameters.num_function_nodes + self.config.num_inputs)
+        ]
         for i in range(self.config.num_inputs):
             if not self.terminals[i].const:
                 node_values[i] = observation[i]

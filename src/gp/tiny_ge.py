@@ -32,11 +32,6 @@ class GEIndividual(GPIndividual):
     def __init__(self, genome_: list[int], fitness_: any = None):
         GPIndividual.__init__(self, genome_, fitness_)
 
-    def serialize_genome(self):
-        return self.genome
-
-    def deserialize_genome(self, genome_):
-        self.genome = genome_
 
     def serialize_genome(self):
         return self.genome
@@ -55,6 +50,7 @@ class TinyGE(GPModel):
     problem: Problem
     functions: list[Function]
 
+
     def __init__(self, functions_: list[Function], grammar_: dict, arguments_: list[str], config: Config, hyperparameters: Hyperparameters):
         super().__init__(config, hyperparameters)
         self.functions = {f.name.upper(): f.function for f in functions_} # the list of functions to that could be used in the grammar                                 # TODO: Adjust to updates in the framework
@@ -69,7 +65,6 @@ class TinyGE(GPModel):
         self.population = [GEIndividual(genome, None) for genome in self.init_uniform(self.hyperparameters.pop_size, self.hyperparameters.genome_length, self.hyperparameters.codon_size)]
 
         #self.evaluate() # evaluates the initial population
-
     def init_uniform(self, num_pop: int, max_genome_length: int, codon_size: int):
         """
         Initialize the population uniformly. It will create one genome per output.
@@ -83,13 +78,12 @@ class TinyGE(GPModel):
             )
         return pop
 
-
     def evaluate_individual(self, genome:list[int], problem) -> float:
         '''
         Evaluate a single individual `genome`.
 
         :return: a `float` representing the fitness of that individual.
-        """
+        '''
         self.num_evaluations += 1  # update the evaluation counter
         f = None
         tmp_expr = self.expression(genome)
@@ -197,6 +191,7 @@ class TinyGE(GPModel):
         :return: a selected genome.
         """
         # samples `self.hyperparameters.tournament_size` solutions completely at random
+
         parents = [random.choice(self.population) for _ in range(self.hyperparameters.tournament_size)]
         # return the best of this sample whether it is a minimization or maximization problem     
         if self.config.minimizing_fitness:
@@ -273,11 +268,17 @@ class TinyGE(GPModel):
         """
         Prints information about a single individual.
         """
-        print("Expression: " + ";".join(self.expression(individual[0])) + " : Fitness: " + str(individual[1]))
+        print(
+            "Expression: "
+            + ";".join(self.expression(individual[0]))
+            + " : Fitness: "
+            + str(individual[1])
+        )
 
     def pipeline(self, problem):
         """
         Single step of TGP
         """
+
         self.breed()
         return self.evaluate(problem)

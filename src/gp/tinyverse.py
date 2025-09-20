@@ -21,7 +21,7 @@ import os
 import json
 from abc import ABC
 from abc import abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from typing import List, Any, Generic, Callable, Dict
 import copy
 
@@ -74,6 +74,7 @@ class Config(ABC):
         names = {field.name for field in fields(cls)}
         return cls(**{k: v for k, v in d.items() if k in names})
 
+
 @dataclass(kw_only=True)
 class GPConfig(Config):
     """
@@ -100,7 +101,6 @@ class GPConfig(Config):
     checkpoint_dir: str = ""
     experiment_name: str = ""
 
-    constraints: Callable[[Any], float] = lambda x: 0.0
 
 @dataclass
 class Hyperparameter(ABC, Generic[HPType]):
@@ -121,8 +121,11 @@ class Hyperparameters(ABC):
     Base class for the GP hyperparamters.
     """
 
-    def dictionary(self) -> dict:
-        return self.__dict__
+    penalization_complexity_factor: float = 0.0
+    penalization_feasibility_factor: float = 0.0
+    penalization_validity_factor: float = 0.0
+    discard_invalid: bool = True
+    discard_infeasible: bool = False
 
     def __post_init__(self):
         self.space = dict()
@@ -138,6 +141,7 @@ class Hyperparameters(ABC):
     def from_dict(cls, d: dict):
         names = {field.name for field in fields(cls)}
         return cls(**{k: v for k, v in d.items() if k in names})
+
 
 @dataclass(kw_only=True)
 class GPHyperparameters(Hyperparameters):
@@ -162,6 +166,7 @@ class GPHyperparameters(Hyperparameters):
         self.space["penalization_validity_factor"] = (0.0, 1.0)
         self.space["discard_invalid"] = (False, True)
         self.space["discard_infeasible"] = (False, True)
+
 
 @dataclass
 class Function:
@@ -310,7 +315,9 @@ class GPModel(ABC):
             self.num_evaluations += 1
             genome = individual.genome
             if individual.fitness is None:
-                individual.fitness = self.penalize(self.evaluate_individual(genome), genome)
+                individual.fitness = self.penalize(
+                    self.evaluate_individual(genome, problem), genome
+                )
             fitness = individual.fitness
 
             if best is None:
@@ -465,6 +472,7 @@ class GPModel(ABC):
 
         return best_individual
 
+    @abstractmethod
     def selection(self) -> Any:
         """
         Implementation of the selection mechanism.

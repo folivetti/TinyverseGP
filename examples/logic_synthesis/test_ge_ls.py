@@ -81,6 +81,7 @@ grammar = {
     "<var>": ["a", "b", "c", "d", "e", "f", "g"]
 }
 
+
 ge = TinyGE(functions, grammar, arguments, config, hyperparameters)
 result = ge.evolve(problem)
 print(ge.expression(result.genome))

@@ -40,6 +40,7 @@ def plog(x):
         return 0.0
     return np.log(np.abs(x))
 
+
 def psqrt(x):
     return np.sqrt(np.abs(x))
 
