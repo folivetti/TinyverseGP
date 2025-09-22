@@ -2,8 +2,9 @@ from abc import ABC, abstractmethod
 from src.gp.tinyverse import GPModel, GPHyperparameters
 from ConfigSpace import Configuration, ConfigurationSpace
 from smac import HyperparameterOptimizationFacade, Scenario
+from random import randrange
+from smac.intensifier import Intensifier
 import copy
-
 
 class HPOInterface(ABC):
     """
@@ -18,42 +19,39 @@ class HPOInterface(ABC):
 
 class SMACInterface(HPOInterface):
 
-    def optimise(self, gpmodel_: GPModel, n_trials_=10) -> GPHyperparameters:
-        """
-        Runs HPO with SMAC (https://github.com/automl/SMAC3)
 
-        Args:
-            gpmodel_ (GPModel): the GP model to be optimised
-            n_trials_: Number of trials in the SMAC optimisation environment
-
-        Returns:
-            GPHyperparameters: the hyperparameter configuration to be used
-        """
+    def optimise(self, gpmodel_: GPModel, problem, n_trials_=10, seed_=42, _repeats_per_config=3) -> GPHyperparameters:
 
         def train(config: Configuration, seed: int = 0) -> float:
             gpmodel = copy.deepcopy(gpmodel_)
+            # Apply hyperparameters
             for c in config.keys():
                 setattr(gpmodel.hyperparameters, c, config[c])
-            gpmodel.evolve()
-            return gpmodel.best_individual.fitness
+            # Randomize seed for stochasticity
+            # gpmodel.hyperparameters.global_seed = randrange(0, 100000)
+            print("Config applied:", {key: getattr(gpmodel.hyperparameters, key) for key in config.keys()})
+            gpmodel.evolve(problem)
+            fitness = gpmodel.best_individual.fitness
+            print("Fitness obtained:", fitness)
+            return fitness
 
-        # Obtain the hyperparameter (HP) space from the GP model
-        paramspace = gpmodel_.hyperparameters.space
+        # Configuration space
+        configspace = ConfigurationSpace(gpmodel_.hyperparameters.space)
 
-        # Use the HP space to init the configuration space (CS)
-        configspace = ConfigurationSpace(paramspace)
+        # SMAC scenario (stochastic)
+        scenario = Scenario(configspace, deterministic=True, n_trials=n_trials_, seed=seed_)
 
-        # Scenario object specifying the optimization environment
-        scenario = Scenario(configspace, deterministic=True, n_trials=n_trials_)
-
-        # Use SMAC to find the best configuration/hyperparameters
-        smac = HyperparameterOptimizationFacade(scenario, train)
+        # Run SMAC
+        smac = HyperparameterOptimizationFacade(scenario, train, overwrite=True)
         incumbent = smac.optimize()
 
+        # Map incumbent to hyperparameters object
         inc_hp = copy.deepcopy(gpmodel_.hyperparameters)
         for c in incumbent.keys():
             setattr(inc_hp, c, incumbent[c])
+
         return inc_hp
+    
 
 
 class Hpo:
@@ -77,7 +75,7 @@ class Hpo:
             gpmodel = copy.deepcopy(gpmodel_)
             for c in config.keys():
                 setattr(gpmodel.hyperparameters, c, config[c])
-            gpmodel.evolve()
+            gpmodel.evolve(problem)
             return gpmodel.best_individual.fitness
 
         # Obtain the hyperparameter (HP) space from the GP model
@@ -95,4 +93,4 @@ class Hpo:
         incHP = copy.deepcopy(gpmodel_.hyperparameters)
         for c in incumbent.keys():
             setattr(incHP, c, incumbent[c])
-        return incHP
+        return incHP 

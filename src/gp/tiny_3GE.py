@@ -10,7 +10,7 @@ notes:
 - This implementation is designed to be minimal and focused on the derivation tree structure.
 - define a parameter for the maximum depth of the derivation tree.
     - however, this is optional and can be adjusted based on the problem requirements.
-- the grammar is defined in BNF format in a dictionary. 
+- the grammar is defined in BNF format as a dictionary. 
 - This module is intended to reuse the existing TinyGE functionalities that are already implemented in the TinyGE class.
 - It implements a mapping from the derivation tree to a linear genome representation, which is then used for evaluation and prediction via the TinyGE class.
 - This class will use all the hyperparamters defined in the TinyGE class and add only one hyperparater: 'max_depth' for the derivation tree.
@@ -31,17 +31,26 @@ class TreeGEHyperparameters(GPHyperparameters):
     """
     Hyperparameters for the Tiny3GE model.
     
-    :param max_depth: Maximum depth of the derivation tree.
+    :param max_depth: Maximum depth of the derivation tree. 
     :codon_size: Size of each codon in the genome.
     """
     min_depth: int
     max_depth: int
     codon_size: int 
     penalty_value: int
+    rhh_rate: float = 0.5  # rate for ramped half-and-half initialization
 
     def __post_init__(self):
         GPHyperparameters.__post_init__(self)
+        self.space["min_depth"] = (2,4)
+        self.space["max_depth"] = (4,8)
+        self.space["rhh_rate"] = (0.2,0.8)
 
+
+
+class TreeGEConfig(GPConfig):
+    def __post_init__(self):
+        GPConfig.__post_init__(self)
 
 class Node:
 
@@ -59,22 +68,49 @@ class Node:
 
 
 class TreeGEIndividual(GPIndividual):
-    genome: Node
-    lin_genome: list[int]  # linear representation of the genome (representation format like in tinyGE)
+    deriv_tree: Node   
+    genome: list[int]  # linear representation of the genome (representation format like in tinyGE)
     fitness: any
 
-    def __init__(self, genome: list[Node], lin_genome: list[int], fitness: any = None):
-        GPIndividual.__init__(self, genome, fitness)
-        self.lin_genome = lin_genome
+    def __init__(self, deriv_tree: list[Node], lin_genome: list[int], fitness: any = None):
+        GPIndividual.__init__(self, lin_genome, fitness)
+        self.deriv_tree = deriv_tree
     
     def serialize_genome(self):
-        return self.genome
+        return self.deriv_tree
 
     def deserialize_genome(self, genome_):
-        self.genome = genome_
+        self.deriv_tree = genome_
 
 
 class Tiny3GE(GPModel):
+    # necessary for SMAC (hyperparameter optimization) to work with deepcopy
+    # def __getstate__(self):
+    #     state = self.__dict__.copy()
+    #     # Remove or replace non-pickleable attributes
+    #     state['functions'] = None  # Remove function objects for pickling/deepcopy
+    #     return state
+
+    # # necessary for SMAC (hyperparameter optimization) to work with deepcopy
+    # def __setstate__(self, state):
+    #     self.__dict__.update(state)
+    #     # Automatically restore self.functions from global registry if missing
+    #     if self.functions is None:
+    #         try:
+    #             from src.gp.functions import ADD, SUB, MUL, DIV, EXP, LOG, SQRT, SQR, CUBE
+    #             self.functions = {
+    #                 'ADD': ADD.function,
+    #                 'SUB': SUB.function,
+    #                 'MUL': MUL.function,
+    #                 'DIV': DIV.function,
+    #                 'EXP': EXP.function,
+    #                 'LOG': LOG.function,
+    #                 'SQRT': SQRT.function,
+    #                 'SQR': SQR.function,
+    #                 'CUBE': CUBE.function
+    #             }
+    #         except ImportError:
+    #             self.functions = {}
 
     '''
     Main class of the tiny3GE module that derives from GPModel and
@@ -102,7 +138,7 @@ class Tiny3GE(GPModel):
                                                                                         self.hyperparameters.min_depth, 
                                                                                         self.hyperparameters.max_depth, 
                                                                                         list(self.grammar.keys())[0])]     # We assume that the first key in the grammar is the start symbol.
-        self.print_population(self.population)
+        # self.print_population(self.population)
         # self.evaluate()
         
 
@@ -131,7 +167,7 @@ class Tiny3GE(GPModel):
         min_steps = float('inf')    
 
         for production in self.grammar[NT]:  # Get all productions for the current non-terminal
-            symbols = self.parse_production(production)
+            symbols = self.parse_production(production)   # Parse the production rule into individual symbols
             max_child_steps = 0
             for sym in symbols:
                 steps = self.get_minimum_derivation_steps(sym, cache, visited.copy())
@@ -203,7 +239,8 @@ class Tiny3GE(GPModel):
 
     def generate_linear_genome(self, tree_root: Node, codon_size: int) -> list[int]:
         """
-        Recursively generates a linear genome from a derivation tree.
+        Recursively generates a linear genome from a derivation tree. 
+        Maps the ndoes in the derivation tree to codons (integer values) based on the production rule
 
         :param root: The root node of the derivation tree
         :param codon_size: Max codon value
@@ -222,34 +259,35 @@ class Tiny3GE(GPModel):
         return genome
     
     
-    def evaluate_individual(self, genome, problem) -> float:
+    def evaluate_individual(self, individual: TreeGEIndividual, problem) -> float:
         '''
         Evaluate a single individual `genome`.
 
         :return: a `float` representing the fitness of that individual.
         '''
-        lin_genome = self.generate_linear_genome(genome, self.hyperparameters.codon_size)  # convert the derivation tree to a linear genome
+        # huge overhead due to repeatedly generating the linear genome from the derivation tree because the main function expects a (individual.genome, problem) as arguments
+        # lin_genome = self.generate_linear_genome(individual.genome, self.hyperparameters.codon_size)  # convert the derivation tree to a linear genome
         self.num_evaluations += 1  # update the evaluation counter
         f = None
-        tmp_expr = self.expression(lin_genome)
+        tmp_expr = self.expression(individual.genome)
         if '<' in tmp_expr or '>' in tmp_expr:
             f = self.hyperparameters.penalty_value 
         else:
-            f = problem.evaluate(lin_genome, self) # evaluate the solution using the problem instance
+            f = problem.evaluate(individual.genome, self) # evaluate the solution using the problem instance
         if self.best_individual is None or problem.is_better(f, self.best_individual.fitness):
-            self.best_individual = TreeGEIndividual(genome, lin_genome, f)
+            self.best_individual = TreeGEIndividual(individual.deriv_tree, individual.genome, f)
         return f
     
 
-    def eval_complexity(self, genome: Node) -> int:
+    def eval_complexity(self, genome: GPIndividual) -> int:
         '''
         Returns the complexity of the genome.
 
         :return: an integer representing the number of nodes in the genome.
         '''
-        lin_genome = self.generate_linear_genome(genome, self.hyperparameters.codon_size)  # convert the derivation tree to a linear genome
+        # lin_genome = self.generate_linear_genome(genome.genome, self.hyperparameters.codon_size)  # convert the derivation tree to a linear genome
         count = 0
-        tmp_genome = copy.deepcopy(lin_genome)
+        tmp_genome = copy.deepcopy(genome.genome)
         expression = "<expr>"
         while '<' in expression and len(tmp_genome) > 0:
             next_non_terminal = re.search(r'<(.*?)>', expression).group(0)
@@ -260,14 +298,15 @@ class Tiny3GE(GPModel):
 
         return sum([node_size(g) for g in genome])
 
-    def is_valid(self, genome: Node) -> bool:
+    def is_valid(self, genome: GPIndividual) -> bool:
         '''
         Check if the genome is valid. A genome is valid if it has the same number of outputs as the problem.
 
         :return: a boolean indicating whether the genome is valid or not.
         '''
+        # lin_genome = self.generate_linear_genome(genome.genome, self.hyperparameters.codon_size)  # convert the derivation tree to a linear genome
 
-        tmp_expr = self.expression(self.generate_linear_genome(genome, self.hyperparameters.codon_size))
+        tmp_expr = self.expression(genome.genome)  # convert the linear genome to an expression
         return '<' not in tmp_expr and '>' not in tmp_expr
     
     def predict(self, lin_genome: list, observation: list) -> list:
@@ -298,6 +337,7 @@ class Tiny3GE(GPModel):
     def mutation(self, individual: TreeGEIndividual, mutation_rate: float) -> TreeGEIndividual:
         """
         Mutates an individual by replacing a random subtree with a new random subtree.
+        This is done in-place to avoid modifying the original individual.
 
         :param individual: The individual to mutate.
         :return: A new mutated individual.
@@ -307,7 +347,7 @@ class Tiny3GE(GPModel):
         if random.random() > mutation_rate:  # If mutation is not applied, return the original individual
             return deepcopy(individual)
         
-        mutated_tree = deepcopy(individual.genome)
+        mutated_tree = deepcopy(individual.deriv_tree)
         mutable_nodes = []      # Collect all mutable (non-terminal) nodes with [selected_node, parent, child_index, depth] information
 
         def collect_nodes(node: Node, parent=None, child_index=None, depth=0):
@@ -322,7 +362,7 @@ class Tiny3GE(GPModel):
             return deepcopy(individual)
 
         selected_node, parent, child_index, depth = random.choice(mutable_nodes)    # Randomly select a node to mutate  
-        new_subtree = self.init_random_tree_grow(self.hyperparameters.max_depth - depth, selected_node.NT)  # Generate a new subtree using the same symbol (non-terminal)
+        new_subtree = self.init_random_tree_grow(self.hyperparameters.max_depth - depth, selected_node.NT)  # Generate a new subtree using the same symbol (non-terminal) on the mutation point to maintain compatibility with the grammar
         parent.children[child_index] = new_subtree
 
         new_linear_genome = self.generate_linear_genome(mutated_tree, self.hyperparameters.codon_size)
@@ -334,41 +374,42 @@ class Tiny3GE(GPModel):
     def crossover(self, parent1: TreeGEIndividual, parent2: TreeGEIndividual) -> TreeGEIndividual:
         """
         Performs one-point crossover between two tree individuals by exchanging subtrees.
+        Parent1 is used as the base, and the parent2 (donor) is used to find a compatible subtree to replace a random subtree in parent1.
 
         :param parent1: First parent individual.
         :param parent2: Second parent individual.
         :return: A new offspring individual.
         """
-        def tree_depth(node: Node) -> int:
+        def tree_depth(node: Node) -> int:  # function to compute the depth of a tree
                 if not node.children:
                     return 1
                 return 1 + max(tree_depth(child) for child in node.children)
 
         # for _ in range(10): # try up to 10 times to find a valid crossover point
 
-        offspring1 = deepcopy(parent1.genome)   # deepcopy the derivation tree of the first parent
-        donor_tree = deepcopy(parent2.genome)   # deepcopy the derivation tree of the second parent
+        offspring1 = deepcopy(parent1.deriv_tree)   # deepcopy the derivation tree of the first parent
+        donor_tree = deepcopy(parent2.deriv_tree)   # deepcopy the derivation tree of the second parent
         
         crossover_nodes = []    # Collect all crossover points (non-terminal nodes with parents) from offspring with [selected_node, parent, child_index, depth] information
 
-        def collect_crossover_nodes(node: Node, parent=None, child_index=None, depth=0):
-            if self.is_non_terminal(node.NT) and parent is not None:
+        # function to collect all valid crossover points which includes every node that is not the root or a terminal (leaf-) node
+        def collect_crossover_nodes(node: Node, parent=None, child_index=None, depth=0):    
+            if self.is_non_terminal(node.NT) and parent is not None:    # Only consider non-terminal nodes that have a parent
                 crossover_nodes.append((node, parent, child_index, depth))
-            for i, child in enumerate(node.children):
+            for i, child in enumerate(node.children):   # iterate over all the children of the current node
                 collect_crossover_nodes(child, node, i, depth+1)
         
         collect_crossover_nodes(offspring1)
         
         if not crossover_nodes:
-            return deepcopy(parent1)  # If no crossover points found, return the first parent
+            return deepcopy(parent1)  # If no crossover points found, return the first parent as offspring
         
         selected_node, parent, child_index, depth = random.choice(crossover_nodes)  # Select random crossover point in offspring
         selected_symbol = selected_node.NT
         
-        # Collect all compatible subtrees from donor (same non-terminal symbol)
-        compatible_subtrees = []
+        compatible_subtrees = []    # Collect all compatible subtrees from donor (same non-terminal symbol)
 
-        def collect_compatible_subtrees(node: Node, depth):
+        def collect_compatible_subtrees(node: Node, depth):     # function to collect all compatible subtrees from the donor tree based on their symbol.
             if node.NT == selected_symbol and tree_depth(node) <= self.hyperparameters.max_depth - depth:   # check if the non-terminal matches and the subtree depth is compatible
                 compatible_subtrees.append(node)
             for child in node.children:
@@ -380,7 +421,7 @@ class Tiny3GE(GPModel):
             return deepcopy(parent1)  # If no compatible subtrees found, return the first parent
         
         donor_subtree = random.choice(compatible_subtrees)  # Select random compatible subtree from donor and replace in offspring
-        parent.children[child_index] = deepcopy(donor_subtree)
+        parent.children[child_index] = deepcopy(donor_subtree)  # perform the insertion of the donor subtree into the offpsring tree - parent.children[child_index] refers to the exact crossover point
         new_linear_genome = self.generate_linear_genome(offspring1, self.hyperparameters.codon_size)
         offspring_individual = TreeGEIndividual(offspring1, new_linear_genome, None)
         
@@ -419,7 +460,7 @@ class Tiny3GE(GPModel):
         # replace the current population by perturbing the sampled parents     
         self.population = [self.perturb(*parent) for parent in parents]
         # keep the best solution in the population 
-        self.population.append(TreeGEIndividual(self.best_individual.genome, self.best_individual.lin_genome, self.best_individual.fitness))
+        self.population.append(TreeGEIndividual(self.best_individual.deriv_tree, self.best_individual.genome, self.best_individual.fitness))
 
     def pipeline(self, problem):
         """
@@ -443,8 +484,8 @@ class Tiny3GE(GPModel):
         :return: A derivation either generated by Grow or Full.
         """
         depth = random.randrange(min_depth, max_depth+1)  # Randomly choose a depth for the generation method
-        method = random.choice(["full", "grow"])      # Randomly choose between full and grow method for tree generation
-        if method == "grow":
+        method = random.random()      # Randomly choose between full and grow method for tree generation
+        if method <= self.hyperparameters.rhh_rate:   # use Grow method
             return self.init_random_tree_grow(depth, list(self.grammar.keys())[0])
         else:   # use Full method
             return self.init_random_tree_full(depth, list(self.grammar.keys())[0])
@@ -466,6 +507,9 @@ class Tiny3GE(GPModel):
         
         valid_productions = self.filter_valid_productions(possible_productions, max_depth)      # filter all the productions to those that can be derived within the remaining depth 
             
+        if not valid_productions:
+            return Node(cur_NT, [], None)
+        
         production = random.choice(valid_productions)
         symbols = self.parse_production(production)     
         
@@ -489,12 +533,14 @@ class Tiny3GE(GPModel):
         cur_NT = symbol
         possible_productions = self.grammar.get(cur_NT, [])
 
-        # If we're at the last depth level, pick only terminal productions
+        # if the current non-terminal is at the maximum depth, we can only use productions that can be derived within the remaining depth
         if remaining_depth <= self.get_minimum_derivation_steps(cur_NT):
             if not possible_productions:    # check if cur_NT is a terminal (productions are empty)
                 return Node(cur_NT, [], None)
             
-            valid_productions = self.filter_valid_productions(possible_productions, remaining_depth)      # filter all the productions to those that can be derived within the remaining depth    
+            valid_productions = self.filter_valid_productions(possible_productions, remaining_depth)
+            if not valid_productions:
+                return Node(cur_NT, [], None)      # filter all the productions to those that can be derived within the remaining depth    
             production = random.choice(valid_productions)
             symbols = self.parse_production(production)     
             
@@ -521,23 +567,37 @@ class Tiny3GE(GPModel):
     
 
     def genotype_phenotype_mapping(self, grammar, lin_genome, expression='<expr>'):
-            '''
-                Maps the genotype to its phenotype.
-                
-                :return: a string representation of the genome.
-            '''
-            tmp_genome = copy.deepcopy(lin_genome)
-            while '<' in expression and len(tmp_genome) > 0:
-                next_non_terminal = re.search(r'<(.*?)>', expression).group(0)
-                choice = grammar[next_non_terminal][(tmp_genome.pop(0) % len(grammar[next_non_terminal]))]
-                expression = expression.replace(next_non_terminal, choice, 1)
-            return expression
+        '''
+            Maps the genotype to its phenotype.
+            
+            :return: a string representation of the genome.
+        '''
+        tmp_genome = copy.deepcopy(lin_genome)
+        while '<' in expression and len(tmp_genome) > 0:
+            next_non_terminal = re.search(r'<(.*?)>', expression).group(0)
+            choice = grammar[next_non_terminal][(tmp_genome.pop(0) % len(grammar[next_non_terminal]))]
+            expression = expression.replace(next_non_terminal, choice, 1)
+        return expression
+    
         
+    def parse_production(self, production: str) -> list:
+            """
+            Parses a production rule into its components (terminals and non-terminals).
+
+            :param production: A string representing a production rule in the grammar.
+            :return: A list of symbols (terminals and non-terminals) parsed from the production rule.
+            """
+            if not production or not production.strip():
+                return []
+            # pattern = re.compile(r'<[^<> ]+>|[A-Za-z_]+|[(),.]')
+            pattern = re.compile(r'<[^<> ]+>|\d+|[A-Za-z_]+|[(),.]')
+            return pattern.findall(production)
+    
 
     def print_population(self, population: list[TreeGEIndividual]):
         for ind in population:
-            self.print_individual_tree(ind.genome, level=1)
-            print(f"Linear genome: {ind.lin_genome}\n")
+            self.print_individual_tree(ind.deriv_tree, level=1)
+            print(f"Linear genome: {ind.genome}\n")
 
     def print_individual_tree(self, node: Node, level=0):
         indent = "  " * level
@@ -557,21 +617,8 @@ class Tiny3GE(GPModel):
         """
         Prints information about a single individual.
         """
-        expression_str = self.expression(individual.lin_genome)
-        print(f"Expression: {' '.join(expression_str)} : Fitness: {individual.fitness}")
+        expression_str = self.expression(individual.genome)
+        print(f"Expression: {''.join(expression_str)} : Fitness: {individual.fitness}")
 
-    def is_non_terminal(self, symbol: str) -> bool:
+    def is_non_terminal(self, symbol: str) -> bool: 
         return symbol.startswith('<') and symbol.endswith('>')  # non-terminals are enclosed in angle brackets
-
-    def parse_production(self, production: str) -> list:
-            """
-            Parses a production rule into its components (terminals and non-terminals).
-
-            :param production: A string representing a production rule in the grammar.
-            :return: A list of symbols (terminals and non-terminals) parsed from the production rule.
-            """
-            if not production or not production.strip():
-                return []
-            # pattern = re.compile(r'<[^<> ]+>|[A-Za-z_]+|[(),.]')
-            pattern = re.compile(r'<[^<> ]+>|\d+|[A-Za-z_]+|[(),.]')
-            return pattern.findall(production)        

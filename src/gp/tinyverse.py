@@ -157,15 +157,15 @@ class GPHyperparameters(Hyperparameters):
 
     def __post_init__(self):
         Hyperparameters.__post_init__(self)
-        self.space["pop_size"] = (10, 5000)
-        self.space["mutation_rate"] = (0.0, 1.0)
-        self.space["cx_rate"] = (0.0, 1.0)
+        self.space["pop_size"] = (10, 400)
+        self.space["mutation_rate"] = (0.0, 0.4)
+        self.space["cx_rate"] = (0.4, 1.0)
         self.space["tournament_size"] = (2, 9)
-        self.space["penalization_complexity_factor"] = (0.0, 1.0)
-        self.space["penalization_feasibility_factor"] = (0.0, 1.0)
-        self.space["penalization_validity_factor"] = (0.0, 1.0)
-        self.space["discard_invalid"] = (False, True)
-        self.space["discard_infeasible"] = (False, True)
+        # self.space["penalization_complexity_factor"] = (0.0, 1.0)
+        # self.space["penalization_feasibility_factor"] = (0.0, 1.0)
+        # self.space["penalization_validity_factor"] = (0.0, 1.0)
+        # self.space["discard_invalid"] = (False, True)
+        # self.space["discard_infeasible"] = (False, True)
 
 
 @dataclass
@@ -315,9 +315,15 @@ class GPModel(ABC):
             self.num_evaluations += 1
             genome = individual.genome
             if individual.fitness is None:
-                individual.fitness = self.penalize(
-                    self.evaluate_individual(genome, problem), genome
-                )
+                # Dynamic dispatch: pass individual for Tiny3GE, genome for others
+                if self.__class__.__name__ == 'Tiny3GE':
+                    individual.fitness = self.penalize(
+                        self.evaluate_individual(individual, problem), individual
+                    )
+                else:
+                    individual.fitness = self.penalize(
+                        self.evaluate_individual(genome, problem), genome
+                    )
             fitness = individual.fitness
 
             if best is None:
@@ -470,6 +476,22 @@ class GPModel(ABC):
                 break
 
         return best_individual
+    
+    def evolve_one_generation(self, problem):
+        """
+        Executes one generation of the evolutionary algorithm:
+        - Select parents
+        - Apply crossover and mutation
+        - Evaluate the offspring
+        - Replace the old population
+        Returns:
+            best_individual: the best individual of this generation
+        """
+        # Run the pipeline (selection + variation + evaluation)
+        best_gen = self.pipeline(problem)
+
+        # Return the best of the current generation
+        return best_gen
 
     @abstractmethod
     def selection(self) -> Any:

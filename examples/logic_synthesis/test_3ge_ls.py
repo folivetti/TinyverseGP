@@ -1,3 +1,4 @@
+
 """
 Example module to test GE with logic synthesis problems.
 
@@ -36,13 +37,17 @@ config = GPConfig(
     minimalistic_output=True,
     num_outputs=num_outputs,
     report_interval=1,
-    max_time=60
+    max_time=60,
+    global_seed=42,
+    checkpoint_interval=10,
+    checkpoint_dir='examples/checkpoint',
+    experiment_name='logic_ge'
 )
 
 hyperparameters = TreeGEHyperparameters(
     pop_size=100,
-    genome_length=60,
     codon_size=1000,
+    min_depth=4,
     max_depth=8,
     cx_rate=0.9,
     mutation_rate=0.1,
@@ -66,12 +71,10 @@ grammar = {
     '<var>': ['x']
 }
 
-ge = Tiny3GE(problem, functions, grammar, arguments, config, hyperparameters)
-ge.print_population(ge.population)
+tree_ge = Tiny3GE(functions, grammar, arguments, config, hyperparameters)
 
-ge.evolve()
+tree_ge.evolve(problem)
+new2= copy.deepcopy(tree_ge)
 
-ge.print_individual_tree(ge.best_individual.genome, level=0)
-print(ge.best_individual.lin_genome)
-print(ge.best_individual.fitness)
-ge.print_individual(ge.best_individual)
+tree_ge.print_individual_tree(tree_ge.best_individual.genome)
+tree_ge.print_individual(tree_ge.best_individual)

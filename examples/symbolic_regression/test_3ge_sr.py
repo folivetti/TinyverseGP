@@ -38,10 +38,10 @@ config = GPConfig(
 )
 
 hyperparameters = TreeGEHyperparameters(
-    pop_size=100,
+    pop_size=16,
     min_depth=4,
-    max_depth=8,
-    codon_size=1000,
+    max_depth=6,
+    codon_size=256,
     cx_rate=0.9,
     mutation_rate=0.1,
     tournament_size=2,
@@ -68,8 +68,9 @@ grammar = {
         "<var>",
     ],
     "<d>": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+    # "<d>": ["1", "0"],
     "<var>": ["x"],
-    }
+}
 
 
 problem = BlackBox(data, actual, loss, 1e-6, True)
@@ -77,6 +78,9 @@ problem = BlackBox(data, actual, loss, 1e-6, True)
 tree_ge = Tiny3GE(functions, grammar, arguments, config, hyperparameters)
 
 tree_ge.evolve(problem)
+print("Im here")
+new2= copy.deepcopy(tree_ge)
+print("Im here 2")
 
-tree_ge.print_individual_tree(tree_ge.best_individual.genome)
+tree_ge.print_individual_tree(tree_ge.best_individual.deriv_tree)
 tree_ge.print_individual(tree_ge.best_individual)
