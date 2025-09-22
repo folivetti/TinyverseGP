@@ -45,7 +45,6 @@ class SRBench(RegressorMixin):
         self.fitted_ = False
         self.config = config
         self.hyperparameters = hyperparameters
-        # self.optimized = optimized
 
     def fit(self, X, y, checkpoint=None):
         problem = BlackBox(X, y, self.loss, 1e-16, True)

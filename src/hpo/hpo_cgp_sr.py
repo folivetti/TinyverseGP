@@ -15,6 +15,7 @@ from src.hpo.hpo import SMACInterface
 import sys
 
 seed_ = int(sys.argv[1])
+print(f"This is job number {seed_}")
 
 dataset = "192_vineyard"
 
@@ -38,10 +39,7 @@ cgp_config = CGPConfig(
     num_outputs=1,
     report_interval=1,
     max_time=600,
-    global_seed=42,
-    checkpoint_interval=10,
-    checkpoint_dir='examples/checkpoint',
-    experiment_name='sr_cgp'
+    global_seed=42
 )
 
 
@@ -57,6 +55,8 @@ cgp_hyperparams = CGPHyperparameters(
     num_function_nodes = 10
 )
 
+cgp_config.init() # Set the number of genes per node and the total number of genes
+
 train_X, test_X, train_y, test_y = train_test_split(X, y, train_size=0.75, shuffle=False)
 n_trials = 200
 
@@ -65,8 +65,7 @@ cgp.fit(train_X, train_y)
 problem = BlackBox(train_X, train_y, cgp.loss, 1e-16, True)
 interface = SMACInterface()
 
-
-opt_hyperparameters = interface.optimise(cgp.model, problem, n_trials, seed_)
+opt_hyperparameters = interface.optimise(cgp.model, n_trials, seed_)
 print(opt_hyperparameters)
 
 print("="*50)
@@ -74,7 +73,6 @@ print(f"The following seed was used: {seed_}")
 print("="*50)
 cgp_old = SRBench('CGP', cgp_config, cgp_hyperparams, functions=functions, terminals=terminals, scaling_=False)
 cgp_old.fit(test_X, test_y)
-print(cgp_old.model.expression(cgp_old.model.best_individual.genome))
 print(f"old cgp train score: {cgp_old.score(train_X, train_y)}")
 print(f"old cgp test score: {cgp_old.score(test_X, test_y)}")
 print("="*50)

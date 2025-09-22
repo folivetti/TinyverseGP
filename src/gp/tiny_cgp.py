@@ -43,13 +43,12 @@ class CGPHyperparameters(Hyperparameters):
 
     def __post_init__(self):
         Hyperparameters.__post_init__(self)
-        self.space["num_function_nodes"] = (10, 100)
         self.space["mutation_rate"] = (0.0, 1.0)
         self.space["cx_rate"] = (0.0, 1.0)
         self.space["tournament_size"] = (2, 9)
-        self.space["levels-back"] = (1, 100)
         self.space["population_size"] = (50, 500)
-
+        self.space["num_function_nodes"] = (10, 100)
+        self.space["levels_back"] = (1, 100)
 
 @dataclass(kw_only=True)
 class CGPConfig(GPConfig):
@@ -63,6 +62,7 @@ class CGPConfig(GPConfig):
     max_arity: int
     max_time: int
     report_every_improvement: bool = False
+    global_seed: int = 42
 
     def __post_init__(self):
         self.genes_per_node = self.max_arity + 1
@@ -137,6 +137,10 @@ class TinyCGP(GPModel):
         self.functions = functions_
         self.function2arity = [f.arity for f in functions_]
         self.terminals = terminals_
+        self.problem = problem_
+        self.config = config_
+        random.seed(self.config.global_seed)
+        self.hyperparameters = hyperparameters_
         self.inputs = dict()
         self.current_paths = None
         self.config.num_genes = (self.config.genes_per_node * self.hyperparameters.num_function_nodes) + self.config.num_outputs
