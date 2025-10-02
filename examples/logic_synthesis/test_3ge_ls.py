@@ -1,6 +1,6 @@
 
 """
-Example module to test GE with logic synthesis problems.
+Example module to test Tree GE with logic synthesis problems.
 
 Evolves a symbolic expression for a boolean function that
 is presented as a compressed or uncompressed truth table.
@@ -63,18 +63,21 @@ problem = BlackBox(data, actual, loss, 0, True)
 functions = [AND, OR, NAND, NOR, NOT]
 arguments = ['x']
 grammar = {
-    '<expr>': [
-        'AND(<expr>, <expr>)', 'OR(<expr>, <expr>)', 'NAND(<expr>, <expr>)', 'NOR(<expr>, <expr>)', 'NOT(<expr>)',
-        '<d>', '<var>'
+    "<expr>": [
+        "AND(<expr>, <expr>)",
+        "OR(<expr>, <expr>)",
+        "NAND(<expr>, <expr>)",
+        "NOR(<expr>, <expr>)",
+        "NOT(<expr>)",
+        "<d>",
+        "x",
     ],
-    '<d>': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-    '<var>': ['x']
+    "<d>": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
 }
 
 tree_ge = Tiny3GE(functions, grammar, arguments, config, hyperparameters)
 
 tree_ge.evolve(problem)
-new2= copy.deepcopy(tree_ge)
 
-tree_ge.print_individual_tree(tree_ge.best_individual.genome)
-tree_ge.print_individual(tree_ge.best_individual)
+#tree_ge.print_individual_tree(tree_ge.best_individual.genome)
+#tree_ge.print_individual(tree_ge.best_individual)

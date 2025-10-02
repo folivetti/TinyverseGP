@@ -1,5 +1,5 @@
 """
-Example module to test GE with symbolic regression problems.
+Example module to test Tree GE with symbolic regression problems.
 
 Attempts to evolve a solution for the Koza-1 benchmkark which is
 a quartic polynomial: x^4 + x^3 + x^2 + x
@@ -65,11 +65,9 @@ grammar = {
         "DIV(<expr>, <expr>)",
         "<d>",
         "<d>.<d><d>",
-        "<var>",
+        "x",
     ],
     "<d>": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
-    # "<d>": ["1", "0"],
-    "<var>": ["x"],
 }
 
 
@@ -78,9 +76,6 @@ problem = BlackBox(data, actual, loss, 1e-6, True)
 tree_ge = Tiny3GE(functions, grammar, arguments, config, hyperparameters)
 
 tree_ge.evolve(problem)
-print("Im here")
-new2= copy.deepcopy(tree_ge)
-print("Im here 2")
 
-tree_ge.print_individual_tree(tree_ge.best_individual.deriv_tree)
-tree_ge.print_individual(tree_ge.best_individual)
+#tree_ge.print_individual_tree(tree_ge.best_individual.deriv_tree)
+#tree_ge.print_individual(tree_ge.best_individual)

@@ -57,7 +57,7 @@ benchmark = SRBenchmark()
 data, actual = benchmark.generate("KOZA1")
 functions = [ADD, SUB, MUL, DIV]
 arguments = ["x"]
-trials = 20
+trials = 5 #20
 
 problem = BlackBox(data, actual, loss, 1e-6, True)
 ge = Tiny3GE(functions, grammar, arguments, config, hyperparameters)

@@ -1,5 +1,5 @@
 """
-Example module to test GE with policy search problems.
+Example module to test Tree GE with policy search problems.
 Evolves a policy for the Gymnasium Lunar Lander environment.
 
 https://gymnasium.farama.org/environments/box2d/lunar_lander/
@@ -92,7 +92,7 @@ grammar = {
 }
 
 treege = Tiny3GE(functions, grammar, arguments, config, hyperparameters)
-treege.print_population(treege.population)
+#treege.print_population(treege.population)
 policy = treege.evolve(problem)
 # env.close()
 env = gym.make("LunarLander-v3", render_mode="human")
