@@ -86,12 +86,12 @@ class SRBench(RegressorMixin):
         # Always set <var> in grammar to correct variable names before fitting
         self.grammar["<var>"] = [f"x{i}" for i in range(X.shape[1])]
         if self.representation == "TGP":
-            self.functions = [strfun[f] for f in self.functions]
+            #self.functions = [strfun[f] for f in self.functions]
             self.model = TinyTGP(
                 self.functions, self.terminals, self.config, self.hyperparameters
             )
         elif self.representation == "CGP":
-            self.functions = [strfun[f] for f in self.functions]
+            #self.functions = [strfun[f] for f in self.functions]
             self.model = TinyCGP(
                 self.functions, self.terminals, self.config, self.hyperparameters
             )
