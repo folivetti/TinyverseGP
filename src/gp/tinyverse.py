@@ -157,15 +157,15 @@ class GPHyperparameters(Hyperparameters):
 
     def __post_init__(self):
         Hyperparameters.__post_init__(self)
-        self.space["pop_size"] = (10, 400)
-        self.space["mutation_rate"] = (0.0, 0.4)
-        self.space["cx_rate"] = (0.4, 1.0)
+        self.space["pop_size"] = (10, 5000)
+        self.space["mutation_rate"] = (0.0, 1.0)
+        self.space["cx_rate"] = (0.0, 1.0)
         self.space["tournament_size"] = (2, 9)
-        # self.space["penalization_complexity_factor"] = (0.0, 1.0)
-        # self.space["penalization_feasibility_factor"] = (0.0, 1.0)
-        # self.space["penalization_validity_factor"] = (0.0, 1.0)
-        # self.space["discard_invalid"] = (False, True)
-        # self.space["discard_infeasible"] = (False, True)
+        self.space["penalization_complexity_factor"] = (0.0, 1.0)
+        self.space["penalization_feasibility_factor"] = (0.0, 1.0)
+        self.space["penalization_validity_factor"] = (0.0, 1.0)
+        self.space["discard_invalid"] = (False, True)
+        self.space["discard_infeasible"] = (False, True)
 
 
 @dataclass
