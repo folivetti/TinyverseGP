@@ -133,7 +133,11 @@ class TinyGE(GPModel):
             expr: str, func_dict: list, args: list[str], values: list
         ) -> any:
             local_vars = dict(zip(args, values))
-            return [eval(expr, func_dict, local_vars)]
+            prediction = eval(expr, func_dict, local_vars)
+            if isinstance(prediction, list):
+                return prediction
+            else:
+                return [prediction]
 
         tmp_expr = self.expression(
             genome
@@ -278,67 +282,3 @@ class TinyGE(GPModel):
 
         self.breed()
         return self.evaluate(problem)
-
-        print("Expression: " + ";".join(self.expression(individual[0])) + " : Fitness: " + str(individual[1]))
-
-    def evolve(self):
-        """
-        Runs the evolution steps.
-
-        TODO: implement this in the base class as a default for every algorithm.
-        """
-        # measure the current time     
-        t0 = time.time()
-        elapsed = 0
-        terminate = False
-        best_fitness_job = None
-        # for each job, if running parallel executions     
-        for job in range(self.config.num_jobs):
-            best_fitness = None
-            # run for a maximum of generations     
-            for generation in range(self.config.max_generations):
-                # breed     
-                self.breed()
-                # evaluate the new population
-                best_fitness = self.evaluate()
-                # `report_generation` will handle the reporting of every generation according to the config     
-                self.report_generation(silent_algorithm= self.config.silent_algorithm,
-                                       generation=generation,
-                                       best_fitness=best_fitness,
-                                       report_interval=self.config.report_interval)
-                t1 = time.time()
-                delta = t1-t0
-                t0 = t1
-                elapsed += delta
-                # if elapsed time is larger than the maximum time, terminate 
-                if elapsed + delta >= self.config.max_time:
-                    terminate = True
-                    break
-                # if we found the ideal fitness, terminate         
-                elif self.problem.is_ideal(best_fitness):
-                    terminate = True
-                    break
-            # update the current best between runs and report             
-            if best_fitness_job is None or self.problem.is_better(best_fitness, best_fitness_job):
-                    best_fitness_job = best_fitness
-            self.report_job(job = job,
-                            num_evaluations=self.num_evaluations,
-                            best_fitness=best_fitness_job,
-                            silent_evolver=self.config.silent_evolver,
-                            minimalistic_output=self.config.minimalistic_output)
-            if terminate:
-                break
-        return self.best_individual.genome
-    
-
-    def eval_complexity(self, genome:GPIndividual) -> float:
-        """
-        Evaluates the complexity of the genome.
-        """
-        pass
-
-    def is_valid(self, genome:GPIndividual) -> bool:
-        """
-        Checks if the genome is valid.
-        """
-        pass
