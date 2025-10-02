@@ -23,7 +23,7 @@ MAXTIME = 3600  # 1 hour
 MAXGEN = 100
 POPSIZE = 100
 group_datasets = [
-    ["522_pm10", "678_visualizing_environmental", "192_vineyard", "1028_SWD"],
+    [ "192_vineyard", "1028_SWD"],  # "522_pm10, "678_visualizing_environmental""
     ["1199_BNG_echoMonths", "210_cloud", "1089_USCrime", "1193_BNG_lowbwt"],
     [
         "557_analcatdata_apnea1",
@@ -33,7 +33,7 @@ group_datasets = [
     ],
 ]
 
-functions = [ADD, SUB, MUL, DIV, EXP, LOG, SQR]
+functions = [ADD, SUB, MUL, DIV, EXP, LOG, SQR, CUBE]
 terminals = [1, 0.5, np.pi, np.sqrt(2)]
 
 grammar = {
@@ -213,21 +213,21 @@ for g in group_datasets:
             # grammar=grammar
         )
 
-        # cgp.fit(
-        #     train_X, train_y
-        # )  # , checkpoint="examples/checkpoint/srbench_cgp/checkpoint_gen_40.dill")
-        # print(cgp.get_model())
-        # print(f"cgp train score: {cgp.score(train_X, train_y)}")
-        # print(f"cgp test score: {cgp.score(test_X, test_y)}")
-        # tgp.fit(train_X, train_y)
-        # print(tgp.get_model())
-        # print(f"tgp train score: {tgp.score(train_X, train_y)}")
-        # print(f"tgp test score: {tgp.score(test_X, test_y)}")
-        # print("=" * 50)
-        # ge.fit(train_X, train_y)
-        # print(ge.get_model())
-        # print(f"ge train score: {ge.score(train_X, train_y)}")
-        # print(f"ge test score: {ge.score(test_X, test_y)}")#
+        cgp.fit(
+            train_X, train_y
+        )  # , checkpoint="examples/checkpoint/srbench_cgp/checkpoint_gen_40.dill")
+        print(cgp.get_model())
+        print(f"cgp train score: {cgp.score(train_X, train_y)}")
+        print(f"cgp test score: {cgp.score(test_X, test_y)}")
+        tgp.fit(train_X, train_y)
+        print(tgp.get_model())
+        print(f"tgp train score: {tgp.score(train_X, train_y)}")
+        print(f"tgp test score: {tgp.score(test_X, test_y)}")
+        print("=" * 50)
+        ge.fit(train_X, train_y)
+        print(ge.get_model())
+        print(f"ge train score: {ge.score(train_X, train_y)}")
+        print(f"ge test score: {ge.score(test_X, test_y)}")#
 
 
         treege.fit(train_X, train_y)
