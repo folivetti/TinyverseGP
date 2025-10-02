@@ -23,7 +23,7 @@ MAXTIME = 3600  # 1 hour
 MAXGEN = 100
 POPSIZE = 100
 group_datasets = [
-    [ "192_vineyard", "1028_SWD"],  # "522_pm10, "678_visualizing_environmental""
+    ["522_pm10", "678_visualizing_environmental", "192_vineyard", "1028_SWD"],
     ["1199_BNG_echoMonths", "210_cloud", "1089_USCrime", "1193_BNG_lowbwt"],
     [
         "557_analcatdata_apnea1",
