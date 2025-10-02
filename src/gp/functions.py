@@ -22,10 +22,10 @@ def b2f(input: bool):
 def pdiv(x, y, eps=1e-8):
     return np.divide(x, y + (np.abs(y) < eps) * eps)
 
-def square(x, clip=1e6):
+def square(x, clip=1e100):
     return np.clip(np.square(x), -clip, clip)
 
-def cube(x, clip=1e6):
+def cube(x, clip=1e100):
     return np.clip(np.power(x, 3), -clip, clip)
 
 
@@ -38,7 +38,7 @@ def psqrt(x):
     return np.sqrt(np.abs(x))
 
 def pexp(x, clip=50.0):
-    return np.exp(np.clip(x, -clip, clip))
+    return np.clip(np.exp(x), -clip, clip)
 
 # Arithmetic Functions
 ADD  = Function(2, 'ADD', lambda x, y: x + y)
