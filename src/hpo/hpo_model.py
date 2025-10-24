@@ -10,9 +10,9 @@ import numpy as np
 import sys
 
 from src.hpo.hpo import SMACInterface
-from src.benchmark.symbolic_regression.srbench1 import SRBench
+from src.benchmark.symbolic_regression.srbench import SRBench
 from src.gp.tiny_cgp import CGPConfig, CGPHyperparameters, TinyCGP
-from src.gp.tiny_3ge import Tiny3GE, TreeGEHyperparameters, TreeGEConfig
+from src.gp.tiny_3GE import Tiny3GE, TreeGEHyperparameters, TreeGEConfig
 from src.gp.tiny_ge import TinyGE, GEHyperparameters
 from src.gp.tiny_tgp import TinyTGP, TGPHyperparameters, Node
 from src.gp.tiny_ge import GEHyperparameters

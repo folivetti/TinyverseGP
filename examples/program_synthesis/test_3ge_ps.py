@@ -1,23 +1,23 @@
 """
-Example module to test GE with symbolic regression problems.
+Example module to test 3GE with program synthesis problems.
 
-Attempts to evolve a solution for the Koza-1 benchmkark which is
-a quartic polynomial: x^4 + x^3 + x^2 + x
+Attempts to evolve a solution for the numbers of two problem that
+is provided on Leetcode.com:
 
-The problem is specified in the following paper:
-https://dl.acm.org/doi/10.1145/2330163.2330273
+https://leetcode.com/problems/power-of-two/description/
 
-Please note: This benchmark is nowadays considered a toy problem and
-no serious benchmark. It only serves as an example for SR as an application
-domain for TinyverseGP:
 """
 
-from src.gp.tiny_3GE import *
+import warnings
+
+warnings.filterwarnings("ignore")
+
+from src.gp.problem import ProgramSynthesis
+from src.benchmark.program_synthesis.ps_benchmark import PSBenchmark
+from src.benchmark.program_synthesis.leetcode.power_of_two import *
 from src.gp.functions import *
-from src.gp.loss import *
-from src.gp.problem import BlackBox
-from src.benchmark.symbolic_regression.sr_benchmark import SRBenchmark
-from src.gp.tinyverse import GPConfig
+from src.gp.tiny_3GE import *
+
 
 config = GPConfig(
     num_jobs=1,
@@ -48,35 +48,37 @@ hyperparameters = TreeGEHyperparameters(
     penalty_value=99999,
 )
 
-loss = absolute_distance
-benchmark = SRBenchmark()
-data, actual = benchmark.generate("KOZA1")
-functions = [ADD, SUB, MUL, DIV]
+generator = gen_power_of_two
+n = 10
+m = 100
+
+benchmark = PSBenchmark(generator, [n, m])
+problem = ProgramSynthesis(benchmark.dataset)
+
+functions = [ADD, SUB, MUL, DIV, AND, OR, NAND, NOR, NOT, IF, LT, GT]
 arguments = ["x"]
-# grammar = {
-#     '<expr>': ['<expr> + <expr>', '<expr> - <expr>', '<expr> * <expr>', '(<expr>)', '<d>', '<d>.<d><d>', 'x'],    # Also possible
-#     '<d>': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
-# }
 grammar = {
     "<expr>": [
         "ADD(<expr>, <expr>)",
         "SUB(<expr>, <expr>)",
         "MUL(<expr>, <expr>)",
         "DIV(<expr>, <expr>)",
+        "AND(<expr>, <expr>)",
+        "OR(<expr>, <expr>)",
+        "NAND(<expr>, <expr>)",
+        "NOR(<expr>, <expr>)",
+        "NOT(<expr>)",
+        "IF(<expr>, <expr>, <expr>)",
+        "LT(<expr>, <expr>)",
+        "GT(<expr>, <expr>)",
         "<d>",
         "<d>.<d><d>",
-        "<var>",
+        "x",
     ],
     "<d>": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
-    # "<d>": ["1", "0"],
-    "<var>": ["x"],
 }
 
-
-problem = BlackBox(data, actual, loss, 1e-6, True)
-
-tree_ge = Tiny3GE(functions, grammar, arguments, config, hyperparameters) 
-
+tree_ge = Tiny3GE(functions, grammar, arguments, config, hyperparameters)
 tree_ge.print_population(tree_ge.population)
 
 tree_ge.evolve(problem)

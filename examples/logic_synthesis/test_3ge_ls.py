@@ -15,7 +15,7 @@ https://dl.acm.org/doi/10.1145/3594805.3607131
 from src.benchmark.logic_synthesis.ls_benchmark import LSBenchmark
 from src.gp.tiny_ge import *
 from src.gp.functions import *
-from src.gp.tiny_3ge import *
+from src.gp.tiny_3GE import *
 from src.gp.loss import *
 from src.gp.problem import BlackBox
 

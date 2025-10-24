@@ -5,13 +5,13 @@ This file contains the SRBench class which is used to define the configuration o
 from src.gp.functions import ADD, SUB, MUL, DIV, EXP, LOG, SQRT, SQR, CUBE
 from src.gp.tinyverse import Const, Var, GPConfig, GPHyperparameters
 from src.gp.tiny_cgp import CGPConfig, CGPHyperparameters, TinyCGP
-from src.gp.tiny_3ge import Tiny3GE, TreeGEHyperparameters, TreeGEConfig
+from src.gp.tiny_3GE import Tiny3GE, TreeGEHyperparameters, TreeGEConfig
 from src.gp.tiny_ge import TinyGE, GEHyperparameters
-from src.gp.tiny_tgp import TinyTGP, TGPHyperparameters, Node
+from src.gp.tiny_tgp import TinyTGP, TGPHyperparameters, Node 
 import copy
 import re
 from src.gp.loss import mean_squared_error, linear_scaling_mse, linear_scaling_coeff
-from src.gp.problem import Problem, BlackBox
+from src.gp.problem import Problem, BlackBox 
 
 import re
 from sklearn.base import RegressorMixin
