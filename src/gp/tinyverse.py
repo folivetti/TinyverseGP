@@ -477,22 +477,6 @@ class GPModel(ABC):
 
         return best_individual
     
-    def evolve_one_generation(self, problem):
-        """
-        Executes one generation of the evolutionary algorithm:
-        - Select parents
-        - Apply crossover and mutation
-        - Evaluate the offspring
-        - Replace the old population
-        Returns:
-            best_individual: the best individual of this generation
-        """
-        # Run the pipeline (selection + variation + evaluation)
-        best_gen = self.pipeline(problem)
-
-        # Return the best of the current generation
-        return best_gen
-
     @abstractmethod
     def selection(self) -> Any:
         """
