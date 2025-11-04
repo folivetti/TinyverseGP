@@ -170,19 +170,19 @@ class TinyTGP(GPModel):
         pop = []
         for md in range(min_depth, max_depth + 1):
             grow = True
-            for _ in range(int(num_pop / (max_depth - 3 + 1))):
+            for _ in range(int(np.ceil(num_pop / (max_depth - min_depth + 1)))):
                 # the individual may be represented by multiple trees
                 # if the problem requires multiple outputs
                 trees = []
                 for _ in range(self.config.num_outputs):
                     if grow:
-                        tree = self.tree_random_grow(min_depth, max_depth, max_size)
+                        tree = self.tree_random_grow(min_depth, md, max_size)
                     else:
-                        tree = self.tree_random_full(max_depth, max_size)
+                        tree = self.tree_random_full(md, max_size)
                     trees.append(tree)
                 pop.append(trees)
                 grow = not grow
-        return pop
+        return pop[-num_pop:]
 
     def evaluate_individual(self, genome: list[int], problem) -> float:
         """

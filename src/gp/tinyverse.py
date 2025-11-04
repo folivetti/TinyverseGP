@@ -315,9 +315,15 @@ class GPModel(ABC):
             self.num_evaluations += 1
             genome = individual.genome
             if individual.fitness is None:
-                individual.fitness = self.penalize(
-                    self.evaluate_individual(genome, problem), genome
-                )
+                # Dynamic dispatch: pass individual for Tiny3GE, genome for others
+                if self.__class__.__name__ == 'Tiny3GE':
+                    individual.fitness = self.penalize(
+                        self.evaluate_individual(individual, problem), individual
+                    )
+                else:
+                    individual.fitness = self.penalize(
+                        self.evaluate_individual(genome, problem), genome
+                    )
             fitness = individual.fitness
 
             if best is None:
@@ -471,7 +477,7 @@ class GPModel(ABC):
                 break
 
         return best_individual
-
+    
     @abstractmethod
     def selection(self) -> Any:
         """
