@@ -19,7 +19,6 @@ class FeedForward(NNModel):
         self.num_outputs = self.config.num_outputs
 
         self.layers = nn.ModuleList()
-
         self.layers.append(torch.nn.Linear(self.num_inputs, self.num_units))
 
         for _ in range(1, self.num_layers - 1):
@@ -28,6 +27,7 @@ class FeedForward(NNModel):
         self.layers.append(torch.nn.Linear(self.num_units, self.num_outputs))
 
         self.activation = self.hyperparameters.activation
+        self.dropout = nn.Dropout(self.hyperparameters.dropout)
 
     def predict(self, data):
         return self.forward(data)
@@ -36,5 +36,6 @@ class FeedForward(NNModel):
         out = self.layers[0](x)
         for idx in range(1, self.num_layers - 1):
             out = self.activation(self.layers[idx](out))
+            out = self.dropout(out)
         out = self.layers[-1](out)
         return out

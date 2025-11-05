@@ -1,10 +1,10 @@
+import torch as torch
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
-from src.gp.tinyverse import Hyperparameters
-import torch as torch
+from src.gp.tinyverse import Hyperparameters, Config
 
 @dataclass()
-class NNConfig(Hyperparameters):
+class NNConfig(Config):
     report_interval: int
     loss: callable
     ideal: float
