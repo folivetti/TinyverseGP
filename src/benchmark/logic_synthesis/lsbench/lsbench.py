@@ -1,3 +1,10 @@
+"""
+Provides a wrapper class that facilitates the usage of the
+General Boolean Function Benchmark Suite (GBFS):
+
+https://dl.acm.org/doi/abs/10.1145/3594805.3607131
+"""
+
 import os
 from sklearn.base import RegressorMixin
 from pathlib import Path
