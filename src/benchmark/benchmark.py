@@ -15,3 +15,9 @@ class Benchmark(ABC):
         problem type.
         """
         pass
+
+class BenchmarkSuite(Benchmark):
+
+    @abstractmethod
+    def bench(self, args: any):
+        pass
