@@ -77,9 +77,9 @@ class LSBench(Benchmark):
         self.benchmarks["enc16"] = LSBenchmark(file_=self.data_dir + "/tt/onehot_enc16.tt", name_="enc16")
         self.benchmarks["enc32"] = LSBenchmark(file_=self.data_dir + "/tt/onehot_enc32.tt", name_="enc32")
 
+        self.benchmarks["dec4"] = LSBenchmark(file_=self.data_dir + "/tt/onehot_dec4.tt", name_="dec4")
         self.benchmarks["dec8"] = LSBenchmark(file_=self.data_dir + "/tt/onehot_dec8.tt", name_="dec8")
         self.benchmarks["dec16"] = LSBenchmark(file_=self.data_dir + "/tt/onehot_dec16.tt", name_="dec16")
-        self.benchmarks["dec32"] = LSBenchmark(file_=self.data_dir + "/tt/onehot_dec32.tt", name_="dec32")
 
         self.benchmarks["count4"] = LSBenchmark(file_=self.data_dir + "/tt/onescount4.tt", name_="count4")
         self.benchmarks["count6"] = LSBenchmark(file_=self.data_dir + "/tt/onescount6.tt", name_="count6")
@@ -185,14 +185,14 @@ class LSBench(Benchmark):
     def enc32(self):
         return self.benchmarks["enc32"]
 
+    def dec4(self):
+        return self.benchmarks["dec4"]
+
     def dec8(self):
         return self.benchmarks["dec8"]
 
     def dec16(self):
         return self.benchmarks["dec16"]
-
-    def dec32(self):
-        return self.benchmarks["dec32"]
 
     def count4(self):
         return self.benchmarks["count4"]
