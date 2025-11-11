@@ -57,15 +57,20 @@ LOG = Function(1, "LOG", plog)
 SQRT = Function(1, "SQRT", psqrt)
 SQR = Function(1, "SQR", square)
 CUBE = Function(1, "CUBE", cube)
+POWER = Function(2, "Power", operator.pow, lambda x, y: x**y)
 
 # Logical Functions
 AND = Function(2, "AND", lambda x, y: int(x) & int(y))
 OR = Function(2, "OR", lambda x, y: int(x) | int(y))
 NOT = Function(1, "NOT", lambda x: ~int(x))
+NOTA = Function(2, "NOTa", lambda x,y: ~int(x))
+NOTB = Function(2, "NOTb", lambda x,y: ~int(y))
 NAND = Function(2, "NAND", lambda x, y: ~(int(x) & int(y)))
 NOR = Function(2, "NOR", lambda x, y: ~(int(x) | int(y)))
 XOR = Function(2, "XOR", lambda x, y: int(x) ^ int(y))
 XNOR = Function(2, "XNOR", lambda x, y: ~(int(x) ^ int(y)))
+BUFA = Function(2, "BUFa", lambda x, y: x)
+BUFB = Function(2, "BUFb", lambda x, y: y)
 
 # Policy Search / Classification
 LT = Function(2, "LT", lambda x, y: b2f(x < y))

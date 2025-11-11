@@ -3,8 +3,18 @@ Benchmark representation module for symbolic regression.
 """
 
 import random
+import numpy as np
 from src.benchmark.benchmark import Benchmark
 
+
+def koza1(x):
+    return pow(x, 4) + pow(x, 3) + pow(x, 2) + x
+
+def koza2(x):
+    return pow(x, 5) - 2 * pow(x, 3) + x
+
+def koza3(x):
+    return pow(x, 6) - 2 * pow(x, 4) + pow(x, 2)
 
 class SRBenchmark(Benchmark):
     """
@@ -35,6 +45,23 @@ class SRBenchmark(Benchmark):
         values = [self.objective(benchmark, point) for point in sample]
         return sample, values
 
+    @staticmethod
+    def random_set(min, max, n, objective, dim=1):
+        def random_samples(min, max, n, dim=1):
+            assert min < max
+            samples = []
+
+            for idx in range(0, dim):
+                sample = (max - min) * np.random.random_sample(n) + min
+                samples.append(np.array(sample, dtype=np.float32))
+
+            return np.stack(samples, axis=1)
+
+        samples = random_samples(min, max, n, dim)
+        values = [objective(point) for point in samples]
+
+        return samples, np.array(values, dtype=np.float32)
+
     def generate(self, benchmark: str) -> tuple:
         """
         Generates the dataset for a selected benchmark function.
@@ -44,11 +71,13 @@ class SRBenchmark(Benchmark):
         """
         match benchmark:
             case "KOZA1":
-                return self.dataset_uniform(-1, 1, 20, 1, benchmark)
+                return self.dataset_uniform(-10, 10, 20, 1, benchmark)
             case "KOZA2":
-                return self.dataset_uniform(-1, 1, 20, 1, benchmark)
+                return self.dataset_uniform(-10, 10, 20, 1, benchmark)
             case "KOZA3":
-                return self.dataset_uniform(-1, 1, 20, 1, benchmark)
+                return self.dataset_uniform(-10, 10, 20, 1, benchmark)
+            case "DEBUG":
+                return self.dataset_uniform(-4, 4, 100, 1, benchmark)
 
     def objective(self, benchmark: str, args: list) -> float:
         """
@@ -66,3 +95,5 @@ class SRBenchmark(Benchmark):
                 return pow(args[0], 5) - 2 * pow(args[0], 3) + args[0]
             case "KOZA3":
                 return pow(args[0], 6) - 2 * pow(args[0], 4) + pow(args[0], 2)
+            case "DEBUG":
+                return pow(args[0], 3) - pow(args[0], 2) + pow(args[0], 4)

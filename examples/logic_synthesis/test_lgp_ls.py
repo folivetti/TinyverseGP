@@ -22,34 +22,42 @@ benchmark.generate()
 truth_table = benchmark.get_truth_table()
 num_inputs = benchmark.benchmark.num_inputs
 num_outputs = benchmark.benchmark.num_outputs
+print(num_inputs, num_outputs)
 
-functions = [AND, OR, NAND, NOR]
+functions = [AND, OR, NAND, NOR, XOR, NOT]
 terminals = [Var(i) for i in range(num_inputs)]
 
 hyperparameters = LGPHyperparameters(
-    mu=1000,
-    probability_mutation=0.3,
-    branch_probability=0.2,
-    max_len = 8,
-    p_register = 0.5,
+    mu=5000,
+    macro_variation_rate=0.75,
+    micro_variation_rate=0.25,
+    insertion_rate=0.4,
+    max_segment=15,
+    reproduction_rate=0.2,
+    branch_probability=0.0,
+    p_register = 0.1,
+    max_len = 150,
+    initial_max_len = 35,
     erc = False,
-    default_value = 0.0
+    default_value = 0,
+    protection = 1e10,
+    penalization_validity_factor=0.0
 )
 config = LGPConfig(
         num_jobs=1,
-        max_generations=10000 - hyperparameters.mu,
-        stopping_criteria=1e-6,
+        max_generations=1_000_000, # - hyperparameters.mu,
+        stopping_criteria=0,
         minimizing_fitness=True,
-        ideal_fitness=1e-6,
+        ideal_fitness=0,
         silent_algorithm=False,
         silent_evolver=False,
         minimalistic_output=True,
-        report_interval=hyperparameters.mu,
-        max_time=500,
+        report_interval=10*hyperparameters.mu,
+        max_time=2000,
         num_outputs=num_outputs,
-        num_registers=num_outputs+4,
-        global_seed=42,
-        checkpoint_interval=100,
+        num_registers=6,
+        global_seed=None,
+        checkpoint_interval=1000000000,
         checkpoint_dir="checkpoints",
         experiment_name="logic_lgp",
 )
@@ -59,5 +67,6 @@ data = truth_table.inputs
 actual = truth_table.outputs
 problem = BlackBox(data, actual, loss, 0, True)
 
-tgp = TinyLGP(functions, terminals, config, hyperparameters)
-tgp.evolve(problem)
+lgp = TinyLGP(functions, terminals, config, hyperparameters)
+lgp.evolve(problem)
+print(lgp.expression(lgp.best_individual.genome))
