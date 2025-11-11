@@ -31,7 +31,7 @@ class CGPHyperparameters(Hyperparameters):
     mu: int
     lmbda: int
     num_function_nodes: int
-    population_size: int
+    pop_size: int
     levels_back: int
     strict_selection: bool
     mutation_rate: float = None
@@ -144,7 +144,7 @@ class TinyCGP(GPModel):
         :return: list of individuals
         """
         self.population.clear()
-        for _ in range(self.hyperparameters.population_size):
+        for _ in range(self.hyperparameters.pop_size):
             individual = self.init_individual()
             self.population.append(individual)
 

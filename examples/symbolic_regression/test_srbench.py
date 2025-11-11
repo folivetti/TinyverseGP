@@ -11,7 +11,6 @@ from src.benchmark.symbolic_regression.srbench import SRBench
 import numpy as np
 from pmlb import fetch_data
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, r2_score
 from src.gp.tiny_cgp import CGPConfig, CGPHyperparameters
 from src.gp.tiny_tgp import TGPHyperparameters, TGPConfig
 
@@ -21,12 +20,7 @@ POPSIZE = 100
 group_datasets = [
     ["522_pm10", "678_visualizing_environmental", "192_vineyard", "1028_SWD"],
     ["1199_BNG_echoMonths", "210_cloud", "1089_USCrime", "1193_BNG_lowbwt"],
-    [
-        "557_analcatdata_apnea1",
-        "650_fri_c0_500_50",
-        "579_fri_c0_250_5",
-        "606_fri_c2_1000_10",
-    ],
+    ["557_analcatdata_apnea1", "650_fri_c0_500_50", "579_fri_c0_250_5", "606_fri_c2_1000_10"],
 ]
 
 functions = ["+", "-", "*", "/", "exp", "log", "square", "cube"]
@@ -47,8 +41,9 @@ cgp_hyperparams = CGPHyperparameters(
     lmbda=10,
     strict_selection=True,
     mutation_rate=0.3,
-    population_size=POPSIZE,
+    pop_size=POPSIZE,
     levels_back=10,
+    num_function_nodes=30,
 )
 
 #   Set up configurations for TGP and CGP
@@ -82,7 +77,6 @@ cgp_config = CGPConfig(
     max_arity=2,
     num_inputs=1,
     num_outputs=1,
-    num_function_nodes=30,
     report_interval=10,
     max_time=MAXTIME,
     global_seed=42,
