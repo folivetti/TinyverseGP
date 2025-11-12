@@ -14,6 +14,7 @@ from sklearn.model_selection import train_test_split
 from src.gp.tiny_cgp import CGPConfig, CGPHyperparameters, TinyCGP
 from src.gp.tiny_tgp import TGPHyperparameters, TGPConfig, TinyTGP
 import argparse
+import csv
 from src.gp.problem import Problem, BlackBox
 
 from src.hpo.hpo import SMACInterface
@@ -30,10 +31,7 @@ parser.add_argument('--popsize', dest='popsize', type=int, default=100)
 parser.add_argument('--algo', dest='algo', type=str, default="TGP")
 parser.add_argument('-s', '--seed', dest='seed', type=int, default=42)
 parser.add_argument('-o', '--optimise', action='store_true')
-parser.add_argument('-v', '--verbose',
-                    action='store_true')  # on/off flag
-
-
+parser.add_argument('-v', '--verbose', action='store_true')  # on/off flag
 args = parser.parse_args()
 
 group_datasets = [['522_pm10', '678_visualizing_environmental', '192_vineyard', '1028_SWD'],
@@ -68,7 +66,7 @@ if args.algo=='TGP':
                             num_outputs=1,
                             report_interval=1000000,
                             max_time=args.maxtime,
-                            global_seed=42,
+                            global_seed=args.seed,
                             checkpoint_interval=10,
                             checkpoint_dir='checkpoints',
                             experiment_name='srbench_tgp'
@@ -81,7 +79,8 @@ elif args.algo=='CGP':
         lmbda=10,
         strict_selection=True,
         mutation_rate=0.3,
-        population_size=args.popsize,
+        pop_size=args.popsize,
+        num_function_nodes=30,
         levels_back=10
     )
 
@@ -99,10 +98,9 @@ elif args.algo=='CGP':
                             max_arity=2,
                             num_inputs=1,
                             num_outputs=1,
-                            num_function_nodes=30,
                             report_interval=10,
                             max_time=args.maxtime,
-                            global_seed=42,
+                            global_seed=args.seed,
                             checkpoint_interval=10,
                             checkpoint_dir='checkpoints',
                             experiment_name='srbench_cgp'
@@ -113,30 +111,70 @@ else:
     print(f"{args.algo} is not a supported algorithm")
     exit()
 
-for g in group_datasets:
-    for d in g:
-        print(f"Running dataset: {d}\n")
-        X, y = fetch_data(d, return_X_y=True)
-        train_X, test_X, train_y, test_y = train_test_split(X, y, train_size=0.75)
 
-        algo = SRBench(args.algo, config, hyperparams, functions=functions, terminals=terminals, scaling_=scaling)
-        if args.optimise:
-            interface = SMACInterface()
-
-            ## Perform HPO via SMAC
-            config.silent_algorithm=True
-            config.silent_evolver=True
-            trials = 50
-            problem  = BlackBox(X, y, algo.loss, 1e-16, True)
-            model = TinyTGP(problem, algo.functions, algo.terminals, algo.config, algo.hyperparameters)
-            opt_hyperparameters = interface.optimise(model,trials)
-            algo = SRBench(args.algo, config, opt_hyperparameters, functions=functions, terminals=terminals, scaling_=scaling)
-
+csv_filename = f"results_{args.algo}_{args.seed}.csv"
+with open(csv_filename, mode="w", newline="") as csv_file:
+    fieldnames = ["dataset_name", "algo_name", "nb_trials", "def_parameters", "opt_parameters", "def_train", "def_test", "opt_train", "opt_test", "seed"]
+    writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+    writer.writeheader()
+    
+    for g in group_datasets:
+        for d in g[:-1]:
+            print(f"Running dataset: {d}\n")
+            X, y = fetch_data(d, return_X_y=True)
+            train_X, test_X, train_y, test_y = train_test_split(X, y, train_size=0.75, random_state=1337)
             
-        algo.fit(train_X, train_y) #, checkpoint="examples/checkpoint/srbench_cgp/checkpoint_gen_40.dill")
-        print(algo.get_model())
-        print(f"{args.algo} train score: {algo.score(train_X, train_y)}")
-        print(f"{args.algo} test score: {algo.score(test_X, test_y)}")
-        print("="*50)
+            # Default run
+            algo = SRBench(args.algo, config, hyperparams, functions=functions, terminals=terminals, scaling_=scaling)
+            algo.fit(train_X, train_y)
+            def_train_score = algo.score(train_X, train_y)
+            def_test_score = algo.score(test_X, test_y)
+            
+            writer.writerow({
+                'dataset_name': d,
+                'algo_name': args.algo,
+                'nb_trials': 0,
+                'def_parameters': str(hyperparams.__dict__),
+                'opt_parameters': str(hyperparams.__dict__),
+                'def_train': def_train_score,
+                'def_test': def_test_score,
+                'opt_train': def_train_score,
+                'opt_test': def_test_score,
+                'seed': args.seed
+            })
+
+            algo = SRBench(args.algo, config, hyperparams, functions=functions, terminals=terminals, scaling_=scaling)
+            if args.optimise:
+                interface = SMACInterface()
+
+                ## Perform HPO via SMAC
+                config.silent_algorithm=True
+                config.silent_evolver=True
+                trials = 200
+                if args.algo=='CGP':
+                    model = TinyCGP(algo.functions, algo.terminals, algo.config, algo.hyperparameters)
+                elif args.algo=='TGP':   
+                    model = TinyTGP(algo.functions, algo.terminals, algo.config, algo.hyperparameters)
+                opt_hyperparameters = interface.optimise(model,trials, train_X, train_y)
+                algo = SRBench(args.algo, config, opt_hyperparameters, functions=functions, terminals=terminals, scaling_=scaling)
+                
+                algo.fit(train_X, train_y) 
+                opt_train_score = algo.score(train_X, train_y)
+                opt_test_score = algo.score(test_X, test_y)
+                
+                writer.writerow(
+                    {
+                        "dataset_name": d,
+                        "algo_name": args.algo,
+                        "nb_trials": trials,
+                        "def_parameters": str(hyperparams.__dict__),
+                        "opt_parameters": str(opt_hyperparameters.__dict__),
+                        "def_train": def_train_score,
+                        "def_test": def_test_score,
+                        "opt_train": opt_train_score,
+                        "opt_test": opt_test_score,
+                        "seed": args.seed,
+                    }
+                )
 
 
