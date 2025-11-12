@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from src.gp.tinyverse import GPModel, GPHyperparameters
+from src.gp.problem import Problem
 from ConfigSpace import Configuration, ConfigurationSpace
 from smac import HyperparameterOptimizationFacade, Scenario
 import copy
@@ -17,7 +18,7 @@ class HPOInterface(ABC):
 
 
 class SMACInterface(HPOInterface):
-    def optimise(self, gpmodel_: GPModel, n_trials_=10, train_X=None, train_y=None) -> GPHyperparameters:
+    def optimise(self, gpmodel_: GPModel, problem : Problem, n_trials_=10) -> GPHyperparameters:
         """
         Runs HPO with SMAC (https://github.com/automl/SMAC3)
         Args:
@@ -33,7 +34,7 @@ class SMACInterface(HPOInterface):
             for c in config.keys():
                 setattr(gpmodel.hyperparameters, c, config[c])
             # Use train_X and train_y in the model's training process
-            gpmodel.fit(train_X, train_y)
+            gpmodel.evolve(problem)
             return gpmodel.best_individual.fitness
 
         # Obtain the hyperparameter (HP) space from the GP model

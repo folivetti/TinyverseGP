@@ -155,7 +155,7 @@ with open(csv_filename, mode="w", newline="") as csv_file:
                     model = TinyCGP(algo.functions, algo.terminals, algo.config, algo.hyperparameters)
                 elif args.algo=='TGP':   
                     model = TinyTGP(algo.functions, algo.terminals, algo.config, algo.hyperparameters)
-                opt_hyperparameters = interface.optimise(model,trials, train_X, train_y)
+                opt_hyperparameters = interface.optimise(model,BlackBox(train_X, train_y, algo.loss, 1e-16, True), n_trials_=trials)
                 algo = SRBench(args.algo, config, opt_hyperparameters, functions=functions, terminals=terminals, scaling_=scaling)
                 
                 algo.fit(train_X, train_y) 
