@@ -7,6 +7,7 @@ https://cavalab.org/srbench/
 https://github.com/cavalab/srbench/tree/master
 """
 
+from backup.tiny_gp import Var
 from src.benchmark.symbolic_regression.srbench import SRBench
 import numpy as np
 from pmlb import fetch_data
@@ -16,9 +17,10 @@ from src.gp.tiny_tgp import TGPHyperparameters, TGPConfig, TinyTGP
 import argparse
 import csv
 from src.gp.problem import Problem, BlackBox
-
+from src.gp.loss import mean_squared_error, linear_scaling_mse
+from src.gp.functions import ADD, SUB, MUL, DIV, EXP, LOG, SQR, CUBE
 from src.hpo.hpo import SMACInterface
-
+from src.gp.tinyverse import Const
 
 parser = argparse.ArgumentParser(
                                 prog='SRBench Test Scenario',
@@ -39,7 +41,8 @@ group_datasets = [['522_pm10', '678_visualizing_environmental', '192_vineyard', 
                   ['557_analcatdata_apnea1', '650_fri_c0_500_50', '579_fri_c0_250_5', '606_fri_c2_1000_10']
                  ]
 
-functions = ['+','-','*','/','exp','log','square','cube']
+strfunctions = ['+','-','*','/','exp','log','square','cube']
+functions = [ADD, SUB, MUL, DIV, EXP, LOG, SQR, CUBE] 
 terminals=[1,0.5,np.pi, np.sqrt(2)]
 print(args)
 if args.algo=='TGP':
@@ -125,7 +128,7 @@ with open(csv_filename, mode="w", newline="") as csv_file:
             train_X, test_X, train_y, test_y = train_test_split(X, y, train_size=0.75, random_state=1337)
             
             # Default run
-            algo = SRBench(args.algo, config, hyperparams, functions=functions, terminals=terminals, scaling_=scaling)
+            algo = SRBench(args.algo, config, hyperparams, functions=strfunctions, terminals=terminals, scaling_=scaling)
             algo.fit(train_X, train_y)
             def_train_score = algo.score(train_X, train_y)
             def_test_score = algo.score(test_X, test_y)
@@ -143,7 +146,7 @@ with open(csv_filename, mode="w", newline="") as csv_file:
                 'seed': args.seed
             })
 
-            algo = SRBench(args.algo, config, hyperparams, functions=functions, terminals=terminals, scaling_=scaling)
+            algo = SRBench(args.algo, config, hyperparams, functions=strfunctions, terminals=terminals, scaling_=scaling)
             if args.optimise:
                 interface = SMACInterface()
 
@@ -151,13 +154,17 @@ with open(csv_filename, mode="w", newline="") as csv_file:
                 config.silent_algorithm=True
                 config.silent_evolver=True
                 trials = 200
+                problem=BlackBox(train_X, train_y, algo.loss, 1e-16, True)
+                pb_terminals = [Var(i) for i in range(train_X.shape[1])] + terminals
+                pb_terminals = [Const(c) for c in pb_terminals]
+                loss = linear_scaling_mse if scaling else mean_squared_error
                 if args.algo=='CGP':
-                    model = TinyCGP(algo.functions, algo.terminals, algo.config, algo.hyperparameters)
+                    model = TinyCGP(functions, pb_terminals, config, hyperparams)
                 elif args.algo=='TGP':   
-                    model = TinyTGP(algo.functions, algo.terminals, algo.config, algo.hyperparameters)
-                opt_hyperparameters = interface.optimise(model,BlackBox(train_X, train_y, algo.loss, 1e-16, True), n_trials_=trials)
-                algo = SRBench(args.algo, config, opt_hyperparameters, functions=functions, terminals=terminals, scaling_=scaling)
+                    model = TinyTGP(functions, pb_terminals, config, hyperparams)
+                opt_hyperparameters = interface.optimise(model,problem, n_trials_=trials)
                 
+                algo = SRBench(args.algo, config, opt_hyperparameters, functions=functions, terminals=terminals, scaling_=scaling)
                 algo.fit(train_X, train_y) 
                 opt_train_score = algo.score(train_X, train_y)
                 opt_test_score = algo.score(test_X, test_y)
