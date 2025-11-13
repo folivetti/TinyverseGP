@@ -5,6 +5,7 @@ Benchmark representation module for logic synthesis.
 from src.benchmark.benchmark import Benchmark
 import src.benchmark.logic_synthesis.boolean_benchmark_tools.benchmark_reader as BenchmarkReader
 
+
 class LSBenchmark(Benchmark):
     """
     Class for representing logic synthesis benchmarks. Receives
@@ -14,10 +15,13 @@ class LSBenchmark(Benchmark):
     benchmark: BenchmarkReader.Benchmark
     reader: BenchmarkReader.BenchmarkReader
     file: str
+    name: str
 
-    def __init__(self, file_: str):
+    def __init__(self, file_: str, name_ = ""):
         self.file = file_
+        self.name = name_
         self.reader = BenchmarkReader.BenchmarkReader()
+        self.generate()
 
     def generate(self):
         """
@@ -32,3 +36,6 @@ class LSBenchmark(Benchmark):
 
     def get_truth_table(self):
         return self.benchmark.table
+
+    def __str__(self):
+        print(self.name)

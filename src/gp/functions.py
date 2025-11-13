@@ -5,6 +5,7 @@ that are commonly used to curate the GP function set.
 
 from src.gp.tinyverse import Function
 import operator
+import numpy as np
 
 def f2b(input: float):
     """
@@ -18,26 +19,51 @@ def b2f(input: bool):
     """
     return 1.0 if input else -1.0
 
-def pdiv(x, y):
-    """
-    Performs a protected division.
-    """
-    return x / y if y > 0 else 1.0
+def pdiv(x, y, eps=1e-8):
+    return np.divide(x, y + (np.abs(y) < eps) * eps)
+
+def square(x, clip=1e100):
+    return np.clip(np.square(x), -clip, clip)
+
+def cube(x, clip=1e100):
+    return np.clip(np.power(x, 3), -clip, clip)
+
+
+def plog(x):
+    if x == 0.0:
+        return 0.0
+    return np.log(np.abs(x))
+
+def psqrt(x):
+    return np.sqrt(np.abs(x))
+
+def pexp(x, clip=50.0):
+    return np.clip(np.exp(x), -clip, clip)
 
 # Arithmetic Functions
-ADD = Function(2, 'Add', operator.add)
-SUB = Function(2, 'Sub', operator.sub, lambda x, y: x-y)
-MUL = Function(2, 'Mul', operator.mul)
-DIV = Function(2, 'Div', pdiv, lambda x, y: x/y)
+ADD = Function(2, "Add", operator.add)
+SUB = Function(2, "Sub", operator.sub, lambda x, y: x - y)
+MUL = Function(2, "Mul", operator.mul)
+DIV = Function(2, "Div", pdiv, lambda x, y: x / y)
+EXP = Function(1, "EXP", np.exp)
+LOG = Function(1, "LOG", plog)
+SQRT = Function(1, "SQRT", psqrt)
+SQR = Function(1, "SQR", square)
+CUBE = Function(1, "CUBE", cube)
+POWER = Function(2, "Power", operator.pow, lambda x, y: x**y)
 
 # Logical Functions
-AND = Function(2, 'AND', lambda x,y : int(x) & int(y))
-OR  = Function(2, 'OR', lambda x,y : int(x) | int(y))
-NOT = Function(1, 'NOT', lambda x : ~int(x))
-NAND = Function(2, 'NAND', lambda x,y : ~(int(x) & int(y)))
-NOR = Function(2, 'NOR', lambda x,y : ~(int(x) | int(y)))
-XOR = Function(2, 'XOR', lambda x,y : int(x) ^ int(y))
-XNOR = Function(2, 'XNOR', lambda x,y : ~(int(x) ^ int(y)))
+AND = Function(2, "AND", lambda x, y: int(x) & int(y))
+OR = Function(2, "OR", lambda x, y: int(x) | int(y))
+NOT = Function(1, "NOT", lambda x: ~int(x))
+NOTA = Function(2, "NOTa", lambda x,y: ~int(x))
+NOTB = Function(2, "NOTb", lambda x,y: ~int(y))
+NAND = Function(2, "NAND", lambda x, y: ~(int(x) & int(y)))
+NOR = Function(2, "NOR", lambda x, y: ~(int(x) | int(y)))
+XOR = Function(2, "XOR", lambda x, y: int(x) ^ int(y))
+XNOR = Function(2, "XNOR", lambda x, y: ~(int(x) ^ int(y)))
+BUFA = Function(2, "BUFa", lambda x, y: x)
+BUFB = Function(2, "BUFb", lambda x, y: y)
 
 # Policy Search / Classification
 LT = Function(2, 'LT', lambda x,y : b2f(x < y))

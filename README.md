@@ -17,10 +17,14 @@ This repository is organized as follows:
 - `src/gp`: contains the core implementation of the different representations.
   - `tiny_tgp.py`: implementation of Tree-based Genetic Programming (TGP).
   - `tiny_cgp.py`: implementation of Cartesian Genetic Programming (CGP).
+  - `tiny_lgp.py`: implementation of Linear Genetic Programming (LGP).
+  - `tiny_ge.py`: implementation of Grammatical Evolution (GE).
   - `tineverse.py`: the abstract classes for GP, Config, Hyperparameters, and Function set.
   - `functions.py`: the standard set of functions currently supported.
   - `problem.py`: the abstract class for the problem to be solved. It includes the example based problem (black-box), policy search, and program synthesis.
   - `loss.py`: currently supported loss functions.
+- `src/llm`: contains the interfaces for the use of LLM's
+- `src/hpo`: contains the interfaces for the use hyperparameter optimisation tools 
 - `src/benchmark`: contains the benchmark problems and datasets.
   - `symbolic_regression/sr_benchmark.py`: sample symbolic regression benchmark problems.
   - `symbolic_regression/srbench.py`:  interface to the SRBench benchmark suite.
@@ -30,7 +34,7 @@ This repository is organized as follows:
 
 # Requirements and testing
 
-The current version supports Python3.9 and higher. To install the requirements it is suggest to run:
+The current version supports Python3.9 and Python3.10. To install the requirements it is suggest to run:
 
 
 ```bash
@@ -38,6 +42,15 @@ python3 -m venv env
 . env/bin/activate
 pip3 install -r requirements.txt
 ```
+
+If you have a different Python version, you can use [Pyenv](https://github.com/pyenv/pyenv?tab=readme-ov-file#installation) to switch between versions:
+
+```bash
+pyenv install 3.10
+pyenv sell 3.10
+```
+
+**NOTE:** we currently do not support Python versions higher than 3.10 due to an issue with one of the dependencies ([see here](https://github.com/automl/random_forest_run/issues/78))
 
 To run the examples, you can use one of the following command:
 
@@ -51,6 +64,8 @@ python3 -m examples.policy_learning.test_cgp_pl_ale
 python3 -m examples.policy_learning.test_tgp_pl
 python3 -m examples.program_synthesis.test_cgp_ps
 python3 -m examples.program_synthesis.test_tgp_ps
+python3 -m examples.hpo.test_cgp_sr
+python3 -m examples.hpo.test_tgp_sr
 ```
 
 or any other script in that folder.
@@ -105,7 +120,7 @@ See [Collaborators.md](Collaborators.md) for the current list of collaborators. 
 
 # Accepted peer-reviewed work
 
-A short paper that proposes the first prototype of TinyverseGP  has been accepted for poster presentation at the [Genetic and Evolutionary Computation Conference](https://gecco-2025.sigevo.org/HomePage) (GECCO'25). 
+A short paper that proposes the first prototype of TinyverseGP  has been accepted for poster presentation at the [Genetic and Evolutionary Computation Conference](https://gecco-2025.sigevo.org/HomePage) (GECCO'25). The paper can be obtained from [arXiv](https://arxiv.org/abs/2504.10253). 
 
 > Roman Kalkreuth, Fabricio Olivetti de França, Julian Dierkes, Marie Anastacio, Anja Jankovic, Zdenek Vasicek, and Holger Hoos. 2025. TinyverseGP: Towards a Modular Cross-domain Benchmarking Framework for Genetic Programming. In Genetic and Evolutionary Computation Conference (GECCO ’25 Companion), July 14–18, 2025, Malaga, Spain. ACM, New York, NY, USA, 4 pages. https://doi.org/10.1145/3712255.3726697
 
@@ -116,3 +131,5 @@ This work is under GNU General Public License, Version 3.
 # Acknowledgements
 
 This work was supported by an Alexander von Humboldt Professorship in AI held by Holger Hoos, the Czech Science Foundation project 25-15490S and Conselho Nacional de Desenvolvimento Cientifico e Tecnologico (CNPq) grant 301596/2022-0.
+
+
