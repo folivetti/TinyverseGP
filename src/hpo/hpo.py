@@ -4,6 +4,8 @@ from src.gp.problem import Problem
 from ConfigSpace import Configuration, ConfigurationSpace
 from smac import HyperparameterOptimizationFacade, Scenario
 import copy
+from src.benchmark.symbolic_regression.srbench import SRBench
+import numpy as np
 
 
 class HPOInterface(ABC):
@@ -52,7 +54,64 @@ class SMACInterface(HPOInterface):
             setattr(inc_hp, c, incumbent[c])
         return inc_hp
 
+class SMAC4SRBenchInterface:
+    def __init__(self, srbench: SRBench):
+        """
+        Initialize the SMAC4SRBenchInterface with an SRBench instance.
+        Args:
+            srbench: An instance of SRBench to be optimized.
+        """
+        self.srbench = srbench
+        self.model_type = srbench.representation  # 'TGP' or 'CGP'
 
+    def optimise(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        n_trials: int = 10,
+        seed: int = 42,
+    ) -> GPHyperparameters:
+        """
+        Optimize the hyperparameters of the SRBench model using SMAC.
+        Args:
+            X: Training features.
+            y: Training labels.
+            n_trials: Number of SMAC trials.
+            seed: Random seed for reproducibility.
+        Returns:
+            Dictionary of optimized hyperparameters.
+        """
+
+        def train(config: Configuration, seed: int = 0) -> float:
+            # Create a copy of the SRBench instance
+            srbench = copy.deepcopy(self.srbench)
+            # Apply the SMAC configuration to the hyperparameters
+            for param, value in config.items():
+                setattr(srbench.hyperparameters, param, value)
+            # Fit the model
+            srbench.fit(X, y)
+            # Return the fitness (e.g., negative MSE for minimization)
+            return -srbench.score(X, y)  # SMAC minimizes, so return negative score
+
+        # Get the hyperparameter space from the SRBench's hyperparameters
+        paramspace = self.srbench.hyperparameters.space
+        # Initialize the configuration space
+        configspace = ConfigurationSpace(paramspace)
+        # Define the SMAC scenario
+        scenario = Scenario(
+            configspace,
+            deterministic=True,
+            n_trials=n_trials,
+            seed=seed,
+        )
+        # Run SMAC optimization
+        smac = HyperparameterOptimizationFacade(scenario, train)
+        incumbent = smac.optimize()
+        inc_hp = copy.deepcopy(self.srbench.hyperparameters)
+        for c in incumbent.keys():
+            setattr(inc_hp, c, incumbent[c])
+        return inc_hp
+    
 class Hpo:
     """
     Class that provides methods to run HPO for GP models

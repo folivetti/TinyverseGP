@@ -19,7 +19,7 @@ import csv
 from src.gp.problem import Problem, BlackBox
 from src.gp.loss import mean_squared_error, linear_scaling_mse
 from src.gp.functions import ADD, SUB, MUL, DIV, EXP, LOG, SQR, CUBE
-from src.hpo.hpo import SMACInterface
+from src.hpo.hpo import SMAC4SRBenchInterface, SMACInterface
 from src.gp.tinyverse import Const
 
 parser = argparse.ArgumentParser(
@@ -31,12 +31,16 @@ parser.add_argument('--maxtime', dest='maxtime', type=int, default=3600)
 parser.add_argument('--maxgen', dest='maxgen', type=int, default=100)
 parser.add_argument('--popsize', dest='popsize', type=int, default=100)
 parser.add_argument('--algo', dest='algo', type=str, default="TGP")
+parser.add_argument('-d', '--dataset', dest='dataset', type=str, default="")
 parser.add_argument('-s', '--seed', dest='seed', type=int, default=42)
 parser.add_argument('-o', '--optimise', action='store_true')
 parser.add_argument('-v', '--verbose', action='store_true')  # on/off flag
 args = parser.parse_args()
 
-group_datasets = [['522_pm10', '678_visualizing_environmental', '192_vineyard', '1028_SWD'],
+if args.dataset != "":
+    group_datasets = [[args.dataset]]
+else:
+    group_datasets = [['522_pm10', '678_visualizing_environmental', '192_vineyard', '1028_SWD'],
                   ['1199_BNG_echoMonths', '210_cloud', '1089_USCrime', '1193_BNG_lowbwt'],
                   ['557_analcatdata_apnea1', '650_fri_c0_500_50', '579_fri_c0_250_5', '606_fri_c2_1000_10']
                  ]
@@ -115,14 +119,15 @@ else:
     exit()
 
 
-csv_filename = f"results_{args.algo}_{args.seed}.csv"
-with open(csv_filename, mode="w", newline="") as csv_file:
-    fieldnames = ["dataset_name", "algo_name", "nb_trials", "def_parameters", "opt_parameters", "def_train", "def_test", "opt_train", "opt_test", "seed"]
-    writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-    writer.writeheader()
+
     
-    for g in group_datasets:
-        for d in g[:-1]:
+for g in group_datasets:
+    for d in g:
+        csv_filename = f"{d}_{args.algo}_{args.seed}.csv"
+        with open(csv_filename, mode="w", newline="") as csv_file:
+            fieldnames = ["dataset_name", "algo_name", "nb_trials", "def_parameters", "opt_parameters", "def_train", "def_test", "opt_train", "opt_test", "seed"]
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+            writer.writeheader()
             print(f"Running dataset: {d}\n")
             X, y = fetch_data(d, return_X_y=True)
             train_X, test_X, train_y, test_y = train_test_split(X, y, train_size=0.75, random_state=1337)
@@ -148,23 +153,35 @@ with open(csv_filename, mode="w", newline="") as csv_file:
 
             algo = SRBench(args.algo, config, hyperparams, functions=strfunctions, terminals=terminals, scaling_=scaling)
             if args.optimise:
-                interface = SMACInterface()
+                
 
                 ## Perform HPO via SMAC
                 config.silent_algorithm=True
                 config.silent_evolver=True
                 trials = 200
-                problem=BlackBox(train_X, train_y, algo.loss, 1e-16, True)
-                pb_terminals = [Var(i) for i in range(train_X.shape[1])] + terminals
-                pb_terminals = [Const(c) for c in pb_terminals]
-                loss = linear_scaling_mse if scaling else mean_squared_error
-                if args.algo=='CGP':
-                    model = TinyCGP(functions, pb_terminals, config, hyperparams)
-                elif args.algo=='TGP':   
-                    model = TinyTGP(functions, pb_terminals, config, hyperparams)
-                opt_hyperparameters = interface.optimise(model,problem, n_trials_=trials)
                 
-                algo = SRBench(args.algo, config, opt_hyperparameters, functions=functions, terminals=terminals, scaling_=scaling)
+                # try GPModel HPO (does not work for now)
+                # interface = SMACInterface()
+                # problem=BlackBox(train_X, train_y, algo.loss, 1e-16, True)
+                # pb_terminals = [Var(i) for i in range(train_X.shape[1])] + [Const(c) for c in terminals]
+                # loss = linear_scaling_mse if scaling else mean_squared_error
+                # if args.algo=='CGP':
+                #     model = TinyCGP(functions, pb_terminals, config, hyperparams)
+                # elif args.algo=='TGP':   
+                #     model = TinyTGP(functions, pb_terminals, config, hyperparams)
+                # opt_hyperparameters = interface.optimise(model,problem, n_trials_=trials)
+                
+                # try SRBench HPO
+                algo = SRBench(args.algo, config, hyperparams, functions=strfunctions, terminals=terminals, scaling_=scaling)
+                interface_srbench = SMAC4SRBenchInterface(algo)
+                opt_hyperparameters_srbench = interface_srbench.optimise(
+                    train_X,
+                    train_y,
+                    n_trials=trials,
+                    seed=args.seed,
+                )
+                
+                algo = SRBench(args.algo, config, opt_hyperparameters_srbench, functions=strfunctions, terminals=terminals, scaling_=scaling)
                 algo.fit(train_X, train_y) 
                 opt_train_score = algo.score(train_X, train_y)
                 opt_test_score = algo.score(test_X, test_y)
@@ -175,7 +192,7 @@ with open(csv_filename, mode="w", newline="") as csv_file:
                         "algo_name": args.algo,
                         "nb_trials": trials,
                         "def_parameters": str(hyperparams.__dict__),
-                        "opt_parameters": str(opt_hyperparameters.__dict__),
+                        "opt_parameters": str(opt_hyperparameters_srbench.__dict__),
                         "def_train": def_train_score,
                         "def_test": def_test_score,
                         "opt_train": opt_train_score,
