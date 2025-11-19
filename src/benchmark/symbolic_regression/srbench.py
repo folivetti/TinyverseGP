@@ -5,8 +5,9 @@ This file contains the SRBench class which is used to define the configuration o
 from src.gp.functions import ADD, SUB, MUL, DIV, EXP, LOG, SQRT, SQR, CUBE
 from src.gp.tinyverse import Const, Var, GPConfig, GPHyperparameters
 from src.gp.tiny_cgp import CGPConfig, CGPHyperparameters, TinyCGP
-from src.gp.tiny_3ge import Tiny3GE, TreeGEHyperparameters, TreeGEConfig
+#from src.gp.tiny_3ge import Tiny3GE, TreeGEHyperparameters, TreeGEConfig
 from src.gp.tiny_ge import TinyGE, GEHyperparameters
+from src.gp.tiny_lgp import TinyLGP, LGPHyperparameters
 from src.gp.tiny_tgp import TinyTGP, TGPHyperparameters, Node
 import copy
 import re
@@ -95,12 +96,18 @@ class SRBench(RegressorMixin):
             self.model = TinyCGP(
                 self.functions, self.terminals, self.config, self.hyperparameters
             )
+        elif self.representation == "LGP":
+            #self.functions = [strfun[f] for f in self.functions]
+            self.model = TinyLGP(
+                self.functions, self.terminals, self.config, self.hyperparameters
+            )
         elif self.representation == "GE" or self.representation == "3GE":
             newfunctions = {f.name.upper(): f.function for f in self.functions}
             arguments = [f"x{i}" for i in range(X.shape[1])]
             self.grammar["<var>"] = arguments
             if self.representation == "3GE":
-                self.model = Tiny3GE(self.functions, self.grammar, arguments, self.config, self.hyperparameters)
+                #self.model = Tiny3GE(self.functions, self.grammar, arguments, self.config, self.hyperparameters)
+                pass
             elif self.representation == "GE":
                 self.model = TinyGE(self.functions, self.grammar, arguments, self.config, self.hyperparameters)
         else:

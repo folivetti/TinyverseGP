@@ -15,9 +15,10 @@ from sklearn.metrics import mean_squared_error, r2_score
 from src.gp.tinyverse import GPConfig
 from src.gp.tiny_ge import TinyGE,  GEHyperparameters
 from src.gp.functions import ADD, SUB, MUL, DIV, EXP, LOG, SQRT, SQR, CUBE
-from src.gp.tiny_3ge import Tiny3GE, TreeGEHyperparameters, TreeGEConfig 
+#from src.gp.tiny_3ge import Tiny3GE, TreeGEHyperparameters, TreeGEConfig
 from src.gp.tiny_cgp import CGPConfig, CGPHyperparameters
 from src.gp.tiny_tgp import TGPHyperparameters, TGPConfig
+from src.gp.tiny_lgp import LGPHyperparameters, LGPConfig
 
 MAXTIME = 3600  # 1 hour
 MAXGEN = 100
@@ -72,17 +73,32 @@ cgp_hyperparams = CGPHyperparameters(
     strict_selection=True,
     mutation_rate=0.3,
 )
-
-treege_hyperparams = TreeGEHyperparameters(
-    pop_size=100,
-    min_depth=2,
-    max_depth=6,
-    codon_size=256,
-    cx_rate=0.9,
-    mutation_rate=0.1,
-    tournament_size=2,
-    penalty_value=99999,
-)
+lgp_hyperparams = LGPHyperparameters(
+        mu=POPSIZE,
+        macro_variation_rate=0.75,
+        micro_variation_rate=0.25,
+        insertion_rate=0.5,
+        max_segment=15,
+        reproduction_rate=0.5,
+        branch_probability=0.0,
+        p_register = 0.5,
+        max_len = 200,
+        initial_max_len = 35,
+        erc = False,
+        default_value = 0.0,
+        protection = 1e10,
+        penalization_validity_factor=0.0
+    )
+#treege_hyperparams = TreeGEHyperparameters(
+#    pop_size=100,
+#    min_depth=2,
+#    max_depth=6,
+#    codon_size=256,
+#    cx_rate=0.9,
+#    mutation_rate=0.1,
+#    tournament_size=2,
+#    penalty_value=99999,
+#)
 
 ge_hyperparams = GEHyperparameters(
     pop_size=100,
@@ -134,25 +150,40 @@ cgp_config = CGPConfig(
     checkpoint_dir="examples/checkpoint",
     experiment_name="srbench_cgp",
 )
-# cgp_config.init()
-
-treege_config = TreeGEConfig(
-    num_jobs=1,
-    max_generations=100,
-    stopping_criteria=1e-6,
-    minimizing_fitness=True,  # this should be used from the problem instance
-    ideal_fitness=1e-6,  # this should be used from the problem instance
-    silent_algorithm=False,
-    silent_evolver=False,
-    minimalistic_output=True,
-    num_outputs=1,
-    report_interval=1,
-    max_time=200,
-    global_seed=42,
-    checkpoint_interval=10,
-    checkpoint_dir='examples/checkpoint',
-    experiment_name='sr_3ge'
-)
+lgp_config = LGPConfig(
+        num_jobs=1,
+        max_generations=MAXGEN,
+        stopping_criteria=1e-6,
+        minimizing_fitness=True,
+        ideal_fitness=1e-6,
+        silent_algorithm=True,
+        silent_evolver=True,
+        minimalistic_output=True,
+        report_interval=100000000000,
+        max_time=500,
+        num_registers=8,
+        global_seed=42,
+        checkpoint_interval=10,
+        checkpoint_dir="examples/checkpoint",
+        experiment_name="srbench_lgp",
+    )
+#treege_config = TreeGEConfig(
+#    num_jobs=1,
+#    max_generations=100,
+#    stopping_criteria=1e-6,
+#    minimizing_fitness=True,  # this should be used from the problem instance
+#    ideal_fitness=1e-6,  # this should be used from the problem instance
+#    silent_algorithm=False,
+#    silent_evolver=False,
+#    minimalistic_output=True,
+#    num_outputs=1,
+#    report_interval=1,
+#    max_time=200,
+#    global_seed=42,
+#    checkpoint_interval=10,
+#    checkpoint_dir='examples/checkpoint',
+#    experiment_name='sr_3ge'
+#)
 
 ge_config = GPConfig(
     num_jobs=1,
@@ -194,15 +225,23 @@ for g in group_datasets:
             terminals=terminals,
             scaling_=False,
         )
-        treege = SRBench(
-            "3GE",
-            treege_config,
-            treege_hyperparams,
+        lgp = SRBench(
+            "LGP",
+            lgp_config,
+            lgp_hyperparams,
             functions=functions,
             terminals=terminals,
-            scaling_=False,             
-            grammar=grammar
-        )
+            scaling_=False,
+            )
+        #treege = SRBench(
+        #    "3GE",
+        #    treege_config,
+        #    treege_hyperparams,
+        #    functions=functions,
+        #    terminals=terminals,
+        #    scaling_=False,
+        #    grammar=grammar
+        #)
         ge = SRBench(
             "GE",
             ge_config,
@@ -224,13 +263,18 @@ for g in group_datasets:
         print(f"tgp train score: {tgp.score(train_X, train_y)}")
         print(f"tgp test score: {tgp.score(test_X, test_y)}")
         print("=" * 50)
+        lgp.fit(train_X, train_y)
+        print(lgp.get_model())
+        print(f"lgp train score: {lgp.score(train_X, train_y)}")
+        print(f"lgp test score: {lgp.score(test_X, test_y)}")
+        print("=" * 50)
         ge.fit(train_X, train_y)
         print(ge.get_model())
         print(f"ge train score: {ge.score(train_X, train_y)}")
         print(f"ge test score: {ge.score(test_X, test_y)}")#
 
 
-        treege.fit(train_X, train_y)
-        print(treege.get_model())
-        print(f"3ge train score: {treege.score(train_X, train_y)}")
-        print(f"3ge test score: {treege.score(test_X, test_y)}") 
+        #treege.fit(train_X, train_y)
+        #print(treege.get_model())
+        #print(f"3ge train score: {treege.score(train_X, train_y)}")
+        #print(f"3ge test score: {treege.score(test_X, test_y)}")
