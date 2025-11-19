@@ -94,8 +94,19 @@ class LGPHyperparameters(Hyperparameters):
         self.default_value = default_value
         self.protection = protection
         super().__init__(**kwargs)
+
     def __post_init__(self):
         Hyperparameters.__post_init__(self)
+        self.space["max_len"] = (15, 200)
+        self.space["initial_max_len"] =  (5, 35)
+        self.space["p_register"] = (0.3, 0.7)
+        self.space["macro_variation_rate"] =  (0.5, 0.9)
+        self.space["micro_variation_rate"] =  (0.1, 0.3)
+        self.space["insertion_rate"] = (0.3, 0.9)
+        self.space["max_segment"] =  (5, 15)
+        self.space["reproduction_rate"] =  (0.3, 0.8)
+        self.space["branch_probability"] =  (0, 0.5)
+
 
 
 @dataclass(kw_only=True)
