@@ -57,21 +57,21 @@ class LGPHyperparameters(Hyperparameters):
     Specialized hyperparameter configuration space for LGP.
     """
 
-    mu: int
-    tournament_size: int
-    min_len : int 
-    max_len : int 
-    initial_max_len : int
-    p_register : float 
-    macro_variation_rate : float
-    micro_variation_rate : float
-    insertion_rate : float
-    max_segment : int
-    reproduction_rate : float
-    branch_probability : float
-    erc : bool
-    default_value : float
-    protection : float
+    mu: int # population size
+    tournament_size: int # ditto / sometimes also called tau
+    min_len : int  # ditto
+    max_len : int  # ditto
+    initial_max_len : int # ditto
+    p_register : float # probability of using a r/w register as an argument of an instruction (else: 1/2 constant 1/2 read-only register)
+    macro_variation_rate : float # probability to crossover (else: copy)
+    micro_variation_rate : float # probability to mutate
+    insertion_rate : float # probability of inserting a slice of i2 into i1 (else: trim a slice of i1)
+    max_segment : int # max length of the slice (see above)
+    reproduction_rate : float # probability to replace parent even if worse (implicit niching)
+    branch_probability : float # probability branch vs. standard op
+    erc : bool # use constants?
+    default_value : float # default values for registers
+    protection : float # default values for NaN
     # levels_back: int
     # strict_selection: bool
     # mutation_rate: float = None
@@ -310,12 +310,17 @@ class TinyLGP(GPModel):
         do = random.random() < self.hyperparameters.macro_variation_rate
         l1 = len(individual1.genome)
         l2 = len(individual2.genome)
+
         if do and l1 < self.hyperparameters.max_len and (insertion or l1 == self.hyperparameters.min_len):
+            # Insert l genes starting at position p2 from i2 into i1 at position p1
+            # i1: ABCD, i2: abcdef, p1: 1, p2: 3, l: 2 -> o: AcdBCD
             p1 = random.randint(0, l1-1)
             p2 = random.randint(0, l2-1)
             l  = random.randint(1, min(l2-p2+1, self.hyperparameters.max_len - l1, self.hyperparameters.max_segment))
             offspring = copy.copy(individual1.genome[:p1]) + copy.copy(individual2.genome[p2:l]) + copy.copy(individual1.genome[p1:])
         elif do and l1 > self.hyperparameters.min_len and (not insertion or l1 == self.hyperparameters.max_len):
+            # Strip l genes from i1 at position p1
+            # i1: ABCD, p1: 1, l: 2 -> o: AD
             p1 = random.randint(0, l1-1)
             l = random.randint(1, min(l1-p1+1, l1-self.hyperparameters.min_len, self.hyperparameters.max_segment))
             offspring = copy.copy(individual1.genome[:p1]) + copy.copy(individual1.genome[p1+l:])
