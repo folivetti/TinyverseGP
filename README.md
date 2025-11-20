@@ -11,6 +11,8 @@ The codebase is written in Python trying to keep the requirements to a minimal. 
 
 - Tree-based Genetic Programming (TGP) (also known as Koza-style): the programs are represented as trees. This version supports multi-tree chromosomes, where each individual is represented by a set of trees when the problem requires multiple outputs.
 - Cartesian Genetic Programming (CGP): the programs are represented graphs and naturally encodes multiple outputs with shared components.
+- Linear Genetic Programming (LGP): the programs are represented as a sequence of instructions with memory registers.
+- Grammatical Evolution (GE): the programas are generated following an specified grammar.
 
 This repository is organized as follows:
 
