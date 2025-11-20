@@ -70,6 +70,7 @@ class SMAC4SRBenchInterface:
         y: np.ndarray,
         n_trials: int = 10,
         seed: int = 42,
+        dataset_name: str = "default"
     ) -> GPHyperparameters:
         """
         Optimize the hyperparameters of the SRBench model using SMAC.
@@ -98,11 +99,13 @@ class SMAC4SRBenchInterface:
         # Initialize the configuration space
         configspace = ConfigurationSpace(paramspace)
         # Define the SMAC scenario
+        output_dir = f"smac3-output_{dataset_name}_{seed}"
         scenario = Scenario(
             configspace,
             deterministic=True,
             n_trials=n_trials,
             seed=seed,
+            output_directory=output_dir
         )
         # Run SMAC optimization
         smac = HyperparameterOptimizationFacade(scenario, train)

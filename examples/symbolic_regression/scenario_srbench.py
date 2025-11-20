@@ -14,6 +14,8 @@ from pmlb import fetch_data
 from sklearn.model_selection import train_test_split
 from src.gp.tiny_cgp import CGPConfig, CGPHyperparameters, TinyCGP
 from src.gp.tiny_tgp import TGPHyperparameters, TGPConfig, TinyTGP
+from src.gp.tiny_ge import GEConfig, GEHyperparameters, TinyGE
+from src.gp.tiny_lgp import LGPConfig, LGPHyperparameters, TinyLGP
 import argparse
 import csv
 from src.gp.problem import Problem, BlackBox
@@ -24,7 +26,7 @@ from src.gp.tinyverse import Const
 
 parser = argparse.ArgumentParser(
                                 prog='SRBench Test Scenario',
-                                description='Run TGP or CGP on selected SRBench instances',
+                                description='Run algorithm on selected SRBench instances',
                                 epilog='')
 
 parser.add_argument('--maxtime', dest='maxtime', type=int, default=3600)
@@ -113,6 +115,56 @@ elif args.algo=='CGP':
                             experiment_name='srbench_cgp'
                         )
     scaling = True
+    
+elif args.algo == "LGP":
+    hyperparams = LGPHyperparameters(mu=2, lmbda=10, strict_selection=True, mutation_rate=0.3, pop_size=args.popsize, num_function_nodes=30, levels_back=10)
+
+    config = LGPConfig(
+        num_jobs=1,
+        max_generations=args.maxgen,
+        stopping_criteria=1e-16,
+        minimizing_fitness=True,
+        ideal_fitness=1e-16,
+        silent_algorithm=True,
+        silent_evolver=True,
+        minimalistic_output=True,
+        num_functions=len(functions),
+        max_arity=2,
+        num_inputs=1,
+        num_outputs=1,
+        report_interval=10,
+        max_time=args.maxtime,
+        global_seed=args.seed,
+        checkpoint_interval=10,
+        checkpoint_dir="checkpoints",
+        experiment_name="srbench_cgp",
+    )
+    scaling = True
+    
+elif args.algo == "GE":
+    hyperparams = GEHyperparameters(mu=2, lmbda=10, strict_selection=True, mutation_rate=0.3, pop_size=args.popsize, num_function_nodes=30, levels_back=10)
+
+    config = GEConfig(
+        num_jobs=1,
+        max_generations=args.maxgen,
+        stopping_criteria=1e-16,
+        minimizing_fitness=True,
+        ideal_fitness=1e-16,
+        silent_algorithm=True,
+        silent_evolver=True,
+        minimalistic_output=True,
+        num_functions=len(functions),
+        max_arity=2,
+        num_inputs=1,
+        num_outputs=1,
+        report_interval=10,
+        max_time=args.maxtime,
+        global_seed=args.seed,
+        checkpoint_interval=10,
+        checkpoint_dir="checkpoints",
+        experiment_name="srbench_cgp",
+    )
+    scaling = True
 #cgp_config.init()
 else:
     print(f"{args.algo} is not a supported algorithm")
@@ -123,7 +175,7 @@ else:
     
 for g in group_datasets:
     for d in g:
-        csv_filename = f"{d}_{args.algo}_{args.seed}.csv"
+        csv_filename = f"experiments_scripts/output_data/{d}_{args.algo}_{args.seed}.csv"
         with open(csv_filename, mode="w", newline="") as csv_file:
             fieldnames = ["dataset_name", "algo_name", "nb_trials", "def_parameters", "opt_parameters", "def_train", "def_test", "opt_train", "opt_test", "seed"]
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
@@ -179,6 +231,7 @@ for g in group_datasets:
                     train_y,
                     n_trials=trials,
                     seed=args.seed,
+                    dataset_name=d
                 )
                 
                 algo = SRBench(args.algo, config, opt_hyperparameters_srbench, functions=strfunctions, terminals=terminals, scaling_=scaling)
