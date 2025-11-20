@@ -11,10 +11,10 @@ import torch.nn as nn
 
 hyperparameters = NNHyperparameters (
     num_units = 100,
-    num_layers = 3,
+    num_layers = 5,
     learning_rate = 1e-4,
     batch_size = 1,
-    dropout = 0.2,
+    dropout = 0.5,
     activation = torch.sigmoid
 )
 

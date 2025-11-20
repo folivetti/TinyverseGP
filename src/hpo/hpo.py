@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from src.gp.problem import Problem
 from src.gp.tinyverse import GPModel, GPHyperparameters
 from src.gp.problem import Problem
 from ConfigSpace import Configuration, ConfigurationSpace
@@ -6,7 +7,6 @@ from smac import HyperparameterOptimizationFacade, Scenario
 import copy
 from src.benchmark.symbolic_regression.srbench import SRBench
 import numpy as np
-
 
 class HPOInterface(ABC):
     """
@@ -33,6 +33,7 @@ class SMACInterface(HPOInterface):
         """
         def train(config: Configuration, seed: int = 0) -> float:
             gpmodel = copy.deepcopy(gpmodel_)
+            # Apply hyperparameters
             for c in config.keys():
                 setattr(gpmodel.hyperparameters, c, config[c])
             # Use train_X and train_y in the model's training process
@@ -49,10 +50,10 @@ class SMACInterface(HPOInterface):
         smac = HyperparameterOptimizationFacade(scenario, train)
         incumbent = smac.optimize()
 
+        # Map incumbent to hyperparameters object
         inc_hp = copy.deepcopy(gpmodel_.hyperparameters)
         for c in incumbent.keys():
             setattr(inc_hp, c, incumbent[c])
-        return inc_hp
 
 class SMAC4SRBenchInterface:
     def __init__(self, srbench: SRBench):

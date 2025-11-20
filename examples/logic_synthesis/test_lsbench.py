@@ -71,6 +71,7 @@ cgp_config = CGPConfig(
 )
 
 lsbench = LSBench(data_dir_='../../data/logic_synthesis')
+print("LSBench has been created!")
 
 tgp = LSBench.LSRegressor(
             representation_="TGP",
@@ -91,6 +92,7 @@ cgp = LSBench.LSRegressor(
 for k in lsbench.benchmarks:
     bm = lsbench.benchmarks[k]
     num_inputs = bm.benchmark.num_inputs
+    num_outputs = bm.benchmark.num_outputs
     tgp_config.num_inputs = num_inputs
     tgp_config.num_outputs = num_outputs
     tt = bm.get_truth_table()
