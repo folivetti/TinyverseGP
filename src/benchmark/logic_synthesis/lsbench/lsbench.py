@@ -6,6 +6,8 @@ https://dl.acm.org/doi/abs/10.1145/3594805.3607131
 """
 
 import os
+from argparse import ArgumentError
+
 from sklearn.base import RegressorMixin
 from pathlib import Path
 from src.benchmark.benchmark import Benchmark
@@ -86,161 +88,172 @@ class LSBench(Benchmark):
         self.benchmarks["count8"] = LSBenchmark(file_=self.data_dir + "/tt/onescount8.tt", name_="count8")
         self.benchmarks["count10"] = LSBenchmark(file_=self.data_dir + "/tt/onescount10.tt", name_="count10")
 
-    def add3(self):
+    def add3(self) -> LSBenchmark:
         return self.benchmarks["add3"]
 
-    def add4(self):
+    def add4(self) -> LSBenchmark:
         return self.benchmarks["add4"]
 
-    def add5(self):
+    def add5(self) -> LSBenchmark:
         return self.benchmarks["add5"]
 
-    def add6(self):
+    def add6(self) -> LSBenchmark:
         return self.benchmarks["add6"]
 
-    def add7(self):
+    def add7(self) -> LSBenchmark:
         return self.benchmarks["add7"]
 
-    def add8(self):
+    def add8(self) -> LSBenchmark:
         return self.benchmarks["add8"]
 
-    def mul3(self):
+    def mul3(self) -> LSBenchmark:
         return self.benchmarks["mul3"]
 
-    def mul4(self):
+    def mul4(self) -> LSBenchmark:
         return self.benchmarks["mul4"]
 
-    def mul5(self):
+    def mul5(self) -> LSBenchmark:
         return self.benchmarks["mul5"]
 
-    def epar8(self):
+    def epar8(self) -> LSBenchmark:
         return self.benchmarks["epar8"]
 
-    def epar9(self):
+    def epar9(self) -> LSBenchmark:
         return self.benchmarks["epar9"]
 
-    def epar10(self):
+    def epar10(self) -> LSBenchmark:
         return self.benchmarks["epar10"]
 
-    def epar11(self):
+    def epar11(self) -> LSBenchmark:
         return self.benchmarks["epar11"]
 
-    def icomp3(self):
-        return self.benchmarks["icomp3"]
-
-    def icomp4(self):
-        return self.benchmarks["icomp4"]
-
-    def icomp5(self):
+    def icomp5(self) -> LSBenchmark:
         return self.benchmarks["icomp5"]
 
-    def icomp6(self):
+    def icomp6(self) -> LSBenchmark:
         return self.benchmarks["icomp6"]
 
-    def icomp7(self):
-        return self.benchmarks["icomp6"]
-
-    def icomp8(self):
+    def icomp7(self) -> LSBenchmark:
         return self.benchmarks["icomp7"]
 
-    def icomp9(self):
+    def icomp8(self) -> LSBenchmark:
         return self.benchmarks["icomp8"]
 
-    def mcomp3(self):
+    def icomp9(self) -> LSBenchmark:
+        return self.benchmarks["icomp9"]
+
+    def mcomp3(self) -> LSBenchmark:
         return self.benchmarks["mcomp3"]
 
-    def mcomp4(self):
+    def mcomp4(self) -> LSBenchmark:
         return self.benchmarks["mcomp4"]
 
-    def mcomp5(self):
+    def mcomp5(self) -> LSBenchmark:
         return self.benchmarks["mcomp5"]
 
-    def mcomp6(self):
+    def mcomp6(self) -> LSBenchmark:
         return self.benchmarks["mcomp6"]
 
-    def alu3(self):
+    def alu3(self) -> LSBenchmark:
         return self.benchmarks["alu3"]
 
-    def alu4(self):
+    def alu4(self) -> LSBenchmark:
         return self.benchmarks["alu4"]
 
-    def alu5(self):
+    def alu5(self) -> LSBenchmark:
         return self.benchmarks["alu5"]
 
-    def alu6(self):
+    def alu6(self) -> LSBenchmark:
         return self.benchmarks["alu6"]
 
-    def alu7(self):
+    def alu7(self) -> LSBenchmark:
         return self.benchmarks["alu7"]
 
-    def alu8(self):
+    def alu8(self) -> LSBenchmark:
         return self.benchmarks["alu8"]
 
-    def enc8(self):
+    def enc8(self) -> LSBenchmark:
         return self.benchmarks["enc8"]
 
-    def enc16(self):
+    def enc16(self) -> LSBenchmark:
         return self.benchmarks["enc16"]
 
-    def enc32(self):
+    def enc32(self) -> LSBenchmark:
         return self.benchmarks["enc32"]
 
-    def dec4(self):
+    def dec4(self) -> LSBenchmark:
         return self.benchmarks["dec4"]
 
-    def dec8(self):
+    def dec8(self) -> LSBenchmark:
         return self.benchmarks["dec8"]
 
-    def dec16(self):
+    def dec16(self) -> LSBenchmark:
         return self.benchmarks["dec16"]
 
-    def count4(self):
+    def count4(self) -> LSBenchmark:
         return self.benchmarks["count4"]
 
-    def count6(self):
+    def count6(self) -> LSBenchmark:
         return self.benchmarks["count6"]
 
-    def count8(self):
+    def count8(self) -> LSBenchmark:
         return self.benchmarks["count8"]
 
-    def count10(self):
+    def count10(self) -> LSBenchmark:
         return self.benchmarks["count10"]
 
-    class LSRegressor(RegressorMixin):
+    def get_benchmark(self, name: str) -> LSBenchmark:
+        if self.benchmarks[name] is not None:
+            return self.benchmarks[name]
+        else:
+            raise ArgumentError("Benchmark does not exist")
 
-        def __init__(self,
-                     representation_,
-                     config_,
-                     hyperparameters_,
-                     functions_=["AND", "OR", "BUFA", "NOT"],
-                     terminals_=None):
 
-            if terminals_ is None:
-                terminals_ = []
-            self.program = None
-            self.model = None
-            self.representation = representation_
-            self.config = config_
-            self.hyperparameters = hyperparameters_
-            self.functions = [strfun[f] for f in functions_]
-            self.terminals = terminals_
-            self.evaluator = BenchmarkEvaluator()
-            self.loss = self.evaluator.hamming_distance
-            self.fitted_ = False
+class LSRegressor(RegressorMixin):
 
-        def fit(self, X, y, checkpoint=None):
-            problem = BlackBox(X, y, self.loss, ideal_ = 0, minimizing_ = True)
+    def __init__(self,
+                 representation_,
+                 config_,
+                 hyperparameters_,
+                 functions_=["AND", "OR", "BUFA", "NOT"],
+                 terminals_=None):
 
-            self.model = util.get_model(self.representation, self.functions, self.terminals,
-                                        self.hyperparameters, self.config)
+        if terminals_ is None:
+            terminals_ = []
+        self.program = None
+        self.model = None
+        self.representation = representation_
+        self.config = config_
+        self.hyperparameters = hyperparameters_
+        self.functions = [strfun[f] for f in functions_]
+        self.terminals = terminals_
+        self.evaluator = BenchmarkEvaluator()
+        self.loss = self.evaluator.hamming_distance
+        self.fitted_ = False
 
-            if checkpoint is not None:
-                self.model.resume(checkpoint, problem)
+    def _make_default_grammar(self, functions, terminals):
+        # Ensure grammar uses uppercase function names matching Function objects
+        return {
+            "<expr>": [f"{f.name.upper()}(<expr>, <expr>)" for f in functions if f.arity == 2]
+                    + [f"{f.name.upper()}(<expr>)" for f in functions if f.arity == 1]
+                    + ["<const>", "<var>"],
+            "<const>": [],
+            "<var>": [],
+        }
 
-            self.program = self.model.evolve(problem)
-            self.fitted_ = True
+    def fit(self, X, y, checkpoint=None):
+        problem = BlackBox(X, y, self.loss, ideal_=0, minimizing_=True)
 
-        def predict(self, X):
-            if not self.fitted_:
-                raise ValueError("Model not fitted")
-            return np.array([self.model.predict(self.program.genome, x)[0] for x in X])
+        self.model = util.get_model(self.representation, self.functions, self.terminals,
+                                    self.hyperparameters, self.config)
+
+        if checkpoint is not None:
+            self.model.resume(checkpoint, problem)
+
+        self.program = self.model.evolve(problem)
+        self.fitted_ = True
+
+    def predict(self, X):
+        if not self.fitted_:
+            raise ValueError("Model not fitted")
+        return [self.model.predict(self.program.genome, x) for x in X]
