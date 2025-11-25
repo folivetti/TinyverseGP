@@ -1,11 +1,22 @@
-from src.benchmark.logic_synthesis.lsbench.lsbench import LSBench
+from src.benchmark.logic_synthesis.lsbench.lsbench import LSBench, LSRegressor
 from src.gp.tiny_cgp import CGPConfig, CGPHyperparameters
 from src.gp.tiny_tgp import TGPConfig, TGPHyperparameters
 from src.gp.tinyverse import Var
 
 MAXTIME = 3600  # 1 hour
-MAXGEN = 30
-POPSIZE = 20
+MAXGEN = 50
+POPSIZE = 50
+
+lsbench = LSBench(data_dir_='../../data/logic_synthesis')
+benchmarks = [lsbench.add3(),
+              lsbench.mul3(),
+              lsbench.alu3(),
+              lsbench.count4(),
+              lsbench.dec4(),
+              lsbench.enc8(),
+              lsbench.epar8(),
+              lsbench.mcomp3(),
+              lsbench.icomp5()]
 
 functions=["AND", "OR", "BUFA", "NOT"]
 terminals = None
@@ -17,15 +28,15 @@ tgp_hyperparams = TGPHyperparameters(
     tournament_size=3,
     mutation_rate=0.2,
     cx_rate=0.9,
-    erc=False,  # ephemeral random constants
+    erc = None
 )
 
 cgp_hyperparams = CGPHyperparameters(
-    mu=2,
-    lmbda=10,
+    mu=1,
+    lmbda=4,
     num_function_nodes=10,
     strict_selection=True,
-    mutation_rate=0.3,
+    mutation_rate=0.2,
     population_size=POPSIZE,
     levels_back=10,
 )
@@ -34,9 +45,9 @@ cgp_hyperparams = CGPHyperparameters(
 tgp_config = TGPConfig(
     num_jobs=1,
     max_generations=MAXGEN,
-    stopping_criteria=1e-6,
+    stopping_criteria=0,
     minimizing_fitness=True,
-    ideal_fitness=1e-16,
+    ideal_fitness=0,
     silent_algorithm=True,
     silent_evolver=True,
     minimalistic_output=True,
@@ -46,15 +57,15 @@ tgp_config = TGPConfig(
     global_seed=42,
     checkpoint_interval=10,
     checkpoint_dir="examples/checkpoint",
-    experiment_name="srbench_tgp",
+    experiment_name="lsbench_tgp",
 )
 
 cgp_config = CGPConfig(
     num_jobs=1,
     max_generations=MAXGEN,
-    stopping_criteria=1e-16,
+    stopping_criteria=0,
     minimizing_fitness=True,
-    ideal_fitness=1e-16,
+    ideal_fitness=0,
     silent_algorithm=True,
     silent_evolver=True,
     minimalistic_output=True,
@@ -67,49 +78,50 @@ cgp_config = CGPConfig(
     global_seed=42,
     checkpoint_interval=10,
     checkpoint_dir="examples/checkpoint",
-    experiment_name="srbench_cgp",
+    experiment_name="lsbench_cgp",
 )
 
-lsbench = LSBench(data_dir_='../../data/logic_synthesis')
-print("LSBench has been created!")
+#print("LSBench has been created!")
 
-tgp = LSBench.LSRegressor(
-            representation_="TGP",
-            config_=tgp_config,
-            hyperparameters_=tgp_hyperparams,
-            functions_=functions,
-            terminals_=terminals
-        )
+for bm in benchmarks:
 
-cgp = LSBench.LSRegressor(
-             "CGP",
-             cgp_config,
-             cgp_hyperparams,
-             functions_=functions,
-             terminals_=terminals,
-        )
+    print(f"Running benchmark: {bm.name}\n")
 
-for k in lsbench.benchmarks:
-    bm = lsbench.benchmarks[k]
     num_inputs = bm.benchmark.num_inputs
     num_outputs = bm.benchmark.num_outputs
+
     tgp_config.num_inputs = num_inputs
     tgp_config.num_outputs = num_outputs
+
+    cgp_config.num_inputs = num_inputs
+    cgp_config.num_outputs = num_outputs
+
+    tgp = LSRegressor(
+        representation_="TGP",
+        config_=tgp_config,
+        hyperparameters_=tgp_hyperparams,
+        functions_=functions,
+        terminals_=terminals
+    )
+
+    cgp = LSRegressor(
+        "CGP",
+        cgp_config,
+        cgp_hyperparams,
+        functions_=functions,
+        terminals_=terminals,
+    )
+
     tt = bm.get_truth_table()
+
     terminals = [Var(i) for i in range(num_inputs)]
 
     tgp.terminals = terminals
     tgp.fit(X=tt.inputs, y=tt.outputs)
 
-for k in lsbench.benchmarks:
-    print(k)
-    bm = lsbench.benchmarks[k]
-    num_inputs = bm.benchmark.num_inputs
-    num_outputs = bm.benchmark.num_outputs
-    cgp_config.num_inputs = num_inputs
-    cgp_config.num_outputs = num_outputs
-    tt = bm.get_truth_table()
-    terminals = [Var(i) for i in range(num_inputs)]
+    print(f"tgp score: {tgp.score(tt.inputs,tt.outputs)}")
 
     cgp.terminals = terminals
     cgp.fit(X=tt.inputs, y=tt.outputs)
+
+    print(f"cgp score: {cgp.score(tt.inputs, tt.outputs)}")
