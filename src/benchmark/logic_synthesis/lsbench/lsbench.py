@@ -36,6 +36,9 @@ class LSBench(Benchmark):
         self.data_dir = data_dir_
         self.generate()
 
+        self.functions_reduced = ["AND", "OR", "BUFA", "NOT"]
+        self.functions_extended = ["AND", "OR", "BUFA", "NOT", "XOR", "NAND", "NOR", "XNOR"]
+
     def generate(self, args: any = None):
         self.benchmarks["add3"] = LSBenchmark(file_=self.data_dir + "/tt/add3.tt", name_="add3")
         self.benchmarks["add4"] = LSBenchmark(file_=self.data_dir + "/tt/add4.tt", name_="add4")
@@ -211,7 +214,7 @@ class LSRegressor(RegressorMixin):
                  representation_,
                  config_,
                  hyperparameters_,
-                 functions_=["AND", "OR", "BUFA", "NOT"],
+                 functions_,
                  terminals_=None):
 
         if terminals_ is None:
@@ -223,6 +226,7 @@ class LSRegressor(RegressorMixin):
         self.hyperparameters = hyperparameters_
         self.functions = [strfun[f] for f in functions_]
         self.terminals = terminals_
+        self.grammar = self._make_default_grammar(self.functions, self.terminals)
         self.evaluator = BenchmarkEvaluator()
         self.loss = self.evaluator.hamming_distance
         self.fitted_ = False
@@ -234,14 +238,14 @@ class LSRegressor(RegressorMixin):
                     + [f"{f.name.upper()}(<expr>)" for f in functions if f.arity == 1]
                     + ["<const>", "<var>"],
             "<const>": [],
-            "<var>": [],
+            "<var>": [f"{t.name}" for t in terminals]
         }
 
     def fit(self, X, y, checkpoint=None):
-        problem = BlackBox(X, y, self.loss, ideal_=0, minimizing_=True)
+        problem = BlackBox(X, y, self.loss, ideal_=self.config.ideal_fitness, minimizing_=self.config.minimizing_fitness)
 
         self.model = util.get_model(self.representation, self.functions, self.terminals,
-                                    self.hyperparameters, self.config)
+                                    self.hyperparameters, self.config, self.grammar)
 
         if checkpoint is not None:
             self.model.resume(checkpoint, problem)
