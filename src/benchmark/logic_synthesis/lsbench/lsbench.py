@@ -226,25 +226,33 @@ class LSRegressor(RegressorMixin):
         self.hyperparameters = hyperparameters_
         self.functions = [strfun[f] for f in functions_]
         self.terminals = terminals_
-        self.grammar = self._make_default_grammar(self.functions, self.terminals)
         self.evaluator = BenchmarkEvaluator()
         self.loss = self.evaluator.hamming_distance
         self.fitted_ = False
 
-    def _make_default_grammar(self, functions, terminals):
+        if self.representation == "GE":
+            self.arguments = [f"{t.name}" for t in self.terminals]
+            self.grammar = self._make_default_grammar(self.functions, self.arguments, self.config.num_outputs)
+            print(self.grammar)
+        else:
+            self.arguments = self.terminals
+
+    def _make_default_grammar(self, functions, arguments, num_outputs):
         # Ensure grammar uses uppercase function names matching Function objects
         return {
-            "<expr>": [f"{f.name.upper()}(<expr>, <expr>)" for f in functions if f.arity == 2]
-                    + [f"{f.name.upper()}(<expr>)" for f in functions if f.arity == 1]
-                    + ["<const>", "<var>"],
-            "<const>": [],
-            "<var>": [f"{t.name}" for t in terminals]
+            "<expr>": ["[" + ', '.join([ f"<lexpr>" for _ in range(num_outputs)])+ "]"],
+            "<lexpr>": [f"{f.name.upper()}(<vexpr>, <vexpr>)" for f in functions if f.arity == 2]
+                    + [f"{f.name.upper()}(<vexpr>)" for f in functions if f.arity == 1],
+            "<vexpr>": [f"{f.name.upper()}(<vexpr>, <vexpr>)" for f in functions if f.arity == 2]
+                       + [f"{f.name.upper()}(<vexpr>)" for f in functions if f.arity == 1]
+                       + ["<var>"],
+            "<var>": arguments
         }
 
     def fit(self, X, y, checkpoint=None):
         problem = BlackBox(X, y, self.loss, ideal_=self.config.ideal_fitness, minimizing_=self.config.minimizing_fitness)
 
-        self.model = util.get_model(self.representation, self.functions, self.terminals,
+        self.model = util.get_model(self.representation, self.functions, self.arguments,
                                     self.hyperparameters, self.config, self.grammar)
 
         if checkpoint is not None:
