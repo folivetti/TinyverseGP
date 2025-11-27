@@ -26,9 +26,7 @@ TinyLGP: A minimalistic implementation of Linear Genetic Programming for
 
 from typing import Sequence, Any
 
-import math
 import random
-import time
 import operator
 import copy
 from dataclasses import dataclass
@@ -265,8 +263,8 @@ class TinyLGP(GPModel):
 
     def mutate(self, individual: LGPIndividual) -> LGPIndividual:
         pos = random.randint(0, len(individual.genome) - 1)
-        # 1: change destiny, 2: change operator, 3: change operand, 4: insert random genome
-        muts = [1,2,3,4]
+        # 1: change destination, 2: change operator, 3: change operand, 4: insert random genome, 5: trim slice
+        muts = [1, 2, 3, 4, 5]
         p = random.choice(muts)
         read_write = [f"R{n}" for n in range(self.config.num_registers)]
         read_only = [f"I{n}" for n in range(len(self.terminals))]
@@ -302,26 +300,40 @@ class TinyLGP(GPModel):
         elif p==4:
             individual.genome = individual.genome[:pos] + self._create_random_genome(min_len=1, max_len=1) + individual.genome[pos:]
             return LGPIndividual(individual.genome, None)
+        elif p==5 and len(individual.genome) > self.hyperparameters.min_len:
+            length = len(individual.genome)
+            pos = random.randint(0, length-1)
+            # print(length, pos, length-pos+1, length-self.hyperparameters.min_len, self.hyperparameters.max_segment)
+            l = random.randint(1, min(length-pos+1, length-self.hyperparameters.min_len, self.hyperparameters.max_segment))
+            offspring = copy.copy(individual.genome[:pos]) + copy.copy(individual.genome[pos+l:])
+            return LGPIndividual(offspring, None)
 
     def crossover(
         self, individual1: LGPIndividual, individual2: LGPIndividual
     ) -> tuple[LGPIndividual, LGPIndividual]:
-        insertion = random.random() < self.hyperparameters.insertion_rate
-        do = random.random() < self.hyperparameters.macro_variation_rate
         l1 = len(individual1.genome)
         l2 = len(individual2.genome)
-        if do and l1 < self.hyperparameters.max_len and (insertion or l1 == self.hyperparameters.min_len):
-            p1 = random.randint(0, l1-1)
-            p2 = random.randint(0, l2-1)
-            l  = random.randint(1, min(l2-p2+1, self.hyperparameters.max_len - l1, self.hyperparameters.max_segment))
-            offspring = copy.copy(individual1.genome[:p1]) + copy.copy(individual2.genome[p2:l]) + copy.copy(individual1.genome[p1:])
-        elif do and l1 > self.hyperparameters.min_len and (not insertion or l1 == self.hyperparameters.max_len):
-            p1 = random.randint(0, l1-1)
-            l = random.randint(1, min(l1-p1+1, l1-self.hyperparameters.min_len, self.hyperparameters.max_segment))
-            offspring = copy.copy(individual1.genome[:p1]) + copy.copy(individual1.genome[p1+l:])
+        if random.random() < self.hyperparameters.insertion_rate and l1 < self.hyperparameters.max_len:
+            # insertion
+            p1 = random.randint(0, l1 - 1)
+            p2 = random.randint(0, l2 - 1)
+            l = random.randint(1, min(l2 - p2 + 1, self.hyperparameters.max_len - l1, self.hyperparameters.max_segment))
+            offspring = (
+                copy.copy(individual1.genome[:p1])
+                + copy.copy(individual2.genome[p2:l])
+                + copy.copy(individual1.genome[p1:])
+            )
         else:
+            # 1-cut
+            cut1 = random.randint(0, len(individual1.genome) - 1)
+            cut2 = random.randint(0, len(individual2.genome) - 1)
+            offspring = individual1.genome[:cut1] + individual2.genome[cut2:]
+
+        if random.random() > self.hyperparameters.macro_variation_rate or len(offspring) < self.hyperparameters.min_len or len(offspring) > self.hyperparameters.max_len:
+            # no xover: just copy the original parent
             offspring = copy.copy(individual1.genome)
         return LGPIndividual(offspring, None)
+
 
     def predict(self, genome: Sequence[Instruction], observation: list):
         registerVars = { f"I{n}" : v.function() if v.const else observation[v.function()] for n, v in enumerate(self.terminals) }
