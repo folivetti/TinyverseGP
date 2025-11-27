@@ -14,7 +14,7 @@ from pmlb import fetch_data
 from sklearn.model_selection import train_test_split
 from src.gp.tiny_cgp import CGPConfig, CGPHyperparameters, TinyCGP
 from src.gp.tiny_tgp import TGPHyperparameters, TGPConfig, TinyTGP
-from src.gp.tiny_ge import GEConfig, GEHyperparameters, TinyGE
+from src.gp.tiny_ge import GPConfig, GEHyperparameters, TinyGE
 from src.gp.tiny_lgp import LGPConfig, LGPHyperparameters, TinyLGP
 import argparse
 import csv
@@ -47,7 +47,6 @@ else:
                   ['557_analcatdata_apnea1', '650_fri_c0_500_50', '579_fri_c0_250_5', '606_fri_c2_1000_10']
                  ]
 
-strfunctions = ['+','-','*','/','exp','log','square','cube']
 functions = [ADD, SUB, MUL, DIV, EXP, LOG, SQR, CUBE] 
 terminals=[1,0.5,np.pi, np.sqrt(2)]
 print(args)
@@ -88,81 +87,97 @@ elif args.algo=='CGP':
         lmbda=10,
         strict_selection=True,
         mutation_rate=0.3,
-        pop_size=args.popsize,
+        population_size=args.popsize,
         num_function_nodes=30,
         levels_back=10
     )
 
 
     config = CGPConfig(
-                            num_jobs=1,
-                            max_generations=args.maxgen,
-                            stopping_criteria=1e-16,
-                            minimizing_fitness=True,
-                            ideal_fitness=1e-16,
-                            silent_algorithm=True,
-                            silent_evolver=True,
-                            minimalistic_output=True,
-                            num_functions=len(functions),
-                            max_arity=2,
-                            num_inputs=1,
-                            num_outputs=1,
-                            report_interval=10,
-                            max_time=args.maxtime,
-                            global_seed=args.seed,
-                            checkpoint_interval=10,
-                            checkpoint_dir='checkpoints',
-                            experiment_name='srbench_cgp'
-                        )
+                    num_jobs=1,
+                    max_generations=args.maxgen,
+                    stopping_criteria=1e-16,
+                    minimizing_fitness=True,
+                    ideal_fitness=1e-16,
+                    silent_algorithm=True,
+                    silent_evolver=True,
+                    minimalistic_output=True,
+                    num_functions=len(functions),
+                    max_arity=2,
+                    num_inputs=1,
+                    num_outputs=1,
+                    report_interval=10,
+                    max_time=args.maxtime,
+                    global_seed=args.seed,
+                    checkpoint_interval=10,
+                    checkpoint_dir='checkpoints',
+                    experiment_name='srbench_cgp'
+                )
     scaling = True
     
 elif args.algo == "LGP":
-    hyperparams = LGPHyperparameters(mu=2, lmbda=10, strict_selection=True, mutation_rate=0.3, pop_size=args.popsize, num_function_nodes=30, levels_back=10)
-
+    hyperparams = LGPHyperparameters(
+                        mu=args.popsize,
+                        macro_variation_rate=0.75,
+                        micro_variation_rate=0.25,
+                        insertion_rate=0.5,
+                        max_segment=25,
+                        reproduction_rate=0.5,
+                        branch_probability=0.1,
+                        p_register = 0.5,
+                        max_len = 500,
+                        initial_max_len = 35,
+                        erc = False,
+                        default_value = 0.0,
+                        protection = 1e10,
+                        penalization_validity_factor=0.0
+                    )
     config = LGPConfig(
         num_jobs=1,
         max_generations=args.maxgen,
-        stopping_criteria=1e-16,
+        stopping_criteria=1e-6,
         minimizing_fitness=True,
-        ideal_fitness=1e-16,
+        ideal_fitness=1e-6,
         silent_algorithm=True,
         silent_evolver=True,
         minimalistic_output=True,
-        num_functions=len(functions),
-        max_arity=2,
-        num_inputs=1,
-        num_outputs=1,
-        report_interval=10,
+        report_interval=100000000000,
         max_time=args.maxtime,
+        num_registers=8,
         global_seed=args.seed,
         checkpoint_interval=10,
-        checkpoint_dir="checkpoints",
-        experiment_name="srbench_cgp",
+        checkpoint_dir="checkpoint",
+        experiment_name="srbench_lgp",
     )
     scaling = True
     
 elif args.algo == "GE":
-    hyperparams = GEHyperparameters(mu=2, lmbda=10, strict_selection=True, mutation_rate=0.3, pop_size=args.popsize, num_function_nodes=30, levels_back=10)
-
-    config = GEConfig(
+    hyperparams = GEHyperparameters(
+        pop_size=args.popsize,
+        genome_length=40,
+        codon_size=1000,
+        cx_rate=0.9,
+        mutation_rate=0.1,
+        tournament_size=2,
+        penalty_value=99999,
+    )
+    
+    config = GPConfig(
         num_jobs=1,
         max_generations=args.maxgen,
-        stopping_criteria=1e-16,
-        minimizing_fitness=True,
-        ideal_fitness=1e-16,
-        silent_algorithm=True,
-        silent_evolver=True,
+        stopping_criteria=1e-6,
+        minimizing_fitness=True,  # this should be used from the problem instance
+        ideal_fitness=1e-6,  # this should be used from the problem instance
+        silent_algorithm=False,
+        silent_evolver=False,
         minimalistic_output=True,
-        num_functions=len(functions),
-        max_arity=2,
-        num_inputs=1,
         num_outputs=1,
-        report_interval=10,
+        report_interval=1,
         max_time=args.maxtime,
         global_seed=args.seed,
         checkpoint_interval=10,
-        checkpoint_dir="checkpoints",
-        experiment_name="srbench_cgp",
+        checkpoint_dir="checkpoint",
+        experiment_name="srbench_ge",
     )
     scaling = True
 #cgp_config.init()
@@ -185,7 +200,7 @@ for g in group_datasets:
             train_X, test_X, train_y, test_y = train_test_split(X, y, train_size=0.75, random_state=1337)
             
             # Default run
-            algo = SRBench(args.algo, config, hyperparams, functions=strfunctions, terminals=terminals, scaling_=scaling)
+            algo = SRBench(args.algo, config, hyperparams, functions=functions, terminals=terminals, scaling_=scaling)
             algo.fit(train_X, train_y)
             def_train_score = algo.score(train_X, train_y)
             def_test_score = algo.score(test_X, test_y)
@@ -203,7 +218,7 @@ for g in group_datasets:
                 'seed': args.seed
             })
 
-            algo = SRBench(args.algo, config, hyperparams, functions=strfunctions, terminals=terminals, scaling_=scaling)
+            algo = SRBench(args.algo, config, hyperparams, functions=functions, terminals=terminals, scaling_=scaling)
             if args.optimise:
                 
 
@@ -224,17 +239,17 @@ for g in group_datasets:
                 # opt_hyperparameters = interface.optimise(model,problem, n_trials_=trials)
                 
                 # try SRBench HPO
-                algo = SRBench(args.algo, config, hyperparams, functions=strfunctions, terminals=terminals, scaling_=scaling)
+                algo = SRBench(args.algo, config, hyperparams, functions=functions, terminals=terminals, scaling_=scaling)
                 interface_srbench = SMAC4SRBenchInterface(algo)
                 opt_hyperparameters_srbench = interface_srbench.optimise(
                     train_X,
                     train_y,
                     n_trials=trials,
                     seed=args.seed,
-                    dataset_name=d
+                    sc_name=f'{d}_{args.algo}'
                 )
                 
-                algo = SRBench(args.algo, config, opt_hyperparameters_srbench, functions=strfunctions, terminals=terminals, scaling_=scaling)
+                algo = SRBench(args.algo, config, opt_hyperparameters_srbench, functions=functions, terminals=terminals, scaling_=scaling)
                 algo.fit(train_X, train_y) 
                 opt_train_score = algo.score(train_X, train_y)
                 opt_test_score = algo.score(test_X, test_y)
