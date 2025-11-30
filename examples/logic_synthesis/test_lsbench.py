@@ -69,7 +69,7 @@ ge_hyperparams = GEHyperparameters(
     cx_rate=0.9,
     mutation_rate=0.1,
     tournament_size=2,
-    penalty_value=99999,
+    penalty_value=100,
 )
 
 #   Set up configurations for TGP and CGP
@@ -136,7 +136,7 @@ ge_config = GPConfig(
     stopping_criteria=0,
     minimizing_fitness=True,
     ideal_fitness=0,
-    silent_algorithm=False,
+    silent_algorithm=True,
     silent_evolver=True,
     minimalistic_output=True,
     num_outputs=1,
@@ -170,13 +170,16 @@ for bm in benchmarks:
     ge_config.num_outputs = num_outputs
 
     tt = bm.get_truth_table()
+
+
+    functions = lsbench.get_fs(bm.name)
     terminals = [Var(index = i, name_ ="x" + str(+ i)) for i in range(num_inputs)]
 
     tgp = LSRegressor(
         representation_="TGP",
         config_=tgp_config,
         hyperparameters_=tgp_hyperparams,
-        functions_=functions_reduced,
+        functions_=functions,
         terminals_=terminals
     )
 
@@ -184,7 +187,7 @@ for bm in benchmarks:
         "CGP",
         cgp_config,
         cgp_hyperparams,
-        functions_=functions_reduced,
+        functions_=functions,
         terminals_=terminals
     )
 
@@ -192,7 +195,7 @@ for bm in benchmarks:
         "LGP",
         lgp_config,
         lgp_hyperparams,
-        functions_=functions_reduced,
+        functions_=functions,
         terminals_=terminals
     )
 
@@ -200,18 +203,11 @@ for bm in benchmarks:
         "GE",
         ge_config,
         ge_hyperparams,
-        functions_=functions_reduced,
+        functions_=functions,
         terminals_=terminals
     )
 
-    #tgp.fit(X=tt.inputs, y=tt.outputs)
-    #print(f"tgp score: {tgp.score(tt.inputs,tt.outputs)}")
-
-    #cgp.fit(X=tt.inputs, y=tt.outputs)
-    #print(f"cgp score: {cgp.score(tt.inputs, tt.outputs)}")
-
-    #lgp.fit(X=tt.inputs, y=tt.outputs)
-    #print(f"lgp score: {lgp.score(tt.inputs, tt.outputs)}\n")
-
+    tgp.fit(X=tt.inputs, y=tt.outputs)
+    cgp.fit(X=tt.inputs, y=tt.outputs)
+    lgp.fit(X=tt.inputs, y=tt.outputs)
     ge.fit(X=tt.inputs, y=tt.outputs)
-    print(f"ge score: {ge.score(tt.inputs, tt.outputs)}\n")
