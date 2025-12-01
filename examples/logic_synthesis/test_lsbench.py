@@ -18,7 +18,8 @@ benchmarks = [lsbench.add4(),
               lsbench.enc8(),
               lsbench.epar8(),
               lsbench.mcomp4(),
-              lsbench.icomp5()]
+              lsbench.icomp5()
+            ]
 
 functions_reduced = ["AND", "OR", "BUFA", "NOT"]
 functions_extended = ["AND", "OR", "BUFA", "NOT", "XOR", "NAND", "NOR", "XNOR"]
@@ -63,7 +64,7 @@ lgp_hyperparams = LGPHyperparameters(
 
 ge_hyperparams = GEHyperparameters(
     pop_size=POPSIZE,
-    genome_length=40,
+    genome_length=100,
     codon_size=1000,
     cx_rate=0.9,
     mutation_rate=0.1,
@@ -135,8 +136,8 @@ ge_config = GPConfig(
     stopping_criteria=0,
     minimizing_fitness=True,
     ideal_fitness=0,
-    silent_algorithm=False,
-    silent_evolver=False,
+    silent_algorithm=True,
+    silent_evolver=True,
     minimalistic_output=True,
     num_outputs=1,
     report_interval=1,
@@ -169,13 +170,16 @@ for bm in benchmarks:
     ge_config.num_outputs = num_outputs
 
     tt = bm.get_truth_table()
+
+
+    functions = lsbench.get_fs(bm.name)
     terminals = [Var(index = i, name_ ="x" + str(+ i)) for i in range(num_inputs)]
 
     tgp = LSRegressor(
         representation_="TGP",
         config_=tgp_config,
         hyperparameters_=tgp_hyperparams,
-        functions_=functions_reduced,
+        functions_=functions,
         terminals_=terminals
     )
 
@@ -183,7 +187,7 @@ for bm in benchmarks:
         "CGP",
         cgp_config,
         cgp_hyperparams,
-        functions_=functions_reduced,
+        functions_=functions,
         terminals_=terminals
     )
 
@@ -191,7 +195,7 @@ for bm in benchmarks:
         "LGP",
         lgp_config,
         lgp_hyperparams,
-        functions_=functions_reduced,
+        functions_=functions,
         terminals_=terminals
     )
 
@@ -199,18 +203,11 @@ for bm in benchmarks:
         "GE",
         ge_config,
         ge_hyperparams,
-        functions_=functions_reduced,
+        functions_=functions,
         terminals_=terminals
     )
 
     tgp.fit(X=tt.inputs, y=tt.outputs)
-    print(f"tgp score: {tgp.score(tt.inputs,tt.outputs)}")
-
     cgp.fit(X=tt.inputs, y=tt.outputs)
-    print(f"cgp score: {cgp.score(tt.inputs, tt.outputs)}")
-
     lgp.fit(X=tt.inputs, y=tt.outputs)
-    print(f"lgp score: {lgp.score(tt.inputs, tt.outputs)}\n")
-
-    #ge.fit(X=tt.inputs, y=tt.outputs)
-    #print(f"ge score: {ge.score(tt.inputs, tt.outputs)}\n")
+    ge.fit(X=tt.inputs, y=tt.outputs)
