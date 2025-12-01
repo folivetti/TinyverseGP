@@ -69,7 +69,7 @@ ge_hyperparams = GEHyperparameters(
     cx_rate=0.9,
     mutation_rate=0.1,
     tournament_size=2,
-    penalty_value=100,
+    penalty_value=99999,
 )
 
 #   Set up configurations for TGP and CGP

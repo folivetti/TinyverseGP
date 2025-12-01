@@ -75,13 +75,14 @@ class LGPHyperparameters(Hyperparameters):
     def __init__(self, *, mu=10, tournament_size=2, min_len=5, max_len=10, initial_max_len=10, p_register=0.5,
                  macro_variation_rate=1, micro_variation_rate=0.25, insertion_rate=0.5, max_segment=4,
                  reproduction_rate=1, branch_probability=0.0, erc=False, default_value=0.0, protection=1e10,
-                 register_slack=None, **kwargs):
+                 register_slack=1, **kwargs):
         self.mu = mu
         self.tournament_size = tournament_size
         self.min_len = min_len
         self.max_len = max_len
         self.initial_max_len = initial_max_len
         self.p_register = p_register
+        self.register_slack = register_slack
         self.macro_variation_rate = macro_variation_rate
         self.micro_variation_rate = micro_variation_rate
         self.insertion_rate = insertion_rate
@@ -91,11 +92,6 @@ class LGPHyperparameters(Hyperparameters):
         self.erc = erc
         self.default_value = default_value
         self.protection = protection
-
-        if register_slack is None:
-            self.register_slack = random.randint(4, 16)
-        else:
-            self.register_slack = register_slack
 
         super().__init__(**kwargs)
 
