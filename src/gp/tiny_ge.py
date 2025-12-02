@@ -16,14 +16,19 @@ class GEHyperparameters(GPHyperparameters):
     """
     Specialized hyperparameter configuration space for GE.
     """
-
     genome_length: int
     codon_size: int
     penalty_value: float
 
     def __post_init__(self):
         GPHyperparameters.__post_init__(self)
-
+        self.space["genome_length"] = (10, 1000)
+        self.space["codon_size"] = (1000, 25000)
+        self.space["pop_size"] = (10, 5000)
+        self.space["mutation_rate"] = (0.0, 1.0)
+        self.space["cx_rate"] = (0.0, 1.0)
+        self.space["tournament_size"] = (2, 9)
+        self.space["penalty_value"] = (1, 9999999)
 
 class GEIndividual(GPIndividual):
     genome: list[int]
