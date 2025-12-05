@@ -1,19 +1,18 @@
 import math
 
-from src.analysis.problems import MaxPlusMul
+from src.analysis.problems import MaxPlusMul, MaxPlus
 from src.gp.tiny_cgp import *
 from src.gp.functions import ADD, MUL
 from src.gp.tinyverse import Const
 
-D = 15
+D = 5
 T = 0.5
-problem = MaxPlusMul(d=D, t=T)
+problem = MaxPlus(d=D, t=T)
 functions = [ADD]
 terminals = [Const(T), Const(0)]
 ideal = problem.ideal
 
 problem.ideal = T * 2 ** D
-
 print(problem.ideal)
 
 config = CGPConfig(
