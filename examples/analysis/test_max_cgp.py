@@ -1,45 +1,47 @@
+import math
+
 from src.analysis.problems import Max
 from src.gp.tiny_cgp import *
-from src.gp.problem import BlackBox
 from src.gp.functions import ADD, MUL
 from src.gp.tinyverse import Const
 
-D = 5
-IDEAL = (4**2)**(D - 3)
+D = 8
+T = 1
+problem = Max(d=D, t=T)
 functions = [ADD, MUL]
-terminals = [Const(0.5), Const(0)]
+terminals = [Const(T), Const(0)]
+ideal = problem.ideal
 
 config = CGPConfig(
     num_jobs=1,
     max_generations=10000,
-    stopping_criteria=IDEAL,
+    stopping_criteria=ideal,
     minimizing_fitness=False,
-    ideal_fitness=IDEAL,
-    silent_algorithm=False,
+    ideal_fitness=ideal,
+    silent_algorithm=True,
     silent_evolver=False,
     minimalistic_output=True,
     num_functions=len(functions),
     max_arity=2,
-    num_inputs=2,
+    num_inputs=1,
     num_outputs=1,
     report_interval=1,
-    max_time=60,
-    global_seed=42,
+    max_time=3600,
+    global_seed=None,
     checkpoint_interval=10,
     checkpoint_dir='checkpoint',
-    experiment_name='sr_cgp'
+    experiment_name='max_tgp'
 )
 
 hyperparameters = CGPHyperparameters(
     mu=1,
     lmbda=1,
     population_size=2,
-    num_function_nodes=D,
-    levels_back=99999,
+    num_function_nodes=D-1,
+    levels_back=D,
     mutation_rate=0.1,
     strict_selection=False,
 )
 
-problem = Max(d_=5)
 cgp = TinyCGP(functions, terminals, config, hyperparameters)
-cgp.evolve(problem)
+best = cgp.evolve(problem)
