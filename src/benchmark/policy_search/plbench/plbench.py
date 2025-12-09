@@ -100,6 +100,13 @@ class PLRegressor(RegressorMixin):
         self.program = self.model.evolve(self.problem)
         self.fitted_ = True
 
+    def is_valid(self):
+        if not self.fitted_:
+            raise ValueError("Model not fitted")
+        if not self.representation == "GE":
+            raise ValueError("Method only works for GE")
+        return self.model.is_valid(self.program.genome)
+
     def evaluate(self, num_episodes=10):
         if not self.fitted_:
             raise ValueError("Model not fitted")

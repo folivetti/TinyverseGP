@@ -208,6 +208,9 @@ for k in plbench.benchmark.keys():
 
 
         ge.fit(env=p.env)
-        print(f"Reward GE: {ge.evaluate()}")
+        if ge.is_valid():
+            print(f"Reward GE: {ge.evaluate()}")
+        else:
+            print(f"GE evaluation cannot be done due to invalid genome")
 
         p.env.close()
