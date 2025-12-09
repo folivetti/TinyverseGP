@@ -1,10 +1,13 @@
+import numpy as np
+
 from src.analysis.problems import MaxPlusMul, MaxPlus
 from src.gp.tiny_cgp import *
 from src.gp.functions import ADD, MUL
 from src.gp.tiny_tgp import TGPHyperparameters, TinyTGP
 from src.gp.tinyverse import Const
 
-D = 4
+NUM_JOBS = 10
+D = 3
 T = 0.5
 MAX_SIZE = math.pow(2, D)
 MAX_DEPTH = D + 1
@@ -18,7 +21,7 @@ print(ideal)
 
 config = GPConfig(
     num_jobs=1,
-    max_generations=10000,
+    max_generations=100000,
     stopping_criteria=ideal,
     minimizing_fitness=False,
     ideal_fitness=ideal,
@@ -45,5 +48,10 @@ hyperparameters = TGPHyperparameters(
     erc=False
 )
 
-tgp = TinyTGP(functions, terminals, config, hyperparameters)
-tgp.evolve(problem)
+evals = []
+for _ in range(NUM_JOBS):
+    cgp = TinyTGP(functions, terminals, config, hyperparameters)
+    best = cgp.evolve(problem)
+    evals.append(cgp.num_evaluations)
+
+print(np.mean(evals))
