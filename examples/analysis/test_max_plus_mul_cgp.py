@@ -6,7 +6,7 @@ from src.gp.tiny_cgp import *
 from src.gp.functions import ADD, MUL
 from src.gp.tinyverse import Const
 
-NUM_JOBS = 10
+NUM_INSTANCES = 10
 D = 4
 T = 1
 problem = MaxPlusMul(d=D, t=T)
@@ -14,7 +14,7 @@ functions = [ADD, MUL]
 terminals = [Const(T), Const(0)]
 ideal = problem.ideal
 
-print(ideal)
+print(f"Maximum value: {ideal}")
 
 config = CGPConfig(
     num_jobs=100,
@@ -31,7 +31,7 @@ config = CGPConfig(
     num_outputs=1,
     report_interval=1,
     max_time=3600,
-    global_seed=None,
+    global_seed=42,
     checkpoint_interval=10,
     checkpoint_dir='checkpoint',
     experiment_name='max_tgp'
@@ -48,9 +48,11 @@ hyperparameters = CGPHyperparameters(
 )
 
 evals = []
-for _ in range(NUM_JOBS):
+for _ in range(NUM_INSTANCES):
     cgp = SimpleCGP(functions, terminals, config, hyperparameters)
     best = cgp.evolve(problem)
     evals.append(cgp.num_evaluations)
 
-print(np.mean(evals))
+print("")
+print(f"Mean: {np.mean(evals)}")
+print(f"Median: {np.median(evals)}")

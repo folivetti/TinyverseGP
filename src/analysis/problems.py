@@ -14,7 +14,7 @@ class Max(Problem):
 class MaxPlus(Max):
 
     def __init__(self, d, t):
-        self.ideal = t * 2 ** d
+        self.ideal = t * math.pow(2,d)
         self.minimizing = False
 
 
