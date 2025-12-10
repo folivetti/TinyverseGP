@@ -1,6 +1,4 @@
-import random
-import time
-
+import matplotlib.pyplot as plt
 import numpy as np
 
 from src.analysis.models.simple_cgp import SimpleCGP
@@ -9,14 +7,13 @@ from src.gp.tiny_cgp import *
 from src.gp.functions import ADD, MUL
 from src.gp.tinyverse import Const
 
-NUM_INSTANCES = 10
-D = 4
+NUM_INSTANCES = 30
+D = 15
 T = 1
 problem = MaxPlus(d=D, t=T)
 functions = [ADD]
-terminals = [Const(T), Const(0)]
+terminals = [Const(T)]
 ideal = problem.ideal
-print(f"Maximum value: {ideal}")
 
 config = CGPConfig(
     num_jobs=1,
@@ -25,11 +22,11 @@ config = CGPConfig(
     minimizing_fitness=False,
     ideal_fitness=ideal,
     silent_algorithm=True,
-    silent_evolver=False,
+    silent_evolver=True,
     minimalistic_output=True,
     num_functions=len(functions),
     max_arity=2,
-    num_inputs=2,
+    num_inputs=1,
     num_outputs=1,
     report_interval=100000,
     max_time=3600,
@@ -49,13 +46,29 @@ hyperparameters = CGPHyperparameters(
     strict_selection=False,
 )
 
-evals = []
-for _ in range(NUM_INSTANCES):
-    config.global_seed = int(time.time_ns())
-    cgp = SimpleCGP(functions, terminals, config, hyperparameters)
-    best = cgp.evolve(problem)
-    evals.append(cgp.num_evaluations)
+x = []
+y = []
+for d in range(3,D+1):
+    evals = []
+    for _ in range(NUM_INSTANCES):
+        problem = MaxPlus(d=d, t=T)
+        #print(f"Maximum value: {problem.ideal}")
+        config.ideal_fitness = problem.ideal
+        config.global_seed = int(time.time_ns())
+        cgp = SimpleCGP(functions, terminals, config, hyperparameters)
+        best = cgp.evolve(problem)
+        evals.append(cgp.num_evaluations)
 
-print("")
-print(f"Mean: {np.mean(evals)}")
-print(f"Median: {np.median(evals)}")
+    avg = np.mean(evals)
+    x.append(d)
+    y.append(avg)
+    print(f"{d};{avg}")
+
+
+fig, ax = plt.subplots()
+ax.plot(x, y, linewidth=2.0)
+ax.set_yscale('log')
+ax.set_xscale('log')
+plt.xlabel("D")
+plt.ylabel("# Iterations")
+plt.show()
