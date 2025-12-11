@@ -188,12 +188,8 @@ class TinyLGP(GPModel):
         self.hyperparameters = hyperparameters
         self.best_individual = None
         self.num_evaluations = 0
-
         self.config.num_registers += self.hyperparameters.register_slack
-
-        self.population = [LGPIndividual(
-            self._create_random_genome(self.hyperparameters.min_len, self.hyperparameters.initial_max_len), None) for _
-            in range(self.hyperparameters.mu)]
+        self.init()
 
     def _create_constant(self):
         return random.random() * 2 - 1
@@ -225,6 +221,11 @@ class TinyLGP(GPModel):
                     can_add_read = False
             genome.append(Instruction(dest, operator, operands))
         return genome
+
+    def init(self):
+        self.population = [LGPIndividual(
+            self._create_random_genome(self.hyperparameters.min_len, self.hyperparameters.initial_max_len), None) for _
+            in range(self.hyperparameters.mu)]
 
     def breed(self, problem):
         w1, l1 = self.tournament_selection(problem.minimizing)
@@ -406,7 +407,6 @@ class TinyLGP(GPModel):
         :param genome: the genome of an individual
         :return: fitness of the individual
         """
-        self.num_evaluations += 1
         f = problem.evaluate(
             genome, self
         )  # evaluate the solution using the problem instance
