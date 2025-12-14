@@ -15,17 +15,15 @@ D = 10
 T = 1
 MAX_SIZE = math.pow(2, D + 1)
 MAX_DEPTH = D + 1
-problem = MaxPlus(d=D, t=T)
 functions = [ADD]
 terminals = [Const(T)]
-ideal = problem.ideal
 
 config = TGPConfig(
     num_jobs=1,
     max_generations=MAX_GENERATIONS,
-    stopping_criteria=ideal,
+    stopping_criteria=None,
     minimizing_fitness=False,
-    ideal_fitness=ideal,
+    ideal_fitness=None,
     silent_algorithm=True,
     silent_evolver=True,
     minimalistic_output=True,

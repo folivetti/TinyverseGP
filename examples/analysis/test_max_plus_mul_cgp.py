@@ -7,7 +7,7 @@ from src.gp.tiny_cgp import *
 from src.gp.functions import ADD, MUL
 from src.gp.tinyverse import Const
 
-NUM_INSTANCES = 30
+NUM_INSTANCES = 100
 MAX_GENERATIONS = 5000000
 D = 30
 T = 1
@@ -32,7 +32,7 @@ config = CGPConfig(
     num_outputs=1,
     report_interval=1,
     max_time=3600,
-    global_seed=42,
+    global_seed=None,
     checkpoint_interval=10,
     checkpoint_dir='checkpoint',
     experiment_name='max_tgp'
@@ -54,7 +54,6 @@ for d in range(3,D+1):
     evals = []
     for _ in range(NUM_INSTANCES):
         problem = MaxPlusMul(d=d, t=T)
-        #print(f"Maximum value: {problem.ideal}")
         config.ideal_fitness = problem.ideal
         config.global_seed = int(time.time_ns())
         cgp = SimpleCGP(functions, terminals, config, hyperparameters)
@@ -79,7 +78,7 @@ plt.show()
 fig2, ax2 = plt.subplots()
 ax2.plot(x, y, linewidth=2.0)
 ax2.set_yscale('log')
-ax2.set_xscale('log')
+ax2.set_xscale('linear')
 plt.xlabel("D")
 plt.ylabel("# Iterations")
 plt.show()

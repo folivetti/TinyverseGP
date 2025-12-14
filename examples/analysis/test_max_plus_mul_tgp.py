@@ -9,23 +9,21 @@ from src.gp.tiny_tgp import TGPConfig
 from src.gp.tinyverse import Const
 from src.analysis.models.simple_tgp import SimpleTGP, SGPHyperparameters
 
-NUM_INSTANCES = 30
+NUM_INSTANCES = 100
 MAX_GENERATIONS = 5000000
-D = 15
+D = 30
 T = 1
 MAX_SIZE = math.pow(2, D + 1)
 MAX_DEPTH = D + 1
-problem = MaxPlusMul(d=D, t=T)
 functions = [ADD, MUL]
 terminals = [Const(T)]
-ideal = problem.ideal
 
 config = TGPConfig(
     num_jobs=1,
     max_generations=MAX_GENERATIONS,
-    stopping_criteria=ideal,
+    stopping_criteria=None,
     minimizing_fitness=False,
-    ideal_fitness=ideal,
+    ideal_fitness=None,
     silent_algorithm=True,
     silent_evolver=True,
     minimalistic_output=True,
@@ -50,7 +48,7 @@ y = []
 for d in range(3,D+1):
     evals = []
     for _ in range(NUM_INSTANCES):
-        problem = MaxPlus(d=d, t=T)
+        problem = MaxPlusMul(d=d, t=T)
         config.ideal_fitness = problem.ideal
         config.global_seed = int(time.time_ns())
         tgp = SimpleTGP(functions, terminals, config, hyperparameters)
@@ -74,7 +72,7 @@ plt.show()
 fig2, ax2 = plt.subplots()
 ax2.plot(x, y, linewidth=2.0)
 ax2.set_yscale('log')
-ax2.set_xscale('log')
+ax2.set_xscale('linear')
 plt.xlabel("D")
 plt.ylabel("# Iterations")
 plt.show()
