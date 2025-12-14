@@ -2,13 +2,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from src.analysis.models.simple_cgp import SimpleCGP
-from src.analysis.problems import MaxPlusMul, MaxPlus
+from src.analysis.problems import MaxPlus
 from src.gp.tiny_cgp import *
 from src.gp.functions import ADD, MUL
 from src.gp.tinyverse import Const
 
 NUM_INSTANCES = 30
-D = 15
+MAX_GENERATIONS = 5000000
+D = 30
 T = 1
 problem = MaxPlus(d=D, t=T)
 functions = [ADD]
@@ -17,7 +18,7 @@ ideal = problem.ideal
 
 config = CGPConfig(
     num_jobs=1,
-    max_generations=5000000,
+    max_generations=MAX_GENERATIONS,
     stopping_criteria=ideal,
     minimizing_fitness=False,
     ideal_fitness=ideal,
@@ -60,15 +61,24 @@ for d in range(3,D+1):
         evals.append(cgp.num_evaluations)
 
     avg = np.mean(evals)
+    std = np.std(evals)
     x.append(d)
     y.append(avg)
-    print(f"{d};{avg}")
+    print(f"{d};{avg};{std}")
 
 
-fig, ax = plt.subplots()
-ax.plot(x, y, linewidth=2.0)
-ax.set_yscale('log')
-ax.set_xscale('log')
+fig1, ax1 = plt.subplots()
+ax1.plot(x, y, linewidth=2.0)
+ax1.set_yscale('linear')
+ax1.set_xscale('linear')
+plt.xlabel("D")
+plt.ylabel("# Iterations")
+plt.show()
+
+fig2, ax2 = plt.subplots()
+ax2.plot(x, y, linewidth=2.0)
+ax2.set_yscale('log')
+ax2.set_xscale('log')
 plt.xlabel("D")
 plt.ylabel("# Iterations")
 plt.show()

@@ -11,12 +11,12 @@ from src.analysis.models.simple_tgp import SimpleTGP, SGPHyperparameters
 
 NUM_INSTANCES = 30
 MAX_GENERATIONS = 5000000
-D = 10
+D = 15
 T = 1
 MAX_SIZE = math.pow(2, D + 1)
 MAX_DEPTH = D + 1
-problem = MaxPlus(d=D, t=T)
-functions = [ADD]
+problem = MaxPlusMul(d=D, t=T)
+functions = [ADD, MUL]
 terminals = [Const(T)]
 ideal = problem.ideal
 
@@ -30,7 +30,7 @@ config = TGPConfig(
     silent_evolver=True,
     minimalistic_output=True,
     num_outputs=1,
-    report_interval=100,
+    report_interval=1,
     max_time=3600,
     global_seed=None,
     checkpoint_interval=10,
@@ -47,7 +47,7 @@ hyperparameters = SGPHyperparameters(
 
 x = []
 y = []
-for d in range(1,D+1):
+for d in range(3,D+1):
     evals = []
     for _ in range(NUM_INSTANCES):
         problem = MaxPlus(d=d, t=T)
@@ -74,7 +74,7 @@ plt.show()
 fig2, ax2 = plt.subplots()
 ax2.plot(x, y, linewidth=2.0)
 ax2.set_yscale('log')
-ax2.set_xscale('linear')
+ax2.set_xscale('log')
 plt.xlabel("D")
 plt.ylabel("# Iterations")
 plt.show()

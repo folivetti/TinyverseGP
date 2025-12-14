@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib import pyplot as plt
 
 from src.analysis.models.simple_cgp import SimpleCGP
 from src.analysis.problems import MaxPlusMul
@@ -6,15 +7,15 @@ from src.gp.tiny_cgp import *
 from src.gp.functions import ADD, MUL
 from src.gp.tinyverse import Const
 
-NUM_INSTANCES = 10
-D = 4
+NUM_INSTANCES = 30
+MAX_GENERATIONS = 5000000
+D = 30
 T = 1
 problem = MaxPlusMul(d=D, t=T)
 functions = [ADD, MUL]
 terminals = [Const(T), Const(0)]
 ideal = problem.ideal
 
-print(f"Maximum value: {ideal}")
 
 config = CGPConfig(
     num_jobs=100,
@@ -23,7 +24,7 @@ config = CGPConfig(
     minimizing_fitness=False,
     ideal_fitness=ideal,
     silent_algorithm=True,
-    silent_evolver=False,
+    silent_evolver=True,
     minimalistic_output=True,
     num_functions=len(functions),
     max_arity=2,
@@ -47,12 +48,38 @@ hyperparameters = CGPHyperparameters(
     strict_selection=False,
 )
 
-evals = []
-for _ in range(NUM_INSTANCES):
-    cgp = SimpleCGP(functions, terminals, config, hyperparameters)
-    best = cgp.evolve(problem)
-    evals.append(cgp.num_evaluations)
+x = []
+y = []
+for d in range(3,D+1):
+    evals = []
+    for _ in range(NUM_INSTANCES):
+        problem = MaxPlusMul(d=d, t=T)
+        #print(f"Maximum value: {problem.ideal}")
+        config.ideal_fitness = problem.ideal
+        config.global_seed = int(time.time_ns())
+        cgp = SimpleCGP(functions, terminals, config, hyperparameters)
+        best = cgp.evolve(problem)
+        evals.append(cgp.num_evaluations)
 
-print("")
-print(f"Mean: {np.mean(evals)}")
-print(f"Median: {np.median(evals)}")
+    avg = np.mean(evals)
+    std = np.std(evals)
+    x.append(d)
+    y.append(avg)
+    print(f"{d};{avg};{std}")
+
+
+fig1, ax1 = plt.subplots()
+ax1.plot(x, y, linewidth=2.0)
+ax1.set_yscale('linear')
+ax1.set_xscale('linear')
+plt.xlabel("D")
+plt.ylabel("# Iterations")
+plt.show()
+
+fig2, ax2 = plt.subplots()
+ax2.plot(x, y, linewidth=2.0)
+ax2.set_yscale('log')
+ax2.set_xscale('log')
+plt.xlabel("D")
+plt.ylabel("# Iterations")
+plt.show()

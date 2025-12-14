@@ -1,5 +1,4 @@
 import math
-from abc import ABC
 
 from src.gp.problem import Problem
 from src.gp.tinyverse import GPModel
@@ -21,5 +20,5 @@ class MaxPlus(Max):
 class MaxPlusMul(Max):
 
     def __init__(self, d, t):
-        self.ideal = math.pow((2 * t), 2 * (d - 1)) if t < 2 else math.pow(t, 2 * (d - 1))
+        self.ideal = max(math.pow(2 * t,t*t), math.pow(2, (d - 1)))
         self.minimizing = False
