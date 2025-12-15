@@ -1,4 +1,6 @@
 from math import sqrt, pi
+
+from src.benchmark.policy_search.pl_benchmark import ALEArgs
 from src.benchmark.policy_search.plbench.plbench import PLBench, PLRegressor
 from src.gp.functions import ADD, SUB, MUL, DIV, AND, OR, NAND, NOR, NOTA, IF, LT, GT, BUFA, XOR, XNOR
 from src.gp.tiny_cgp import CGPHyperparameters, CGPConfig
@@ -7,13 +9,12 @@ from src.gp.tiny_lgp import LGPHyperparameters, LGPConfig
 from src.gp.tiny_tgp import TGPHyperparameters, TGPConfig
 from src.gp.tinyverse import Var, GPConfig, Const
 
+
 FUNCTIONS = [ADD, MUL, DIV, AND, OR, NAND, NOR, NOTA, BUFA, XOR, XNOR, IF, LT, GT]
 CONSTANTS =  [Const(1),Const(2),Const(sqrt(2)),Const(pi),Const(0.5)]
 MAXTIME = 3600  # 1 hour
 MAXGEN = 10
 POPSIZE = 50
-
-plbench = PLBench()
 
 tgp_hyperparams = TGPHyperparameters(
     max_depth=4,
@@ -138,79 +139,87 @@ ge_config = GPConfig(
     experiment_name='sr_ge'
 )
 
-for k in plbench.benchmark.keys():
-    problems = plbench.benchmark[k]
+ale_args = ALEArgs(
+    noop_max=30,
+    frame_skip=1,
+    screen_size=32,
+    grayscale_obs=True,
+    terminal_on_life_loss=True,
+    scale_obs=False,
+    frame_stack=4,
+)
 
-    for name, p in problems.items():
-        print(f"Running benchmark: {name}")
+plbench = PLBench(ale_args)
+problems = plbench.benchmark["atari_5"]
 
-        num_inputs = p.len_observation_space()
-        num_outputs = p.len_action_space()
+for name, p in problems.items():
 
-        tgp_config.num_inputs = num_inputs
-        tgp_config.num_outputs = num_outputs
+    print(f"Running benchmark: {name}")
 
-        cgp_config.num_inputs = num_inputs
-        cgp_config.num_outputs = num_outputs
+    num_inputs = p.len_observation_space()
+    num_outputs = p.len_action_space()
 
-        lgp_config.num_inputs = num_inputs
-        lgp_config.num_registers = num_outputs
-        lgp_config.num_outputs = num_outputs
+    tgp_config.num_inputs = num_inputs
+    tgp_config.num_outputs = num_outputs
 
-        ge_config.num_outputs = num_outputs
+    cgp_config.num_inputs = num_inputs
+    cgp_config.num_outputs = num_outputs
 
-        terminals = [Var(i) for i in range(num_inputs)]
+    lgp_config.num_inputs = num_inputs
+    lgp_config.num_registers = num_outputs
+    lgp_config.num_outputs = num_outputs
 
-        tgp = PLRegressor(
-            representation_="TGP",
-            config_=tgp_config,
-            hyperparameters_=tgp_hyperparams,
-            functions_=FUNCTIONS,
-            terminals_=terminals
-        )
+    ge_config.num_outputs = num_outputs
 
-        cgp = PLRegressor(
-            representation_="CGP",
-            config_=cgp_config,
-            hyperparameters_=cgp_hyperparams,
-            functions_=FUNCTIONS,
-            terminals_=terminals
-        )
+    terminals = [Var(i) for i in range(num_inputs)]
 
-        lgp = PLRegressor(
-            representation_="LGP",
-            config_=lgp_config,
-            hyperparameters_=lgp_hyperparams,
-            functions_=FUNCTIONS,
-            terminals_=terminals,
-            num_episodes_=10
-        )
+    tgp = PLRegressor(
+        representation_="TGP",
+        config_=tgp_config,
+        hyperparameters_=tgp_hyperparams,
+        functions_=FUNCTIONS,
+        terminals_=terminals
+    )
 
-        ge = PLRegressor(
-            representation_="GE",
-            config_=ge_config,
-            hyperparameters_=ge_hyperparams,
-            functions_=FUNCTIONS,
-            terminals_=terminals,
-            num_episodes_ = 10
-        )
+    cgp = PLRegressor(
+        representation_="CGP",
+        config_=cgp_config,
+        hyperparameters_=cgp_hyperparams,
+        functions_=FUNCTIONS,
+        terminals_=terminals
+    )
 
-        tgp.fit(env=p.env)
-        print(f"Reward TGP: {tgp.evaluate()}")
+    lgp = PLRegressor(
+        representation_="LGP",
+        config_=lgp_config,
+        hyperparameters_=lgp_hyperparams,
+        functions_=FUNCTIONS,
+        terminals_=terminals,
+        num_episodes_=10
+    )
 
+    ge = PLRegressor(
+        representation_="GE",
+        config_=ge_config,
+        hyperparameters_=ge_hyperparams,
+        functions_=FUNCTIONS,
+        terminals_=terminals,
+        num_episodes_=10
+    )
 
-        cgp.fit(env=p.env)
-        print(f"Reward CGP: {cgp.evaluate()}")
+    tgp.fit(env=p.env)
+    print(f"Reward TGP: {tgp.evaluate()}")
 
+    cgp.fit(env=p.env)
+    print(f"Reward CGP: {cgp.evaluate()}")
 
-        lgp.fit(env=p.env)
-        print(f"Reward LGP: {lgp.evaluate()}")
+    lgp.fit(env=p.env)
+    print(f"Reward LGP: {lgp.evaluate()}")
 
+    ge.fit(env=p.env)
+    if ge.is_valid():
+        print(f"Reward GE: {ge.evaluate()}")
+    else:
+        print(f"GE evaluation cannot be done due to invalid genome")
 
-        ge.fit(env=p.env)
-        if ge.is_valid():
-            print(f"Reward GE: {ge.evaluate()}")
-        else:
-            print(f"GE evaluation cannot be done due to invalid genome")
-
-        p.env.close()
+    p.env.close()

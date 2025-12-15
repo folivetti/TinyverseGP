@@ -33,6 +33,11 @@ class ALEArgs:
     scale_obs: int
     frame_stack: int
 
+class MinAtarArgs:
+    """
+    Arguments for the MinAtar benchmarks.
+    """
+    use_minimal_action_set: bool
 
 class PLBenchmark(Benchmark):
     """
