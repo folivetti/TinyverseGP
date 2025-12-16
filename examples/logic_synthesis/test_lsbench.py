@@ -19,7 +19,7 @@ benchmarks = [lsbench.add4(),
               lsbench.epar8(),
               lsbench.mcomp4(),
               lsbench.icomp5()
-            ]
+              ]
 
 functions_reduced = ["AND", "OR", "BUFA", "NOT"]
 functions_extended = ["AND", "OR", "BUFA", "NOT", "XOR", "NAND", "NOR", "XNOR"]
@@ -32,7 +32,7 @@ tgp_hyperparams = TGPHyperparameters(
     tournament_size=3,
     mutation_rate=0.2,
     cx_rate=0.9,
-    erc = None
+    erc=None
 )
 
 cgp_hyperparams = CGPHyperparameters(
@@ -46,21 +46,21 @@ cgp_hyperparams = CGPHyperparameters(
 )
 
 lgp_hyperparams = LGPHyperparameters(
-        mu=POPSIZE,
-        macro_variation_rate=0.75,
-        micro_variation_rate=0.25,
-        insertion_rate=0.5,
-        max_segment=15,
-        reproduction_rate=0.5,
-        branch_probability=0.0,
-        p_register = 0.5,
-        max_len = 200,
-        initial_max_len = 35,
-        erc = False,
-        default_value = 0.0,
-        protection = 1e10,
-        penalization_validity_factor=0.0
-    )
+    mu=POPSIZE,
+    macro_variation_rate=0.75,
+    micro_variation_rate=0.25,
+    insertion_rate=0.5,
+    max_segment=15,
+    reproduction_rate=0.5,
+    branch_probability=0.0,
+    p_register=0.5,
+    max_len=200,
+    initial_max_len=35,
+    erc=False,
+    default_value=0.0,
+    protection=1e10,
+    penalization_validity_factor=0.0
+)
 
 ge_hyperparams = GEHyperparameters(
     pop_size=POPSIZE,
@@ -113,22 +113,22 @@ cgp_config = CGPConfig(
 )
 
 lgp_config = LGPConfig(
-        num_jobs=1,
-        max_generations=MAXGEN,
-        stopping_criteria=0,
-        minimizing_fitness=True,
-        ideal_fitness=0,
-        silent_algorithm=True,
-        silent_evolver=True,
-        minimalistic_output=True,
-        report_interval=100000000000,
-        max_time=500,
-        num_registers=8,
-        global_seed=42,
-        checkpoint_interval=10,
-        checkpoint_dir="examples/checkpoint",
-        experiment_name="srbench_lgp",
-    )
+    num_jobs=1,
+    max_generations=MAXGEN,
+    stopping_criteria=0,
+    minimizing_fitness=True,
+    ideal_fitness=0,
+    silent_algorithm=True,
+    silent_evolver=True,
+    minimalistic_output=True,
+    report_interval=100000000000,
+    max_time=500,
+    num_registers=8,
+    global_seed=42,
+    checkpoint_interval=10,
+    checkpoint_dir="examples/checkpoint",
+    experiment_name="srbench_lgp",
+)
 
 ge_config = GPConfig(
     num_jobs=1,
@@ -148,10 +148,9 @@ ge_config = GPConfig(
     experiment_name='sr_ge'
 )
 
-#print("LSBench has been created!")
+# print("LSBench has been created!")
 
 for bm in benchmarks:
-
     print(f"Running benchmark: {bm.name}")
 
     num_inputs = bm.benchmark.num_inputs
@@ -171,9 +170,8 @@ for bm in benchmarks:
 
     tt = bm.get_truth_table()
 
-
     functions = lsbench.get_fs(bm.name)
-    terminals = [Var(index = i, name_ ="x" + str(+ i)) for i in range(num_inputs)]
+    terminals = [Var(index=i, name_="x" + str(+ i)) for i in range(num_inputs)]
 
     tgp = LSRegressor(
         representation_="TGP",
@@ -208,6 +206,13 @@ for bm in benchmarks:
     )
 
     tgp.fit(X=tt.inputs, y=tt.outputs)
+    print(f"tgp score: {tgp.score(tt.inputs, tt.outputs)}")
     cgp.fit(X=tt.inputs, y=tt.outputs)
+    print(f"cgp score: {cgp.score(tt.inputs, tt.outputs)}")
     lgp.fit(X=tt.inputs, y=tt.outputs)
+    print(f"lgp score: {lgp.score(tt.inputs, tt.outputs)}")
     ge.fit(X=tt.inputs, y=tt.outputs)
+    if ge.is_valid():
+        print(f"ge score: {ge.score(tt.inputs, tt.outputs)}")
+    else:
+        print(f"GE score cannot be calculated due to invalid genome")
