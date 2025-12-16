@@ -1,3 +1,9 @@
+"""
+Example script to test CGP with PLBench,
+Evolves a policy for Battle Zone onother games from Atari5:
+
+"""
+
 import warnings
 from math import sqrt, pi
 
@@ -32,7 +38,7 @@ config = CGPConfig(
     silent_evolver=False,
     minimalistic_output=True,
     num_functions=len(functions),
-    max_arity=2,
+    max_arity=3,
     num_inputs=None,
     num_outputs=None,
     report_interval=1,
