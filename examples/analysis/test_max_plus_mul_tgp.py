@@ -86,7 +86,7 @@ if EXPORT_CSV:
         writer.writerows(csv_data)
 
 if PLOT:
-    tgp_max_plus = pd.read_csv('max_plus_mul_cgp_tgp.csv')
+    tgp_max_plus = pd.read_csv('max_plus_mul_tgp.csv')
 
     p = sns.lineplot(
         data=tgp_max_plus,
