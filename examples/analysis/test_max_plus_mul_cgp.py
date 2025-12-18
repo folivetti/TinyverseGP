@@ -1,28 +1,32 @@
 import numpy as np
+import seaborn as sns
+import pandas as pd
+import csv
 from matplotlib import pyplot as plt
-
 from src.analysis.models.simple_cgp import SimpleCGP
 from src.analysis.problems import MaxPlusMul
 from src.gp.tiny_cgp import *
 from src.gp.functions import ADD, MUL
 from src.gp.tinyverse import Const
 
-NUM_INSTANCES = 100
+NUM_INSTANCES = 30
 MAX_GENERATIONS = 5000000
-D = 30
+EXPORT_CSV = True
+PLOT = True
+D_MIN = 1
+D_MAX = 4
 T = 1
-problem = MaxPlusMul(d=D, t=T)
 functions = [ADD, MUL]
 terminals = [Const(T), Const(0)]
-ideal = problem.ideal
 
+sns.set_theme()
 
 config = CGPConfig(
     num_jobs=100,
     max_generations=5000000,
-    stopping_criteria=ideal,
+    stopping_criteria=None,
     minimizing_fitness=False,
-    ideal_fitness=ideal,
+    ideal_fitness=None,
     silent_algorithm=True,
     silent_evolver=True,
     minimalistic_output=True,
@@ -42,43 +46,55 @@ hyperparameters = CGPHyperparameters(
     mu=1,
     lmbda=1,
     population_size=2,
-    num_function_nodes=D,
-    levels_back=D,
-    mutation_rate=1.0/D,
+    num_function_nodes=D_MAX,
+    levels_back=D_MAX,
+    mutation_rate=None,
     strict_selection=False,
 )
 
 x = []
 y = []
-for d in range(3,D+1):
+csv_data = []
+for d in range(D_MIN,D_MAX+1):
     evals = []
+    deltas = []
+    problem = MaxPlusMul(d=d, t=T)
     for _ in range(NUM_INSTANCES):
-        problem = MaxPlusMul(d=d, t=T)
         config.ideal_fitness = problem.ideal
         config.global_seed = int(time.time_ns())
         cgp = SimpleCGP(functions, terminals, config, hyperparameters)
+        t0 = time.time()
         best = cgp.evolve(problem)
+        t1 = time.time()
+        delta = t1 - t0
         evals.append(cgp.num_evaluations)
+        deltas.append(delta)
+        csv_data.append({'d': d, 'num_evals': cgp.num_evaluations})
 
-    avg = np.mean(evals)
+    avg_eval = np.mean(evals)
     std = np.std(evals)
+    avg_delta = np.mean(deltas)
     x.append(d)
-    y.append(avg)
-    print(f"{d};{avg};{std}")
+    y.append(avg_eval)
+    print(f"{d};{avg_eval:.2f};{std:.2f};{avg_delta:.2f}")
+
+if EXPORT_CSV:
+    with open('max_plus_mul_tgp.csv', 'w', newline='') as csvfile:
+        fieldnames = ['d', 'num_evals']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(csv_data)
 
 
-fig1, ax1 = plt.subplots()
-ax1.plot(x, y, linewidth=2.0)
-ax1.set_yscale('linear')
-ax1.set_xscale('linear')
-plt.xlabel("D")
-plt.ylabel("# Iterations")
-plt.show()
+tgp_max_plus = pd.read_csv('max_plus_mul_tgp.csv')
 
-fig2, ax2 = plt.subplots()
-ax2.plot(x, y, linewidth=2.0)
-ax2.set_yscale('log')
-ax2.set_xscale('linear')
-plt.xlabel("D")
-plt.ylabel("# Iterations")
+p = sns.lineplot(
+    data=tgp_max_plus,
+    x="d", y="num_evals",
+    markers=True,
+)
+
+p.set(xlabel='D', ylabel='# Iterations')
+p.set_xticks(range(D_MIN,D_MAX+1))
+p.set_xticklabels([str(d) for d in range(D_MIN,D_MAX+1)])
 plt.show()
