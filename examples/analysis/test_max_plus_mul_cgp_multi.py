@@ -85,14 +85,14 @@ if EXPORT_CSV:
         writer.writeheader()
         writer.writerows(csv_data)
 
+if PLOT:
+    data = pd.read_csv('max_plus_mul_cgp.csv')
 
-tgp_max_plus = pd.read_csv('max_plus_mul_cgp.csv')
-
-p = sns.lineplot(
-    data=tgp_max_plus,
-    x="d", y="num_evals",
-    markers=True,
-)
+    p = sns.lineplot(
+        data=data,
+        x="d", y="num_evals",
+        markers=True,
+    )
 
 p.set(xlabel='D', ylabel='# Iterations')
 p.set_xticks(range(D_MIN,D_MAX+1))

@@ -60,14 +60,14 @@ class HVLPrime:
         n_rnd.function = random.choice(self.functions)
 
     def insert(self, n: Node):
-        u, p = self.rnd_leaf(n)
-        v = random.choice(self.terminals)
+        v, p = self.rnd_leaf(n)
+        u = random.choice(self.terminals)
         w = random.choice(self.functions)
 
-        tmp = u.function
-        u.function = w
-        u.children.append(Node(function=tmp, children=[]))
-        u.children.append(Node(function=v, children=[]))
+        tmp = v.function
+        v.function = w
+        v.children.append(Node(function=u, children=[]))
+        v.children.append(Node(function=tmp, children=[]))
 
     def delete(self, n: Node):
         v, p = self.rnd_leaf(n)
@@ -81,6 +81,7 @@ class HVLPrime:
             u = p.children[0]
 
         p.function = u.function
+        p.children = u.children
 
     def as_list(self):
         return [self.substitute, self.insert,  self.delete]

@@ -79,7 +79,7 @@ hp_cgp = CGPHyperparameters(
 hp_tgp = SGPHyperparameters(
     lmbda=1,
     k=1,
-    strict_selection = True
+    strict_selection = False
 )
 
 x = []
@@ -122,10 +122,10 @@ if EXPORT_CSV:
         writer.writerows(csv_data)
 
 if PLOT:
-    tgp_max_plus = pd.read_csv('max_plus_mul_cgp_tgp.csv')
+    data = pd.read_csv('max_plus_mul_cgp_tgp.csv')
 
     p = sns.lineplot(
-        data=tgp_max_plus,
+        data=data,
         x="d", y="num_evals",
         hue="model", style="model",
         markers=True,

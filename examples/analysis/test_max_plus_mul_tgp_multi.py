@@ -45,7 +45,7 @@ config = TGPConfig(
 hyperparameters = SGPHyperparameters(
     lmbda=1,
     k=1,
-    strict_selection = True
+    strict_selection = False
 )
 
 
@@ -86,10 +86,10 @@ if EXPORT_CSV:
         writer.writerows(csv_data)
 
 if PLOT:
-    tgp_max_plus = pd.read_csv('max_plus_mul_tgp.csv')
+    data = pd.read_csv('max_plus_mul_tgp.csv')
 
     p = sns.lineplot(
-        data=tgp_max_plus,
+        data=data,
         x="d", y="num_evals",
         markers=True,
     )
