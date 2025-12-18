@@ -22,7 +22,7 @@ terminals = [Const(T), Const(0)]
 sns.set_theme()
 
 config = CGPConfig(
-    num_jobs=100,
+    num_jobs=1,
     max_generations=5000000,
     stopping_criteria=None,
     minimizing_fitness=False,
