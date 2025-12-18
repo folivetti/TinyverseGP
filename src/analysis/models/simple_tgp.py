@@ -10,7 +10,7 @@ from src.gp.tinyverse import Var, Const, Hyperparameters
 class SGPHyperparameters(Hyperparameters):
     lmbda: int = 1
     k: int = 1
-    strict_selection: bool = True
+    strict_selection: bool = False
 
 
 class HVLPrime:
@@ -87,7 +87,7 @@ class HVLPrime:
 
 
 class SimpleTGP(TinyTGP):
-
+    hyperparameters: SGPHyperparameters
     def __init__(self, functions_: list, terminals_: list, config_: TGPConfig, hyperparameters_: SGPHyperparameters):
         super().__init__(functions_, terminals_, config_, hyperparameters_)
         self.hvl_prime = HVLPrime(functions_, terminals_).as_list()

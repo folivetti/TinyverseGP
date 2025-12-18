@@ -13,12 +13,13 @@ class Max(Problem):
 class MaxPlus(Max):
 
     def __init__(self, d, t):
-        self.ideal = t * math.pow(2,d)
+        self.ideal = t * math.pow(2, d)
         self.minimizing = False
 
 
 class MaxPlusMul(Max):
 
     def __init__(self, d, t):
-        self.ideal = max(math.pow(2 * t,t*t), math.pow(2, (d - 1)))
+        assert(t >= 1)
+        self.ideal = math.pow(max(2*t,t*t), math.pow(2, d - 1))
         self.minimizing = False
