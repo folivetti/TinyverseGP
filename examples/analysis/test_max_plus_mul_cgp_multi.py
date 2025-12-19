@@ -9,13 +9,13 @@ from src.gp.tiny_cgp import *
 from src.gp.functions import ADD, MUL
 from src.gp.tinyverse import Const
 
-NUM_INSTANCES = 30
-MAX_GENERATIONS = 5000000
-MAX_TIME = 999999
+NUM_INSTANCES = 100
+MAX_GENERATIONS = 1000000
+MAX_TIME = 9999999
 EXPORT_CSV = True
 PLOT = True
-D_MIN = 8
-D_MAX = 8
+D_MIN = 1
+D_MAX = 10
 T = 1
 functions = [ADD, MUL]
 terminals = [Const(T), Const(0)]
@@ -24,7 +24,7 @@ sns.set_theme()
 
 config = CGPConfig(
     num_jobs=1,
-    max_generations=5000000,
+    max_generations=MAX_GENERATIONS,
     stopping_criteria=None,
     minimizing_fitness=False,
     ideal_fitness=None,
@@ -71,7 +71,7 @@ for d in range(D_MIN,D_MAX+1):
         evals.append(cgp.num_evaluations)
         deltas.append(delta)
         csv_data.append({'d': d, 'num_evals': cgp.num_evaluations})
-        print(f"{d},simple_tgp,{cgp.num_evaluations}")
+        #print(f"{d},simple_tgp,{cgp.num_evaluations}")
 
     avg_eval = np.mean(evals)
     std = np.std(evals)
@@ -81,14 +81,14 @@ for d in range(D_MIN,D_MAX+1):
     print(f"{d};{avg_eval:.2f};{std:.2f};{avg_delta:.2f}")
 
 if EXPORT_CSV:
-    with open('max_plus_mul.csv', 'w', newline='') as csvfile:
+    with open('max_plus_mul_cgp.csv', 'w', newline='') as csvfile:
         fieldnames = ['d', 'num_evals']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(csv_data)
 
 if PLOT:
-    data = pd.read_csv('max_plus_mul.csv')
+    data = pd.read_csv('max_plus_mul_cgp.csv')
 
     p = sns.lineplot(
         data=data,

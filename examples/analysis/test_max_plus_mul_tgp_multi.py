@@ -11,8 +11,8 @@ from src.gp.tinyverse import Const
 from src.analysis.models.simple_tgp import SimpleTGP, SGPHyperparameters
 
 NUM_INSTANCES = 30
-MAX_GENERATIONS = 5000000
-MAX_TIME = 999999
+MAX_GENERATIONS = 1000000
+MAX_TIME = 9999999
 EXPORT_CSV = True
 PLOT = True
 D_MIN = 1

@@ -5,8 +5,8 @@ from src.gp.tiny_cgp import *
 from src.gp.functions import ADD, MUL
 from src.gp.tinyverse import Const
 
-MAX_GENERATIONS = 5000000
-MAX_TIME = 999999
+MAX_GENERATIONS = 1000000
+MAX_TIME = 9999999
 D = int(sys.argv[1])
 T = int(sys.argv[2])
 functions = [ADD, MUL]
@@ -14,7 +14,7 @@ terminals = [Const(T), Const(0)]
 
 config = CGPConfig(
     num_jobs=1,
-    max_generations=5000000,
+    max_generations=MAX_GENERATIONS,
     stopping_criteria=None,
     minimizing_fitness=False,
     ideal_fitness=None,
