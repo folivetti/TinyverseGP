@@ -1,3 +1,4 @@
+import sys
 from src.analysis.problems import MaxPlusMul
 from src.gp.tiny_cgp import *
 from src.gp.functions import ADD, MUL
@@ -5,9 +6,10 @@ from src.gp.tiny_tgp import TGPConfig
 from src.gp.tinyverse import Const
 from src.analysis.models.simple_tgp import SimpleTGP, SGPHyperparameters
 
+
 MAX_GENERATIONS = 5000000
-D = 7
-T = 1
+D = int(sys.argv[1])
+T = int(sys.argv[2])
 functions = [ADD, MUL]
 terminals = [Const(T)]
 

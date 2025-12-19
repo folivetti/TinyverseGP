@@ -1,3 +1,5 @@
+import sys
+
 import seaborn as sns
 from src.analysis.models.simple_cgp import SimpleCGP
 from src.analysis.problems import MaxPlusMul
@@ -6,8 +8,8 @@ from src.gp.functions import ADD, MUL
 from src.gp.tinyverse import Const
 
 MAX_GENERATIONS = 5000000
-D = 4
-T = 1
+D = int(sys.argv[1])
+T = int(sys.argv[2])
 functions = [ADD, MUL]
 terminals = [Const(T), Const(0)]
 
