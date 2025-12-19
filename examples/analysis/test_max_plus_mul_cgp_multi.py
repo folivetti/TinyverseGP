@@ -11,10 +11,11 @@ from src.gp.tinyverse import Const
 
 NUM_INSTANCES = 30
 MAX_GENERATIONS = 5000000
+MAX_TIME = 999999
 EXPORT_CSV = True
 PLOT = True
-D_MIN = 1
-D_MAX = 2
+D_MIN = 8
+D_MAX = 8
 T = 1
 functions = [ADD, MUL]
 terminals = [Const(T), Const(0)]
@@ -35,7 +36,7 @@ config = CGPConfig(
     num_inputs=2,
     num_outputs=1,
     report_interval=1,
-    max_time=3600,
+    max_time=MAX_TIME,
     global_seed=None,
     checkpoint_interval=10,
     checkpoint_dir='checkpoint',
@@ -70,6 +71,7 @@ for d in range(D_MIN,D_MAX+1):
         evals.append(cgp.num_evaluations)
         deltas.append(delta)
         csv_data.append({'d': d, 'num_evals': cgp.num_evaluations})
+        print(f"{d},simple_tgp,{cgp.num_evaluations}")
 
     avg_eval = np.mean(evals)
     std = np.std(evals)

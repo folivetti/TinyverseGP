@@ -8,6 +8,7 @@ from src.analysis.models.simple_tgp import SimpleTGP, SGPHyperparameters
 
 
 MAX_GENERATIONS = 5000000
+MAX_TIME = 999999
 D = int(sys.argv[1])
 T = int(sys.argv[2])
 functions = [ADD, MUL]
@@ -24,7 +25,7 @@ config = TGPConfig(
     minimalistic_output=True,
     num_outputs=1,
     report_interval=1,
-    max_time=3600,
+    max_time=MAX_TIME,
     global_seed=None,
     checkpoint_interval=10,
     checkpoint_dir='checkpoint',

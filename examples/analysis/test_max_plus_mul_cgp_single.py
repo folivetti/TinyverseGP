@@ -6,6 +6,7 @@ from src.gp.functions import ADD, MUL
 from src.gp.tinyverse import Const
 
 MAX_GENERATIONS = 5000000
+MAX_TIME = 999999
 D = int(sys.argv[1])
 T = int(sys.argv[2])
 functions = [ADD, MUL]
@@ -25,7 +26,7 @@ config = CGPConfig(
     num_inputs=2,
     num_outputs=1,
     report_interval=1,
-    max_time=3600,
+    max_time=MAX_TIME,
     global_seed=None,
     checkpoint_interval=10,
     checkpoint_dir='checkpoint',
