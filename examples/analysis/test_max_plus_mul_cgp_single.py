@@ -1,6 +1,4 @@
 import sys
-
-import seaborn as sns
 from src.analysis.models.simple_cgp import SimpleCGP
 from src.analysis.problems import MaxPlusMul
 from src.gp.tiny_cgp import *
@@ -38,8 +36,8 @@ hyperparameters = CGPHyperparameters(
     mu=1,
     lmbda=1,
     population_size=2,
-    num_function_nodes=D,
-    levels_back=D,
+    num_function_nodes=D+1,
+    levels_back=D+1,
     mutation_rate=None,
     strict_selection=False,
 )
@@ -50,4 +48,4 @@ config.global_seed = int(time.time_ns())
 cgp = SimpleCGP(functions, terminals, config, hyperparameters)
 cgp.evolve(problem)
 
-print(f"{D};simple_cgp;{cgp.num_evaluations}")
+print(f"{D},simple_cgp,{cgp.num_evaluations}")

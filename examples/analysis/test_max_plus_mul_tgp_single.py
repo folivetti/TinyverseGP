@@ -43,4 +43,4 @@ config.global_seed = int(time.time_ns())
 tgp = SimpleTGP(functions, terminals, config, hyperparameters)
 tgp.evolve(problem)
 
-print(f"{D};simple_tgp;{tgp.num_evaluations}")
+print(f"{D},simple_tgp,{tgp.num_evaluations}")

@@ -115,14 +115,14 @@ for d in range(D_MIN, D_MAX + 1):
     print("")
 
 if EXPORT_CSV:
-    with open('max_plus_mul_cgp_tgp.csv', 'w', newline='') as csvfile:
+    with open('max_plus_mul_tgp_cgp.csv', 'w', newline='') as csvfile:
         fieldnames = ['d', 'model', 'num_evals']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(csv_data)
 
 if PLOT:
-    data = pd.read_csv('max_plus_mul_cgp_tgp.csv')
+    data = pd.read_csv('max_plus_mul_tgp_cgp.csv')
 
     p = sns.lineplot(
         data=data,

@@ -14,7 +14,7 @@ MAX_GENERATIONS = 5000000
 EXPORT_CSV = True
 PLOT = True
 D_MIN = 1
-D_MAX = 4
+D_MAX = 2
 T = 1
 functions = [ADD, MUL]
 terminals = [Const(T), Const(0)]
@@ -79,14 +79,14 @@ for d in range(D_MIN,D_MAX+1):
     print(f"{d};{avg_eval:.2f};{std:.2f};{avg_delta:.2f}")
 
 if EXPORT_CSV:
-    with open('max_plus_mul_cgp.csv', 'w', newline='') as csvfile:
+    with open('max_plus_mul.csv', 'w', newline='') as csvfile:
         fieldnames = ['d', 'num_evals']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(csv_data)
 
 if PLOT:
-    data = pd.read_csv('max_plus_mul_cgp.csv')
+    data = pd.read_csv('max_plus_mul.csv')
 
     p = sns.lineplot(
         data=data,
