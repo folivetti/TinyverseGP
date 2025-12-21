@@ -1,5 +1,7 @@
 # TinyverseGP: Minimalistic implementations of different representations for Genetic Programming
 
+[![arXiv](https://img.shields.io/badge/arXiv-2504.10253-b31b1b.svg)](https://arxiv.org/abs/2504.10253)
+
 TinyverseGP is a collection of minimalistic implementations of different representations for Genetic Programming. The goal is to provide a simple and easy-to-understand codebase with the following goals in mind:
 
 - **Minimalistic**: The codebase should be as small as possible, while still being able to demonstrate the core concepts of the representation.
