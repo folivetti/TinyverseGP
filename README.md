@@ -95,9 +95,9 @@ To create a new representation, you can follow the following steps:
 - functions: a list of functions (non-terminals)
 
 - Implement the following methods in the `Tiny<first letter of the representation>GP` class:
-
+  - `init_population`: the initialisation function for the population.
   - `fitness(self, individual)`: the fitness function of a single individual.
-  - `evolve(self)`: the evolution method that evolves the population.
+  - `pipeline(self)`: the function for the evolutionary pipeline including breeding and selection
   - `selection(self)`: the selection method that selects individuals for recombination and perturbation.
   - `predict(self, genome, observation)`: the prediction method that predicts the output of `genome` to a single `observation`.
   - `expression(self, genome)`: the expression method that returns the expression represented by `genome`.
