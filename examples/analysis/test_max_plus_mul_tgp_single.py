@@ -4,7 +4,7 @@ from src.gp.tiny_cgp import *
 from src.gp.functions import ADD, MUL
 from src.gp.tiny_tgp import TGPConfig
 from src.gp.tinyverse import Const
-from src.analysis.models.simple_tgp import SimpleTGP, SGPHyperparameters
+from src.analysis.models.simple_tgp import SimpleTGP, SimpleTGPHyperparameters
 
 
 MAX_GENERATIONS = 5000000
@@ -32,7 +32,7 @@ config = TGPConfig(
     experiment_name='max_tgp'
 )
 
-hyperparameters = SGPHyperparameters(
+hyperparameters = SimpleTGPHyperparameters(
     lmbda=1,
     k=1,
     strict_selection = False
@@ -44,4 +44,4 @@ config.global_seed = int(time.time_ns())
 tgp = SimpleTGP(functions, terminals, config, hyperparameters)
 tgp.evolve(problem)
 
-print(f"{D},simple_tgp,{tgp.num_evaluations}")
+print(f"{D},simple_tgp,{tgp.generation_number}")

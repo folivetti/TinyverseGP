@@ -9,13 +9,13 @@ from src.gp.tiny_cgp import *
 from src.gp.functions import ADD, MUL
 from src.gp.tinyverse import Const
 
-NUM_INSTANCES = 100
+NUM_INSTANCES = 10
 MAX_GENERATIONS = 1000000
 MAX_TIME = 9999999
 EXPORT_CSV = True
 PLOT = True
 D_MIN = 1
-D_MAX = 10
+D_MAX = 4
 T = 1
 functions = [ADD, MUL]
 terminals = [Const(T), Const(0)]
@@ -50,14 +50,14 @@ hyperparameters = CGPHyperparameters(
     num_function_nodes=D_MAX,
     levels_back=D_MAX,
     mutation_rate=None,
-    strict_selection=False,
+    strict_selection=True,
 )
 
 x = []
 y = []
 csv_data = []
 for d in range(D_MIN,D_MAX+1):
-    evals = []
+    iters = []
     deltas = []
     problem = MaxPlusMul(d=d, t=T)
     for _ in range(NUM_INSTANCES):
@@ -68,21 +68,21 @@ for d in range(D_MIN,D_MAX+1):
         best = cgp.evolve(problem)
         t1 = time.time()
         delta = t1 - t0
-        evals.append(cgp.num_evaluations)
+        iters.append(cgp.generation_number)
         deltas.append(delta)
-        csv_data.append({'d': d, 'num_evals': cgp.num_evaluations})
+        csv_data.append({'d': d, 'num_iters': cgp.num_evaluations})
         #print(f"{d},simple_tgp,{cgp.num_evaluations}")
 
-    avg_eval = np.mean(evals)
-    std = np.std(evals)
+    avg_iters = np.mean(iters)
+    std = np.std(iters)
     avg_delta = np.mean(deltas)
     x.append(d)
-    y.append(avg_eval)
-    print(f"{d};{avg_eval:.2f};{std:.2f};{avg_delta:.2f}")
+    y.append(avg_iters)
+    print(f"{d};{avg_iters:.2f};{std:.2f};{avg_delta:.2f}")
 
 if EXPORT_CSV:
     with open('max_plus_mul_cgp.csv', 'w', newline='') as csvfile:
-        fieldnames = ['d', 'num_evals']
+        fieldnames = ['d', 'num_iters']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(csv_data)
@@ -92,7 +92,7 @@ if PLOT:
 
     p = sns.lineplot(
         data=data,
-        x="d", y="num_evals",
+        x="d", y="num_iters",
         markers=True,
     )
 

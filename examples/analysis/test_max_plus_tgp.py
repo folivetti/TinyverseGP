@@ -7,7 +7,7 @@ from src.gp.tiny_cgp import *
 from src.gp.functions import ADD, MUL
 from src.gp.tiny_tgp import TGPConfig
 from src.gp.tinyverse import Const
-from src.analysis.models.simple_tgp import SimpleTGP, SGPHyperparameters
+from src.analysis.models.simple_tgp import SimpleTGP, SimpleTGPHyperparameters
 
 NUM_INSTANCES = 30
 MAX_GENERATIONS = 5000000
@@ -36,7 +36,7 @@ config = TGPConfig(
     experiment_name='max_tgp'
 )
 
-hyperparameters = SGPHyperparameters(
+hyperparameters = SimpleTGPHyperparameters(
     lmbda=1,
     k=1,
     strict_selection = True

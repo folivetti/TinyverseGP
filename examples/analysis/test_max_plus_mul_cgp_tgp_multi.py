@@ -5,14 +5,14 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 from src.analysis.models.simple_cgp import SimpleCGP
-from src.analysis.problems import MaxPlusMul, MaxPlus
+from src.analysis.problems import MaxPlusMul
 from src.gp.tiny_cgp import *
 from src.gp.functions import ADD, MUL
 from src.gp.tiny_tgp import TGPConfig
 from src.gp.tinyverse import Const
-from src.analysis.models.simple_tgp import SimpleTGP, SGPHyperparameters
+from src.analysis.models.simple_tgp import SimpleTGP, SimpleTGPHyperparameters
 
-NUM_INSTANCES = 30
+NUM_INSTANCES = 10
 MAX_GENERATIONS = 1000000
 MAX_TIME = 9999999
 EXPORT_CSV = True
@@ -77,7 +77,7 @@ hp_cgp = CGPHyperparameters(
     strict_selection=False,
 )
 
-hp_tgp = SGPHyperparameters(
+hp_tgp = SimpleTGPHyperparameters(
     lmbda=1,
     k=1,
     strict_selection = False
@@ -88,8 +88,8 @@ y = []
 csv_data = []
 for d in range(D_MIN, D_MAX + 1):
     problem = MaxPlusMul(d=d, t=T)
-    evals_cgp = []
-    evals_tgp = []
+    iters_cgp = []
+    iters_tgp = []
     for _ in range(NUM_INSTANCES):
         config_tgp.ideal_fitness = problem.ideal
         config_tgp.global_seed = int(time.time_ns())
@@ -103,21 +103,21 @@ for d in range(D_MIN, D_MAX + 1):
         tgp.evolve(problem)
         cgp.evolve(problem)
 
-        csv_data.append({'d': d, 'model': 'simple_tgp', 'num_evals': tgp.num_evaluations})
-        csv_data.append({'d': d, 'model': 'simple_cgp', 'num_evals': cgp.num_evaluations})
+        csv_data.append({'d': d, 'model': 'simple_tgp', 'num_iters': tgp.num_evaluations})
+        csv_data.append({'d': d, 'model': 'simple_cgp', 'num_iters': cgp.num_evaluations})
 
-        evals_cgp.append(cgp.num_evaluations)
-        evals_tgp.append(tgp.num_evaluations)
+        iters_cgp.append(cgp.num_evaluations)
+        iters_tgp.append(tgp.num_evaluations)
 
-    avg_eval_cgp = np.mean(evals_cgp)
-    avg_eval_tgp = np.mean(evals_tgp)
+    avg_eval_cgp = np.mean(iters_cgp)
+    avg_eval_tgp = np.mean(iters_tgp)
     print(f"{d};{avg_eval_cgp:.2f};simple_cgp")
     print(f"{d};{avg_eval_tgp:.2f};simple_tgp")
     print("")
 
 if EXPORT_CSV:
     with open('max_plus_mul_tgp_cgp.csv', 'w', newline='') as csvfile:
-        fieldnames = ['d', 'model', 'num_evals']
+        fieldnames = ['d', 'model', 'num_iters']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(csv_data)
@@ -127,7 +127,7 @@ if PLOT:
 
     p = sns.lineplot(
         data=data,
-        x="d", y="num_evals",
+        x="d", y="num_iters",
         hue="model", style="model",
         markers=True,
     )

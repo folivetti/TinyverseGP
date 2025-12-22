@@ -8,9 +8,9 @@ from src.gp.tiny_cgp import *
 from src.gp.functions import ADD, MUL
 from src.gp.tiny_tgp import TGPConfig
 from src.gp.tinyverse import Const
-from src.analysis.models.simple_tgp import SimpleTGP, SGPHyperparameters
+from src.analysis.models.simple_tgp import SimpleTGP, SimpleTGPHyperparameters
 
-NUM_INSTANCES = 30
+NUM_INSTANCES = 10
 MAX_GENERATIONS = 1000000
 MAX_TIME = 9999999
 EXPORT_CSV = True
@@ -43,7 +43,7 @@ config = TGPConfig(
     experiment_name='max_tgp'
 )
 
-hyperparameters = SGPHyperparameters(
+hyperparameters = SimpleTGPHyperparameters(
     lmbda=1,
     k=1,
     strict_selection = False
@@ -54,8 +54,8 @@ x = []
 y = []
 csv_data = []
 for d in range(D_MIN, D_MAX + 1):
-    evals = []
     deltas = []
+    iters = []
     problem = MaxPlusMul(d=d, t=T)
     for _ in range(NUM_INSTANCES):
         config.ideal_fitness = problem.ideal
@@ -65,23 +65,21 @@ for d in range(D_MIN, D_MAX + 1):
         best = tgp.evolve(problem)
         t1 = time.time()
         delta = t1 - t0
-        evals.append(tgp.num_evaluations)
+        iters.append(tgp.generation_number)
         deltas.append(delta)
-        csv_data.append({'d': d, 'num_evals': tgp.num_evaluations})
+        csv_data.append({'d': d, 'num_iters': tgp.num_evaluations})
+        # print(f"{d},simple_tgp,{cgp.num_evaluations}")
 
-
-    avg_eval = np.mean(evals)
-    std = np.std(evals)
-    avg_delta = np.mean(deltas)
+    avg_iters = np.mean(iters)
+    std = np.std(iters)
+    avg_delta = np.mean(delta)
     x.append(d)
-    y.append(avg_eval)
-    print(f"{d};{avg_eval:.2f};{std:.2f};{avg_delta:.2f}")
-
-
+    y.append(avg_iters)
+    print(f"{d};{avg_iters:.2f};{std:.2f};{avg_delta:.2f}")
 
 if EXPORT_CSV:
     with open('max_plus_mul_tgp.csv', 'w', newline='') as csvfile:
-        fieldnames = ['d', 'num_evals']
+        fieldnames = ['d', 'num_iters']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(csv_data)
@@ -91,12 +89,12 @@ if PLOT:
 
     p = sns.lineplot(
         data=data,
-        x="d", y="num_evals",
+        x="d", y="num_iters",
         markers=True,
     )
 
-    p.set(xlabel='D', ylabel='# Iterations')
-    p.set_xticks(range(D_MIN,D_MAX+1))
-    p.set_xticklabels([str(d) for d in range(D_MIN,D_MAX+1)])
-    plt.show()
+p.set(xlabel='D', ylabel='# Iterations')
+p.set_xticks(range(D_MIN, D_MAX + 1))
+p.set_xticklabels([str(d) for d in range(D_MIN, D_MAX + 1)])
+plt.show()
 

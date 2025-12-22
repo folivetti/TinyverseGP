@@ -1,5 +1,6 @@
 import copy
 import random
+import numpy as np
 from dataclasses import dataclass
 from typing import override
 from src.gp.tiny_tgp import TGPIndividual, Node, TinyTGP, TGPConfig
@@ -7,10 +8,11 @@ from src.gp.tinyverse import Var, Const, Hyperparameters
 
 
 @dataclass(kw_only=True)
-class SGPHyperparameters(Hyperparameters):
+class SimpleTGPHyperparameters(Hyperparameters):
     lmbda: int = 1
     k: int = 1
     strict_selection: bool = False
+    multi: bool = False
 
 
 class HVLPrime:
@@ -88,8 +90,8 @@ class HVLPrime:
 
 
 class SimpleTGP(TinyTGP):
-    hyperparameters: SGPHyperparameters
-    def __init__(self, functions_: list, terminals_: list, config_: TGPConfig, hyperparameters_: SGPHyperparameters):
+    hyperparameters: SimpleTGPHyperparameters
+    def __init__(self, functions_: list, terminals_: list, config_: TGPConfig, hyperparameters_: SimpleTGPHyperparameters):
         super().__init__(functions_, terminals_, config_, hyperparameters_)
         self.hvl_prime = HVLPrime(functions_, terminals_).as_list()
 
@@ -109,7 +111,12 @@ class SimpleTGP(TinyTGP):
 
     @override
     def mutation(self, parent: Node) -> Node:
-        for _ in range(self.hyperparameters.k):
+        if self.hyperparameters.multi:
+            k = 1 + np.random.poisson(1)
+        else:
+            k = self.hyperparameters.k
+
+        for _ in range(k):
             random.choice(self.hvl_prime)(parent)
         return parent
 

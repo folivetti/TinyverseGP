@@ -1,11 +1,15 @@
 import random
+from dataclasses import dataclass
 from typing_extensions import override
 from src.gp.tiny_cgp import CGPHyperparameters, CGPConfig, TinyCGP
 
+@dataclass(kw_only=True)
+class SimpleCGPConfig(CGPConfig):
+    log_scaling: bool = False
 
 class SimpleCGP(TinyCGP):
 
-    def __init__(self, functions_: list, terminals_: list, config_: CGPConfig, hyperparameters_: CGPHyperparameters):
+    def __init__(self, functions_: list, terminals_: list, config_: SimpleCGPConfig, hyperparameters_: CGPHyperparameters):
         super().__init__(functions_, terminals_, config_, hyperparameters_)
         self.hyperparameters.lmbda = 1
 
