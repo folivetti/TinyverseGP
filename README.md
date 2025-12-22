@@ -36,6 +36,7 @@ This repository is organized as follows:
   - `symbolic_regression/sr_benchmark.py`: sample symbolic regression benchmark problems.
   - `symbolic_regression/srbench.py`:  interface to the SRBench benchmark suite.
   - `logic_synthesis/ls_benchmark.py`: sample logic synthesis benchmark problems.
+  - `logic_synthesis/lsbench/lsbench.py`:  interface to the GBFS/LSBench benchmark.
   - `policy_search/policy_evaluation.py`: interface to the gymnasium environment.
 - `src/examples`: examples on how to use the different benchmarks.
 
