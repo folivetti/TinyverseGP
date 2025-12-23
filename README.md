@@ -42,7 +42,7 @@ This repository is organized as follows:
 
 # Requirements and testing
 
-The current version supports Python3.9 and Python3.10. To install the requirements it is suggest to run:
+The current version supports Python3.10. To install the requirements it is suggest to run:
 
 
 ```bash
