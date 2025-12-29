@@ -1,5 +1,4 @@
 from math import log2, pow, exp2
-from src.analysis.log_transform import transform_log
 from src.gp.problem import Problem
 from src.gp.tinyverse import GPModel
 
