@@ -6,7 +6,7 @@ def transform_log(x):
     return 0 if x == 0 else log2(x)
 
 
-def log_add(a, b, log_output=False):
+def log_add(a, b, log_output=True):
     if a == 0:
         res = b
     elif b == 0:
@@ -16,7 +16,7 @@ def log_add(a, b, log_output=False):
     return transform_log(res) if log_output else res
 
 
-def log_mul(a, b, log_output=False):
+def log_mul(a, b, log_output=True):
     if a == 0 or b == 0:
         res = 0
     else:

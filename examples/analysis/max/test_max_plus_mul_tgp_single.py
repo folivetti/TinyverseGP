@@ -28,7 +28,7 @@ config = TGPConfig(
     max_time=MAX_TIME,
     global_seed=None,
     checkpoint_interval=10,
-    checkpoint_dir='checkpoint',
+    checkpoint_dir='../checkpoint',
     experiment_name='max_tgp'
 )
 

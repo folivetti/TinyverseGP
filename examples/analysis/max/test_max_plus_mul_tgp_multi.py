@@ -39,7 +39,7 @@ config = TGPConfig(
     max_time=MAX_TIME,
     global_seed=None,
     checkpoint_interval=10,
-    checkpoint_dir='checkpoint',
+    checkpoint_dir='../checkpoint',
     experiment_name='max_tgp'
 )
 
@@ -78,14 +78,14 @@ for d in range(D_MIN, D_MAX + 1):
     print(f"{d};{avg_iters:.2f};{std:.2f};{avg_delta:.2f}")
 
 if EXPORT_CSV:
-    with open('max_plus_mul_tgp.csv', 'w', newline='') as csvfile:
+    with open('../max_plus_mul_tgp.csv', 'w', newline='') as csvfile:
         fieldnames = ['d', 'num_iters']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(csv_data)
 
 if PLOT:
-    data = pd.read_csv('max_plus_mul_tgp.csv')
+    data = pd.read_csv('../max_plus_mul_tgp.csv')
 
     p = sns.lineplot(
         data=data,

@@ -33,7 +33,7 @@ config = CGPConfig(
     max_time=3600,
     global_seed=42,
     checkpoint_interval=10,
-    checkpoint_dir='checkpoint',
+    checkpoint_dir='../checkpoint',
     experiment_name='max_tgp'
 )
 

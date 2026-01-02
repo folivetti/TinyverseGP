@@ -42,7 +42,7 @@ config_tgp = TGPConfig(
     max_time=MAX_TIME,
     global_seed=None,
     checkpoint_interval=10,
-    checkpoint_dir='checkpoint',
+    checkpoint_dir='../checkpoint',
     experiment_name='max_tgp'
 )
 
@@ -63,7 +63,7 @@ config_cgp = CGPConfig(
     max_time=3600,
     global_seed=None,
     checkpoint_interval=10,
-    checkpoint_dir='checkpoint',
+    checkpoint_dir='../checkpoint',
     experiment_name='max_tgp'
 )
 
@@ -116,14 +116,14 @@ for d in range(D_MIN, D_MAX + 1):
     print("")
 
 if EXPORT_CSV:
-    with open('max_plus_mul_tgp_cgp.csv', 'w', newline='') as csvfile:
+    with open('../max_plus_mul_tgp_cgp.csv', 'w', newline='') as csvfile:
         fieldnames = ['d', 'model', 'num_iters']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(csv_data)
 
 if PLOT:
-    data = pd.read_csv('max_plus_mul_tgp_cgp.csv')
+    data = pd.read_csv('../max_plus_mul_tgp_cgp.csv')
 
     p = sns.lineplot(
         data=data,

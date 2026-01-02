@@ -1,16 +1,18 @@
 import sys
+from math import log2
 from src.analysis.models.simple_cgp import SimpleCGP
 from src.analysis.problems import MaxPlusMul
 from src.gp.tiny_cgp import *
-from src.gp.functions import ADD, MUL
+from src.analysis.log_transform import LOG_ADD, LOG_MUL
 from src.gp.tinyverse import Const
 
 MAX_GENERATIONS = 1000000
 MAX_TIME = 9999999
 D = int(sys.argv[1])
 T = int(sys.argv[2])
-functions = [ADD, MUL]
-terminals = [Const(T), Const(0)]
+assert(T > 1)
+functions = [LOG_ADD, LOG_MUL]
+terminals = [Const(log2(T)), Const(0)]
 
 config = CGPConfig(
     num_jobs=1,
@@ -25,11 +27,11 @@ config = CGPConfig(
     max_arity=2,
     num_inputs=2,
     num_outputs=1,
-    report_interval=1,
+    report_interval=100,
     max_time=MAX_TIME,
     global_seed=None,
     checkpoint_interval=10,
-    checkpoint_dir='checkpoint',
+    checkpoint_dir='../checkpoint',
     experiment_name='max_tgp'
 )
 
@@ -43,7 +45,7 @@ hyperparameters = CGPHyperparameters(
     strict_selection=False,
 )
 
-problem = MaxPlusMul(d=D, t=T)
+problem = MaxPlusMul(d=D, t=T, log_scaling=True)
 config.ideal_fitness = problem.ideal
 config.global_seed = int(time.time_ns())
 cgp = SimpleCGP(functions, terminals, config, hyperparameters)
