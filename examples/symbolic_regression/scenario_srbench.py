@@ -7,6 +7,7 @@ https://cavalab.org/srbench/
 https://github.com/cavalab/srbench/tree/master
 """
 
+from sklearn.utils import resample
 from backup.tiny_gp import Var
 from src.benchmark.symbolic_regression.srbench import SRBench
 import numpy as np
@@ -197,6 +198,10 @@ for g in group_datasets:
             writer.writeheader()
             print(f"Running dataset: {d}\n")
             X, y = fetch_data(d, return_X_y=True)
+            
+            if X.shape[0]>2000:
+                X, y = resample(X, y, replace = False, n_samples = 2000, random_state=42)
+            
             train_X, test_X, train_y, test_y = train_test_split(X, y, train_size=0.75, random_state=1337)
             
             # Default run
