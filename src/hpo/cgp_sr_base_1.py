@@ -135,30 +135,6 @@ print(f"Standard deviation of fitness (old config, test set): {fitness_std}")
 print(f"Quartiles of fitness (old config, test set): {fitness_quart}")
 print("="*50)
 
-# Calculate R^2-score-related measures for the train set
-mean_r2_score = np.mean(results_train["r2_score"])
-r2_score_var = np.var(results_train["r2_score"])
-r2_score_std = np.std(results_train["r2_score"])
-r2_score_quart = np.quantile(results_train["r2_score"], [0.25, 0.5, 0.75])
-
-print(f"Mean R2 score (old config, train_set): {mean_r2_score}")
-print(f"Variance of R2 score (old config, train_set): {r2_score_var}")
-print(f"Standard deviation of R2 score (old config, train_set): {r2_score_std}")
-print(f"Quartiles of R2 score (old config, train_set): {r2_score_quart}")
-print("="*50)
-
-# Calculate R^2-score-related measures for the test set
-mean_r2_score_test = np.mean(results_test["r2_score"])
-r2_score_var_test = np.var(results_test["r2_score"])
-r2_score_std_test = np.std(results_test["r2_score"])
-r2_score_quart_test = np.quantile(results_test["r2_score"], [0.25, 0.5, 0.75])
-
-print(f"Mean R2 score (old config, test set): {mean_r2_score_test}")
-print(f"Variance of R2 score (old config, test set): {r2_score_var_test}")
-print(f"Standard deviation of R2 score (old config, test set): {r2_score_std_test}")
-print(f"Quartiles of R2 score (old config, test set): {r2_score_quart_test}")
-print("="*50)
-
 print(f"This is base config 1")
 print(f"The following operator was used: {operator_}")
 print("="*50)
