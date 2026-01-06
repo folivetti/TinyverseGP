@@ -62,7 +62,7 @@ class CGPConfig(GPConfig):
     max_arity: int
     max_time: int
     report_every_improvement: bool = False
-    global_seed: int = 42
+    global_seed: int = None
 
     def __post_init__(self):
         self.genes_per_node = self.max_arity + 1
@@ -139,7 +139,8 @@ class TinyCGP(GPModel):
         self.terminals = terminals_
         self.problem = problem_
         self.config = config_
-        random.seed(self.config.global_seed)
+        if self.config.global_seed is not None:
+            random.seed(self.config.global_seed)
         self.hyperparameters = hyperparameters_
         self.inputs = dict()
         self.current_paths = None
