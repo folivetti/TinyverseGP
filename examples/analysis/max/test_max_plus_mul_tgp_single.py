@@ -6,7 +6,6 @@ from src.gp.tiny_tgp import TGPConfig
 from src.gp.tinyverse import Const
 from src.analysis.models.simple_tgp import SimpleTGP, SimpleTGPHyperparameters
 
-
 MAX_GENERATIONS = 5000000
 MAX_TIME = 999999
 D = int(sys.argv[1])
@@ -35,9 +34,15 @@ config = TGPConfig(
 hyperparameters = SimpleTGPHyperparameters(
     lmbda=1,
     k=1,
-    strict_selection = False,
-    max_depth=D
+    strict_selection=False,
+    max_depth=D,
+    multi=False
 )
+
+if hyperparameters.multi:
+    appendix = "multi"
+else:
+    appendix = "single"
 
 problem = MaxPlusMul(d=D, t=T)
 config.ideal_fitness = problem.ideal
@@ -45,4 +50,4 @@ config.global_seed = int(time.time_ns())
 tgp = SimpleTGP(functions, terminals, config, hyperparameters)
 tgp.evolve(problem)
 
-print(f"{D},simple_tgp,{tgp.generation_number}")
+print(f"{D},simple_tgp_{appendix},{tgp.generation_number}")

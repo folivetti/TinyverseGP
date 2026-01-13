@@ -10,7 +10,7 @@ MAX_TIME = 9999999
 D = int(sys.argv[1])
 T = int(sys.argv[2])
 functions = [ADD, MUL]
-terminals = [Const(T), Const(0)]
+terminals = [Const(T)]
 
 config = CGPConfig(
     num_jobs=1,
@@ -23,7 +23,7 @@ config = CGPConfig(
     minimalistic_output=True,
     num_functions=len(functions),
     max_arity=2,
-    num_inputs=2,
+    num_inputs=1,
     num_outputs=1,
     report_interval=1,
     max_time=MAX_TIME,
