@@ -10,16 +10,14 @@ from src.gp.tiny_tgp import TGPConfig
 from src.gp.tinyverse import Const
 from src.analysis.models.simple_tgp import SimpleTGP, SimpleTGPHyperparameters
 
-NUM_INSTANCES = 10
+NUM_INSTANCES = 30
 MAX_GENERATIONS = 1000000
 MAX_TIME = 9999999
 EXPORT_CSV = True
 PLOT = True
 D_MIN = 1
-D_MAX = 4
-T = 1
-MAX_SIZE = math.pow(2, D_MAX + 1)
-MAX_DEPTH = D_MAX + 1
+D_MAX = 8
+T = 2
 functions = [ADD, MUL]
 terminals = [Const(T)]
 
@@ -46,7 +44,10 @@ config = TGPConfig(
 hyperparameters = SimpleTGPHyperparameters(
     lmbda=1,
     k=1,
-    strict_selection = False
+    strict_selection = False,
+    max_depth=1,
+    multi = False,
+    check_size=False
 )
 
 
@@ -57,6 +58,7 @@ for d in range(D_MIN, D_MAX + 1):
     deltas = []
     iters = []
     problem = MaxPlusMul(d=d, t=T)
+    hyperparameters.max_depth = d + 1
     for _ in range(NUM_INSTANCES):
         config.ideal_fitness = problem.ideal
         config.global_seed = int(time.time_ns())

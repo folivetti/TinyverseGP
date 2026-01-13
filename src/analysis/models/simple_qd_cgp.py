@@ -36,7 +36,7 @@ class SimpleQdCGP(SimpleCGP):
             x = random.choice(list(self.m.values()))
 
         y = CGPIndividual(genome_=copy.copy(x.genome))
-        self.mutation(y.genome)
+        self.mutation(y.genome) # Perform SAM
         y.fitness = self.evaluate_individual(y.genome, problem)
         self.update(y)
 

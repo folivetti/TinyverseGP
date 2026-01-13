@@ -35,7 +35,8 @@ config = TGPConfig(
 hyperparameters = SimpleTGPHyperparameters(
     lmbda=1,
     k=1,
-    strict_selection = False
+    strict_selection = False,
+    max_depth=D
 )
 
 problem = MaxPlusMul(d=D, t=T)

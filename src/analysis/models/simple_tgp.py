@@ -1,4 +1,5 @@
 import copy
+import math
 import random
 import numpy as np
 from dataclasses import dataclass
@@ -11,9 +12,13 @@ from src.gp.tinyverse import Var, Const, Hyperparameters
 class SimpleTGPHyperparameters(Hyperparameters):
     lmbda: int = 1
     k: int = 1
+    max_depth: int
+    check_size: bool = True
     strict_selection: bool = False
     multi: bool = False
 
+    def max_size(self):
+        return math.pow(2, self.max_depth + 1) - 1
 
 class HVLPrime:
 
@@ -126,8 +131,14 @@ class SimpleTGP(TinyTGP):
         self.population = [parent]
         for _ in range(self.hyperparameters.lmbda):
             genome = copy.deepcopy(parent.genome[0])
+            genome = [self.perturb(genome)]
+
+            if self.hyperparameters.check_size:
+                if self.eval_complexity(genome) > self.hyperparameters.max_size():
+                    genome = [copy.deepcopy(parent.genome[0])]
+
             offspring = TGPIndividual(
-                genome_=[self.perturb(genome)]
+                genome_=genome
             )
             self.population.append(offspring)
 
