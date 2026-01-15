@@ -9,16 +9,16 @@ from src.gp.tiny_cgp import *
 from src.gp.functions import ADD, MUL
 from src.gp.tinyverse import Const
 
-NUM_INSTANCES = 10
+NUM_INSTANCES = 30
 MAX_GENERATIONS = 1000000
 MAX_TIME = 9999999
-EXPORT_CSV = True
-PLOT = True
+EXPORT_CSV = False
+PLOT = False
 D_MIN = 1
-D_MAX = 4
+D_MAX = 8
 T = 1
 functions = [ADD, MUL]
-terminals = [Const(T), Const(0)]
+terminals = [Const(T)]
 
 sns.set_theme()
 
@@ -33,7 +33,7 @@ config = CGPConfig(
     minimalistic_output=True,
     num_functions=len(functions),
     max_arity=2,
-    num_inputs=2,
+    num_inputs=1,
     num_outputs=1,
     report_interval=1,
     max_time=MAX_TIME,
@@ -96,7 +96,7 @@ if PLOT:
         markers=True,
     )
 
-p.set(xlabel='D', ylabel='# Iterations')
-p.set_xticks(range(D_MIN,D_MAX+1))
-p.set_xticklabels([str(d) for d in range(D_MIN,D_MAX+1)])
-plt.show()
+    p.set(xlabel='D', ylabel='# Iterations')
+    p.set_xticks(range(D_MIN,D_MAX+1))
+    p.set_xticklabels([str(d) for d in range(D_MIN,D_MAX+1)])
+    plt.show()

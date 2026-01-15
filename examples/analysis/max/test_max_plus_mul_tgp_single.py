@@ -23,7 +23,7 @@ config = TGPConfig(
     silent_evolver=True,
     minimalistic_output=True,
     num_outputs=1,
-    report_interval=1,
+    report_interval=1000,
     max_time=MAX_TIME,
     global_seed=None,
     checkpoint_interval=10,
@@ -35,8 +35,9 @@ hyperparameters = SimpleTGPHyperparameters(
     lmbda=1,
     k=1,
     strict_selection=False,
+    check_size=False,
     max_depth=D,
-    multi=False
+    multi=True
 )
 
 if hyperparameters.multi:

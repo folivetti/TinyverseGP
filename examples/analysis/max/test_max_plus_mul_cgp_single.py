@@ -37,16 +37,16 @@ hyperparameters = CGPHyperparameters(
     mu=1,
     lmbda=1,
     population_size=2,
-    num_function_nodes=D+1,
-    levels_back=D+1,
+    num_function_nodes=D,
+    levels_back=D,
     mutation_rate=None,
     strict_selection=False,
 )
 
-problem = MaxPlusMul(d=D, t=T)
-config.ideal_fitness = problem.ideal
-config.global_seed = int(time.time_ns())
-cgp = SimpleCGP(functions, terminals, config, hyperparameters)
-cgp.evolve(problem)
-
-print(f"{D},simple_cgp,{cgp.generation_number}")
+for _ in range(0,30):
+    problem = MaxPlusMul(d=D, t=T)
+    config.ideal_fitness = problem.ideal
+    config.global_seed = int(time.time_ns())
+    cgp = SimpleCGP(functions, terminals, config, hyperparameters)
+    cgp.evolve(problem)
+    print(f"{D},simple_cgp,{cgp.generation_number}")
