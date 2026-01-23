@@ -1,16 +1,25 @@
 import random
 from dataclasses import dataclass
+from enum import Enum
+
 from typing_extensions import override
 from src.gp.tiny_cgp import CGPHyperparameters, CGPConfig, TinyCGP
+
+class MutationType(Enum):
+    PROB = 0
+    SAM = 1
 
 @dataclass(kw_only=True)
 class SimpleCGPConfig(CGPConfig):
     log_scaling: bool = False
+    mutation_type: MutationType = MutationType.SAM
 
 class SimpleCGP(TinyCGP):
+    config: SimpleCGPConfig
 
     def __init__(self, functions_: list, terminals_: list, config_: SimpleCGPConfig, hyperparameters_: CGPHyperparameters):
         super().__init__(functions_, terminals_, config_, hyperparameters_)
+        self.config = config_
         self.hyperparameters.lmbda = 1
 
     def new_value(self, position: int, old_val: int=None) -> int:
@@ -39,8 +48,13 @@ class SimpleCGP(TinyCGP):
         new_vals = [c for c in range(min, max + 1) if c not in exclude]
         return random.choice(new_vals) if len(new_vals) > 0 else old_val
 
-    @override
-    def mutation(self, genome: list[int]):
+    def mutation_prob(self, genome: list[int]):
+        for idx in range(len(genome)):
+            if random.random() < self.hyperparameters.mutation_rate:
+                gene_val = genome[idx]
+                genome[idx] =self.new_value(idx, old_val=gene_val)
+
+    def mutation_sam(self, genome: list[int]):
         active_nodes = self.active_nodes(genome)
         active = False
         while not active:
@@ -50,4 +64,12 @@ class SimpleCGP(TinyCGP):
             node_num = self.node_number(gene_pos)
             if node_num in active_nodes or self.phenotype(gene_pos) == self.GeneType.OUTPUT:
                 active = True
+
+    @override
+    def mutation(self, genome: list[int]):
+        if self.config.mutation_type == MutationType.SAM:
+            self.mutation_sam(genome)
+        else:
+            self.mutation_prob(genome)
+
 

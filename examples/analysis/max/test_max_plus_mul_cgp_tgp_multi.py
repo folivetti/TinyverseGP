@@ -4,7 +4,7 @@ import seaborn as sns
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from src.analysis.models.simple_cgp import SimpleCGP
+from src.analysis.models.simple_cgp import SimpleCGP, SimpleCGPConfig, MutationType
 from src.analysis.problems import MaxPlusMul
 from src.gp.tiny_cgp import *
 from src.gp.functions import ADD, MUL
@@ -41,12 +41,12 @@ config_tgp = TGPConfig(
     report_interval=1,
     max_time=MAX_TIME,
     global_seed=None,
-    checkpoint_interval=10,
+    checkpoint_interval=9999999,
     checkpoint_dir='../checkpoint',
     experiment_name='max_tgp'
 )
 
-config_cgp = CGPConfig(
+config_cgp = SimpleCGPConfig(
     num_jobs=1,
     max_generations=5000000,
     stopping_criteria=None,
@@ -61,8 +61,9 @@ config_cgp = CGPConfig(
     num_outputs=1,
     report_interval=1,
     max_time=3600,
+    mutation_type=MutationType.PROB,
     global_seed=None,
-    checkpoint_interval=10,
+    checkpoint_interval=9999999,
     checkpoint_dir='../checkpoint',
     experiment_name='max_tgp'
 )
@@ -116,14 +117,14 @@ for d in range(D_MIN, D_MAX + 1):
     print("")
 
 if EXPORT_CSV:
-    with open('../max_plus_mul_tgp_cgp.csv', 'w', newline='') as csvfile:
+    with open('../max_plus_mul_tgp_cgp_1_8.csv', 'w', newline='') as csvfile:
         fieldnames = ['d', 'model', 'num_iters']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(csv_data)
 
 if PLOT:
-    data = pd.read_csv('../max_plus_mul_tgp_cgp.csv')
+    data = pd.read_csv('../max_plus_mul_tgp_cgp_1_8.csv')
 
     p = sns.lineplot(
         data=data,

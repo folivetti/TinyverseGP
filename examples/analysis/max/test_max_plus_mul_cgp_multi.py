@@ -3,7 +3,7 @@ import seaborn as sns
 import pandas as pd
 import csv
 from matplotlib import pyplot as plt
-from src.analysis.models.simple_cgp import SimpleCGP
+from src.analysis.models.simple_cgp import SimpleCGP, MutationType, SimpleCGPConfig
 from src.analysis.problems import MaxPlusMul
 from src.gp.tiny_cgp import *
 from src.gp.functions import ADD, MUL
@@ -22,7 +22,7 @@ terminals = [Const(T)]
 
 sns.set_theme()
 
-config = CGPConfig(
+config = SimpleCGPConfig(
     num_jobs=1,
     max_generations=MAX_GENERATIONS,
     stopping_criteria=None,
@@ -37,8 +37,9 @@ config = CGPConfig(
     num_outputs=1,
     report_interval=1,
     max_time=MAX_TIME,
+    mutation_type=MutationType.SAM,
     global_seed=None,
-    checkpoint_interval=10,
+    checkpoint_interval=9999999,
     checkpoint_dir='../checkpoint',
     experiment_name='max_tgp'
 )

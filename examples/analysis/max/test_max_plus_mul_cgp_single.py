@@ -1,5 +1,5 @@
 import sys
-from src.analysis.models.simple_cgp import SimpleCGP
+from src.analysis.models.simple_cgp import SimpleCGP, SimpleCGPConfig, MutationType
 from src.analysis.problems import MaxPlusMul
 from src.gp.tiny_cgp import *
 from src.gp.functions import ADD, MUL
@@ -9,10 +9,13 @@ MAX_GENERATIONS = 1000000
 MAX_TIME = 9999999
 D = int(sys.argv[1])
 T = int(sys.argv[2])
+MAX_ARITY = 2
+NUM_GENES = (MAX_ARITY + 1) * D  + 1
+MUTATION_RATE = 1 / NUM_GENES
 functions = [ADD, MUL]
 terminals = [Const(T)]
 
-config = CGPConfig(
+config = SimpleCGPConfig(
     num_jobs=1,
     max_generations=MAX_GENERATIONS,
     stopping_criteria=None,
@@ -27,8 +30,9 @@ config = CGPConfig(
     num_outputs=1,
     report_interval=1,
     max_time=MAX_TIME,
+    mutation_type=MutationType.PROB,
     global_seed=None,
-    checkpoint_interval=10,
+    checkpoint_interval=9999999,
     checkpoint_dir='../checkpoint',
     experiment_name='max_tgp'
 )
@@ -39,14 +43,14 @@ hyperparameters = CGPHyperparameters(
     population_size=2,
     num_function_nodes=D,
     levels_back=D,
-    mutation_rate=None,
+    mutation_rate=MUTATION_RATE,
     strict_selection=False,
 )
 
-for _ in range(0,30):
-    problem = MaxPlusMul(d=D, t=T)
-    config.ideal_fitness = problem.ideal
-    config.global_seed = int(time.time_ns())
-    cgp = SimpleCGP(functions, terminals, config, hyperparameters)
-    cgp.evolve(problem)
-    print(f"{D},simple_cgp,{cgp.generation_number}")
+
+problem = MaxPlusMul(d=D, t=T)
+config.ideal_fitness = problem.ideal
+config.global_seed = int(time.time_ns())
+cgp = SimpleCGP(functions, terminals, config, hyperparameters)
+cgp.evolve(problem)
+print(f"{D},simple_cgp,{cgp.generation_number}")
