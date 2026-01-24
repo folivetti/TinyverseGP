@@ -1,3 +1,23 @@
+"""
+Implements the MAX problem which is one of the problems that is commonly used
+for analysis of GP.
+
+The aim of MAX is to find a program that returns the largest possible as output
+given a maximum depth D and a constant (terminal) value t.
+
+The maximum output is the ideal fitness of the formulated GP search problem.
+
+There are two version of MAX that are implemented in this problem class:
+    - max-{+}-D-t :
+        MAX with maximum depth D, constant t and function set F = {+} (MaxPlus)
+
+    - max-{+,*}-D-t :
+        MAX with maximum depth D, constant t and function set F = {+, *} (MaxPlusMul)
+
+This implementation of MAX supports log scaling to enable evaluation of MAX on large settings
+of the depth D.
+"""
+
 from math import log2, pow, exp2
 from src.gp.problem import Problem
 from src.gp.tinyverse import GPModel
@@ -24,7 +44,6 @@ class MaxPlus(Max):
 
 
 class MaxPlusMul(Max):
-
     def __init__(self, d, t, log_scaling = False):
         super().__init__(t = t, log_scaling_=log_scaling)
         if log_scaling:

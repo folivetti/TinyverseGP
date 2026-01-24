@@ -1,3 +1,11 @@
+"""
+Implementation of simple tree-based GP as it has been used for runtime analysis of various
+problems.
+
+SimpleTGP uses a (1+1) search strategy and a composite HVL prime mutation operator
+consisting of three tree operations: insert, delete and substitute.
+"""
+
 import copy
 import math
 import random
@@ -10,6 +18,9 @@ from src.gp.tinyverse import Var, Const, Hyperparameters
 
 @dataclass(kw_only=True)
 class SimpleTGPHyperparameters(Hyperparameters):
+    """
+    Set of hyperparameters that are used to configure simple TGP.
+    """
     lmbda: int = 1
     k: int = 1
     max_depth: int
@@ -21,27 +32,41 @@ class SimpleTGPHyperparameters(Hyperparameters):
         return math.pow(2, self.max_depth + 1) - 1
 
 class HVLPrime:
-
+    """
+    This implementation of the HVL prime follows the formal description provided
+    in the work of Koetzing et al:
+        https://doi.org/10.1145/2330163.2330348
+        https://doi.org/10.1016/j.tcs.2013.06.014
+    """
     def __init__(self, functions_: list, terminals_: list):
         self.functions = functions_
         self.terminals = terminals_
 
-    def is_leaf(self, n: Node):
+    def is_leaf(self, n: Node) -> bool:
+        """
+        Checks whether a given node is a leaf or not.
+        """
         return isinstance(n.function, Var) or isinstance(n.function, Const)
 
     def rnd_leaf(self, n: Node, p=None) -> tuple[Node, Node]:
+        """
+        Return a random leaf node.
+        """
         if self.is_leaf(n):
             return n, p
         return self.rnd_leaf(random.choice(n.children), n)
 
-    def rnd_inner(self, n: Node, p: float) -> Node:
+    def rnd_inner_node(self, n: Node, p: float) -> Node:
+        """
+         Return a random inner node.
+        """
         if random.random() <= p:
             return n
 
         c = [child for child in n.children if self.is_leaf(child) == False]
 
         if len(c) > 0:
-            n = self.rnd_inner(random.choice(c), p)
+            n = self.rnd_inner_node(random.choice(c), p)
         return n
 
     def count_inner_nodes(self, node: Node) -> int:
@@ -57,16 +82,24 @@ class HVLPrime:
         return 1 + s
 
     def substitute(self, n: Node):
+        """
+        Substitute replaces an inner node of the tree that has been selected by chance
+        with a new node which is selected uniformly at random.
+        """
         n_inner = self.count_inner_nodes(n)
 
         if n_inner == 0:
             return
 
         p = 1.0 / n_inner
-        n_rnd = self.rnd_inner(n, p)
+        n_rnd = self.rnd_inner_node(n, p)
         n_rnd.function = random.choice(self.functions)
 
     def insert(self, n: Node):
+        """
+        Insert appends an inner node uniformly selected at random at the position of the leaf and appends
+        the given leaf as well an additional randomly selected leaf node as children.
+        """
         v, p = self.rnd_leaf(n)
         u = random.choice(self.terminals)
         w = random.choice(self.functions)
@@ -77,6 +110,11 @@ class HVLPrime:
         v.children.append(Node(function=tmp, children=[]))
 
     def delete(self, n: Node):
+        """
+        Delete randomly selects a leaf node and it then replaces the other child node of its parent
+        with the child. In this way, the prior selected leaf node as well as the parent node are deleted from
+        the tree.
+        """
         v, p = self.rnd_leaf(n)
 
         if p is None:
@@ -95,6 +133,15 @@ class HVLPrime:
 
 
 class SimpleTGP(TinyTGP):
+    """
+    Simple tree based GP model that is commonly used for runtime analysis.
+
+    Uses (1+1) search strategy and the HVL prime mutation.
+
+    Derives from TinyTGP within TinyverseGP which represent the conventional "vanilla"
+    TGP model. Key methods such as initialisation, mutation, breeding and the pipeline
+    from TinyTGP are overwritten  to simplify aspects of the standard TGP model.
+    """
     hyperparameters: SimpleTGPHyperparameters
     def __init__(self, functions_: list, terminals_: list, config_: TGPConfig, hyperparameters_: SimpleTGPHyperparameters):
         super().__init__(functions_, terminals_, config_, hyperparameters_)
@@ -102,12 +149,22 @@ class SimpleTGP(TinyTGP):
 
     @override
     def init(self):
+        """
+        Initialises the population.
+        """
         self.population = [self.init_individual() for _ in range(self.hyperparameters.lmbda + 1)]
 
     def init_individual(self) -> TGPIndividual:
+        """
+        Initialises an individual with a genome
+        """
         return TGPIndividual(genome_=[self.init_tree_simple()])
 
     def init_tree_simple(self):
+        """
+        Simplified version of the tree init method that only creates tree
+        with one leaf uniformly selected at random.
+        """
         return Node(function=random.choice(self.terminals), children=[])
 
     @override
@@ -116,6 +173,16 @@ class SimpleTGP(TinyTGP):
 
     @override
     def mutation(self, parent: Node) -> Node:
+        """
+        Overrides the mutation method of TinyTGP which is by default the subtree
+        mutation.
+
+        The mutation method of SimpleTGP either performs HVL-single or the multi-strategy.
+
+        HVL-single only perform one operation in the framework of the mutation procedure
+        while HVL-multi perform k steps that are drawn from poisson distribution.
+
+        """
         if self.hyperparameters.multi:
             k = 1 + np.random.poisson(1)
         else:
@@ -127,6 +194,12 @@ class SimpleTGP(TinyTGP):
 
     @override
     def breed(self):
+        """
+        Breeding procedure that first selects the parent according to the chosen selection
+        strategy. Then the parent individual is cloned and mutated. Depending on the choice of
+        the size check option, the offspring is only replaces the parent when its size is less or
+        equal the maximum tree size.
+        """
         parent = self.selection()
         self.population = [parent]
         for _ in range(self.hyperparameters.lmbda):
@@ -144,6 +217,10 @@ class SimpleTGP(TinyTGP):
 
     @override
     def selection(self) -> TGPIndividual:
+        """
+        Selects the parent from the population according to the chosen selection strategy
+        - non-strict (also known as random local search RLS) or strict selection.
+        """
         sorted_pop = sorted(
             self.population,
             key=lambda ind: ind.fitness,
@@ -164,5 +241,9 @@ class SimpleTGP(TinyTGP):
 
     @override
     def pipeline(self, problem):
+        """
+        Pipeline of simple TGP:
+         -> Selection -> Mutation -> Evaluation
+        """
         self.breed()
         return self.evaluate(problem)
