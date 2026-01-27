@@ -36,7 +36,13 @@ class Max(Problem):
 
 
 class MaxPlus(Max):
+    """
+    Variant of MAX that only considers addition in the function set.
 
+    Ideal value is calculated accordingly und used to check if the
+    correct solution has been obtained.
+
+    """
     def __init__(self, d, t):
         super().__init__(t=t, log_scaling_=False)
         self.ideal = t * pow(2, d)
@@ -44,8 +50,17 @@ class MaxPlus(Max):
 
 
 class MaxPlusMul(Max):
+    """
+    Variant of MAX that considers both, addition and multiplication in the function set.
+
+    Ideal value is calculated accordingly und used to check if the
+    correct solution has been obtained.
+    """
     def __init__(self, d, t, log_scaling = False):
         super().__init__(t = t, log_scaling_=log_scaling)
+
+        # Maximum output value of the program depends on whether log-scaling
+        # is enabled or not
         if log_scaling:
             self.ideal = exp2(d-1) * log2(max(2*t, t*t))
         else:

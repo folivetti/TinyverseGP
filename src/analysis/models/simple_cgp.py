@@ -1,5 +1,6 @@
 """
-Implementation of simple CartesianGP as it has been used for runtime analysis.
+Implementation of simple Cartesian Genetic Programming (CGP) as it has been
+used for runtime analysis.
 
 SimpleCGP uses a (1+1) search strategy and either probabilistic or
 single-active-gene mutation for genetic variation.
@@ -13,6 +14,11 @@ from typing_extensions import override
 from src.gp.tiny_cgp import CGPHyperparameters, CGPConfig, TinyCGP
 
 class MutationType(Enum):
+    """
+    Used for the selection of the mutation method.
+        - PROB: probabilistic mutation
+        - SAM: single-active-gene mutation
+    """
     PROB = 0
     SAM = 1
 
@@ -52,11 +58,14 @@ class SimpleCGP(TinyCGP):
         """
         gene_type = self.phenotype(position)
 
+        # Init the set of excluded values for the sampling of the new value
         if old_val is None:
             exclude = []
         else:
             exclude = [old_val]
 
+        # Calculate the bounds for sampling a new gene value
+        # depending on the gene type
         if gene_type == self.GeneType.CONNECTION:
             levels_back = self.hyperparameters.levels_back
             node_num = self.node_number(position)
@@ -68,12 +77,16 @@ class SimpleCGP(TinyCGP):
         elif gene_type == self.GeneType.FUNCTION:
             min = 0
             max = self.config.num_functions - 1
-        else:
-            # It is an output gene then
+        else: # In this case it is an output gene
             min = 0
             max = self.config.num_inputs + self.hyperparameters.num_function_nodes - 1
 
+        # Sample new potential gene values uniformly at random
+        # w.r.t. the bounds and excluded values
         new_vals = [c for c in range(min, max + 1) if c not in exclude]
+
+        # Select a new gene value by chance if it is possible
+        # otherwise keep the old value
         return random.choice(new_vals) if len(new_vals) > 0 else old_val
 
     def mutation_prob(self, genome: list[int]):
@@ -88,16 +101,20 @@ class SimpleCGP(TinyCGP):
 
     def mutation_sam(self, genome: list[int]):
         """
-        Single active gene mutation that enforces the mutation of a single active
+        Single-active-gene mutation (SAM) enforces the mutation of a single active
         gene in the genotype.
         """
         active_nodes = self.active_nodes(genome)
         active = False
         while not active:
+            # Randomly select and mutate one gene per iteration until
+            # an active gene was altered
             gene_pos = random.randint(0, self.config.num_genes - 1)
             gene_val = genome[gene_pos]
             genome[gene_pos] = self.new_value(gene_pos, old_val=gene_val)
             node_num = self.node_number(gene_pos)
+
+            # Check whether the selected gene is active (output genes are considered
             if node_num in active_nodes or self.phenotype(gene_pos) == self.GeneType.OUTPUT:
                 active = True
 

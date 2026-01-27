@@ -4,6 +4,9 @@ problems.
 
 SimpleTGP uses a (1+1) search strategy and a composite HVL prime mutation operator
 consisting of three tree operations: insert, delete and substitute.
+
+A description of SimpleTGP can be found in the work of Neumann et al.
+ - https://link.springer.com/chapter/10.1007/978-1-4614-1770-5_7
 """
 
 import copy
@@ -19,7 +22,7 @@ from src.gp.tinyverse import Var, Const, Hyperparameters
 @dataclass(kw_only=True)
 class SimpleTGPHyperparameters(Hyperparameters):
     """
-    Set of hyperparameters that are used to configure simple TGP.
+    Set of hyperparameters used to configure simple TGP.
     """
     lmbda: int = 1
     k: int = 1
@@ -34,7 +37,7 @@ class SimpleTGPHyperparameters(Hyperparameters):
 class HVLPrime:
     """
     This implementation of the HVL prime follows the formal description provided
-    in the work of Koetzing et al:
+    in the works of Koetzing et al:
         https://doi.org/10.1145/2330163.2330348
         https://doi.org/10.1016/j.tcs.2013.06.014
     """
@@ -83,8 +86,8 @@ class HVLPrime:
 
     def substitute(self, n: Node):
         """
-        Substitute replaces an inner node of the tree that has been selected by chance
-        with a new node which is selected uniformly at random.
+        Substitute replaces the symbol (function) of a randomly selected inner node of the tree
+        with a new function that is selected uniformly at random from the function set.
         """
         n_inner = self.count_inner_nodes(n)
 
@@ -97,8 +100,8 @@ class HVLPrime:
 
     def insert(self, n: Node):
         """
-        Insert appends an inner node uniformly selected at random at the position of the leaf and appends
-        the given leaf as well an additional randomly selected leaf node as children.
+        Insert appends an inner node that is uniformly selected at random at the position of a randomly selected leaf
+        . The selected leaf as well an additional randomly selected leaf node are then appended as children.
         """
         v, p = self.rnd_leaf(n)
         u = random.choice(self.terminals)
@@ -111,9 +114,9 @@ class HVLPrime:
 
     def delete(self, n: Node):
         """
-        Delete randomly selects a leaf node and it then replaces the other child node of its parent
-        with the child. In this way, the prior selected leaf node as well as the parent node are deleted from
-        the tree.
+        Delete randomly selects a leaf node and it then replaces the parent node with the other child node.
+        In this way, the prior selected leaf node as well as the parent node are deleted from
+        the tree. Please note that the replacement can be both leaf as well as inner node.
         """
         v, p = self.rnd_leaf(n)
 
