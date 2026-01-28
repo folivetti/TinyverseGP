@@ -6,6 +6,7 @@
 #SBATCH --array=0-0
 #SBATCH --time=01:00:00
 #SBATCH --account=rwth1938
+#SBATCH --partition=c23ms
 
 # List of datasets
 datasets=('add4' 'mul3' 'alu4' 'count4' 'dec4' 'enc8' 'epar8' 'mcomp4' 'icomp5')

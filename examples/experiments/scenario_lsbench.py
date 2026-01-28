@@ -7,6 +7,7 @@ from src.gp.tinyverse import Var, GPConfig
 import argparse
 import csv
 import pathlib
+from src.hpo.hpo import SMAC4BenchInterface, SMACInterface
 
 
 parser = argparse.ArgumentParser(
@@ -23,7 +24,9 @@ parser.add_argument('-s', '--seed', dest='seed', type=int, default=42)
 parser.add_argument('-o', '--optimise', action='store_true')
 parser.add_argument('-v', '--verbose', action='store_true')  # on/off flag
 
-lsbench = LSBench(data_dir_=pathlib.Path(__file__).parent.parent.parent.resolve() / 'data' / 'logic_synthesis')
+args = parser.parse_args()
+
+lsbench = LSBench(data_dir_=str(pathlib.Path(__file__).parent.parent.parent.resolve() / 'data' / 'logic_synthesis'))
 if args.dataset != "":
     benchmarks = [getattr(lsbench, args.dataset)()]
 else:
@@ -96,7 +99,7 @@ elif args.algo=='CGP':
                     silent_algorithm=True,
                     silent_evolver=True,
                     minimalistic_output=True,
-                    num_functions=len(functions),
+                    num_functions=1,
                     max_arity=2,
                     num_inputs=1,
                     num_outputs=1,
@@ -182,29 +185,49 @@ else:
 # print("LSBench has been created!")
 
 for bm in benchmarks:
-    csv_filename = f"experiments_scripts/output_data/{d}_{args.algo}_{args.seed}.csv"
-    with open(csv_filename, mode="w", newline="") as csv_file:
-        fieldnames = ["dataset_name", "algo_name", "nb_trials", "def_parameters", "opt_parameters", "default", "optimised", "seed"]
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-        writer.writeheader()
-        print(f"Running benchmark: {bm.name}")
+    csv_filename = f"experiments_scripts/output_data/{args.dataset}_{args.algo}_{args.seed}.csv"
 
-        num_inputs = bm.benchmark.num_inputs
-        num_outputs = bm.benchmark.num_outputs
+    print(f"Running benchmark: {bm.name}")
 
-        if algo in ['TGP', 'CGP', 'LGP', 'GE']:
-            config.num_outputs = num_outputs
-            
-            if args.algo in ['TGP', 'CGP', 'LGP']:
-                config.num_inputs = num_inputs
-                if args.algo == 'LGP':
-                    config.num_registers = num_outputs
+    tt = bm.get_truth_table()
 
-        tt = bm.get_truth_table()
+    functions = lsbench.get_fs(bm.name)
+    
+    
+    # Set problem dependent parameters
+    num_inputs = bm.benchmark.num_inputs
+    num_outputs = bm.benchmark.num_outputs
+    if args.algo in ['TGP', 'CGP', 'LGP', 'GE']:
+        config.num_outputs = num_outputs
+        
+        if args.algo in ['TGP', 'CGP', 'LGP']:
+            config.num_inputs = num_inputs
+            if args.algo == 'LGP':
+                config.num_registers = num_outputs
+            if args.algo == 'CGP':
+                config.num_functions = len(functions)
 
-        functions = lsbench.get_fs(bm.name)
-        terminals = [Var(index=i, name_="x" + str(+ i)) for i in range(num_inputs)]
+    terminals = [Var(index=i, name_="x" + str(+ i)) for i in range(num_inputs)]
 
+    algo = LSRegressor(
+        representation_=args.algo,
+        config_=config,
+        hyperparameters_=hyperparams,
+        functions_=functions,
+        terminals_=terminals
+    )
+
+    algo.fit(X=tt.inputs, y=tt.outputs)
+    default_score = algo.score(tt.inputs, tt.outputs)
+    print(f"{args.algo} default score: {default_score}")
+    
+    if args.optimise:
+        ## Perform HPO via SMAC
+        config.silent_algorithm=True
+        config.silent_evolver=True
+        trials = 5
+        
+        # try LSBench HPO
         algo = LSRegressor(
             representation_=args.algo,
             config_=config,
@@ -212,7 +235,39 @@ for bm in benchmarks:
             functions_=functions,
             terminals_=terminals
         )
-
+        interface_lsbench = SMAC4BenchInterface(algo)
+        opt_hyperparameters_lsbench = interface_lsbench.optimise(
+            tt.inputs,
+            tt.outputs,
+            n_trials=trials,
+            seed=args.seed,
+            sc_name=f'{args.dataset}_{args.algo}'
+        )
+        
+        # rerun with optimised hyperparameters
+        algo = LSRegressor(
+            representation_=args.algo,
+            config_=config,
+            hyperparameters_=opt_hyperparameters_lsbench,
+            functions_=functions,
+            terminals_=terminals
+        )
         algo.fit(X=tt.inputs, y=tt.outputs)
-        print(f"{args.algo} score: {algo.score(tt.inputs, tt.outputs)}")
-        break
+        optimised_score = algo.score(tt.inputs, tt.outputs)
+        with open(csv_filename, mode="w+", newline="") as csv_file:
+            fieldnames = ["dataset_name", "algo_name", "nb_trials", "def_parameters", "opt_parameters", "default", "optimised", "seed"]
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerow(
+                {
+                    "dataset_name": d,
+                    "algo_name": args.algo,
+                    "nb_trials": trials,
+                    "def_parameters": str(hyperparams.__dict__),
+                    "opt_parameters": str(opt_hyperparameters_srbench.__dict__),
+                    "default": default_score,
+                    "optimised": optimised_score,
+                    "seed": args.seed,
+                }
+            )
+    

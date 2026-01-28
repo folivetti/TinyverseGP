@@ -6,6 +6,7 @@
 #SBATCH --array=0-0
 #SBATCH --time=01:00:00
 #SBATCH --account=rwth1938
+#SBATCH --partition=c23ms
 
 # if you installed Miniforge to a different location, change the path accordingly
 export CONDA_ROOT=$HOME/miniconda3
