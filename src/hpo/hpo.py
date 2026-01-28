@@ -99,8 +99,8 @@ class SMAC4BenchInterface:
             if fn_eval_limit > 0:
                 if fn_eval_per_gen == 'pop_size':
                     bench.hyperparameters.max_gen = fn_eval_limit // bench.config.pop_size
-                elif fn_eval_per_gen == '1+lambda':
-                    bench.hyperparameters.max_gen = fn_eval_limit // (1 + bench.config.lmbda)
+                elif fn_eval_per_gen == 'lambda':
+                    bench.hyperparameters.max_gen = fn_eval_limit // bench.config.lmbda
                 elif fn_eval_per_gen.isdigit():
                     bench.hyperparameters.max_gen = fn_eval_limit // int(fn_eval_per_gen)
                 else:
