@@ -6,6 +6,8 @@ from src.gp.tiny_tgp import TGPConfig, TGPHyperparameters
 from src.gp.tinyverse import Var, GPConfig
 import argparse
 import csv
+import pathlib
+
 
 parser = argparse.ArgumentParser(
                                 prog='LSBench Test Scenario',
@@ -21,7 +23,7 @@ parser.add_argument('-s', '--seed', dest='seed', type=int, default=42)
 parser.add_argument('-o', '--optimise', action='store_true')
 parser.add_argument('-v', '--verbose', action='store_true')  # on/off flag
 
-lsbench = LSBench(data_dir_='../../data/logic_synthesis')
+lsbench = LSBench(data_dir_=pathlib.Path(__file__).parent.parent.parent.resolve() / 'data' / 'logic_synthesis')
 if args.dataset != "":
     benchmarks = [getattr(lsbench, args.dataset)()]
 else:
@@ -179,32 +181,38 @@ else:
 
 # print("LSBench has been created!")
 
-for bm in benchmarks:csv_filename = f"experiments_scripts/output_data/{d}_{args.algo}_{args.seed}.csv"
-        with open(csv_filename, mode="w", newline="") as csv_file:
-            fieldnames = ["dataset_name", "algo_name", "nb_trials", "def_parameters", "opt_parameters", "default", "optimised", "seed"]
-            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-            writer.writeheader()
-            print(f"Running benchmark: {bm.name}")
+for bm in benchmarks:
+    csv_filename = f"experiments_scripts/output_data/{d}_{args.algo}_{args.seed}.csv"
+    with open(csv_filename, mode="w", newline="") as csv_file:
+        fieldnames = ["dataset_name", "algo_name", "nb_trials", "def_parameters", "opt_parameters", "default", "optimised", "seed"]
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        writer.writeheader()
+        print(f"Running benchmark: {bm.name}")
 
-            num_inputs = bm.benchmark.num_inputs
-            num_outputs = bm.benchmark.num_outputs
+        num_inputs = bm.benchmark.num_inputs
+        num_outputs = bm.benchmark.num_outputs
 
-            config.num_inputs = num_inputs
+        if algo in ['TGP', 'CGP', 'LGP', 'GE']:
             config.num_outputs = num_outputs
-            config.num_registers = num_outputs
+            
+            if args.algo in ['TGP', 'CGP', 'LGP']:
+                config.num_inputs = num_inputs
+                if args.algo == 'LGP':
+                    config.num_registers = num_outputs
 
-            tt = bm.get_truth_table()
+        tt = bm.get_truth_table()
 
-            functions = lsbench.get_fs(bm.name)
-            terminals = [Var(index=i, name_="x" + str(+ i)) for i in range(num_inputs)]
+        functions = lsbench.get_fs(bm.name)
+        terminals = [Var(index=i, name_="x" + str(+ i)) for i in range(num_inputs)]
 
-            algo = LSRegressor(
-                representation_=args.algo,
-                config_=config,
-                hyperparameters_=hyperparams,
-                functions_=functions,
-                terminals_=terminals
-            )
+        algo = LSRegressor(
+            representation_=args.algo,
+            config_=config,
+            hyperparameters_=hyperparams,
+            functions_=functions,
+            terminals_=terminals
+        )
 
-            algo.fit(X=tt.inputs, y=tt.outputs)
-            print(f"{args.algo} score: {algo.score(tt.inputs, tt.outputs)}")
+        algo.fit(X=tt.inputs, y=tt.outputs)
+        print(f"{args.algo} score: {algo.score(tt.inputs, tt.outputs)}")
+        break

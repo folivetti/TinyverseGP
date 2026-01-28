@@ -1,11 +1,17 @@
 #!/bin/bash
-#SBATCH --job-name=scenario_srbench_CGP_hpo
-#SBATCH --output=scenario_srbench_CGP_hpo_%a.txt
-#SBATCH --mem-per-cpu=6000
+#SBATCH --job-name=scenario_lsbench_CGP_hpo
+#SBATCH --output=scenario_lsbench_CGP_hpo_%a.txt
+#SBATCH --mem-per-cpu=2541
 #SBATCH --cpus-per-task=1
-#SBATCH --array=0-1
+#SBATCH --array=0-0
 #SBATCH --time=01:00:00
 #SBATCH --account=rwth1938
+
+# if you installed Miniforge to a different location, change the path accordingly
+export CONDA_ROOT=$HOME/miniconda3
+source $CONDA_ROOT/etc/profile.d/conda.sh
+export PATH="$CONDA_ROOT/bin:$PATH"
+conda activate tinyverse
 
 # List of datasets
 datasets=('add4' 'mul3' 'alu4' 'count4' 'dec4' 'enc8' 'epar8' 'mcomp4' 'icomp5')
@@ -18,4 +24,4 @@ seed=$((SLURM_ARRAY_TASK_ID % 10))
 dataset=${datasets[$dataset_idx]}
 
 # Run the Python script
-python3 -m examples.symbolic_regression.scenario_srbench --algo CGP -o -s $seed -d $dataset
+python3 -m examples.experiments.scenario_lsbench  --algo CGP -o -s $seed -d $dataset
