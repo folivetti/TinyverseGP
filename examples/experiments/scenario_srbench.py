@@ -22,7 +22,7 @@ import csv
 from src.gp.problem import Problem, BlackBox
 from src.gp.loss import mean_squared_error, linear_scaling_mse
 from src.gp.functions import ADD, SUB, MUL, DIV, EXP, LOG, SQR, CUBE
-from src.hpo.hpo import SMAC4SRBenchInterface, SMACInterface
+from src.hpo.hpo import SMAC4BenchInterface, SMACInterface
 from src.gp.tinyverse import Const
 
 parser = argparse.ArgumentParser(

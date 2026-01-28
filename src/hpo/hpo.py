@@ -5,7 +5,7 @@ from src.gp.problem import Problem
 from ConfigSpace import Configuration, ConfigurationSpace
 from smac import HyperparameterOptimizationFacade, Scenario
 import copy
-from src.benchmark.symbolic_regression.srbench import SRBench
+from sklearn.base import RegressorMixin
 import numpy as np
 
 class HPOInterface(ABC):
@@ -55,15 +55,15 @@ class SMACInterface(HPOInterface):
         for c in incumbent.keys():
             setattr(inc_hp, c, incumbent[c])
 
-class SMAC4SRBenchInterface:
-    def __init__(self, srbench: SRBench):
+class SMAC4BenchInterface:
+    def __init__(self, bench: RegressorMixin):
         """
         Initialize the SMAC4SRBenchInterface with an SRBench instance.
         Args:
-            srbench: An instance of SRBench to be optimized.
+            bench: An instance of RegressorMixin to be optimized.
         """
-        self.srbench = srbench
-        self.model_type = srbench.representation  # 'TGP' or 'CGP'
+        self.bench = bench
+        self.model_type = bench.representation  # 'TGP' or 'CGP'
 
     def optimise(
         self,
@@ -71,7 +71,9 @@ class SMAC4SRBenchInterface:
         y: np.ndarray,
         n_trials: int = 10,
         seed: int = 42,
-        sc_name: str = "default"
+        sc_name: str = "default",
+        fn_eval_limit: int = -1,
+        fn_eval_per_gen: str = "pop_size"
     ) -> GPHyperparameters:
         """
         Optimize the hyperparameters of the SRBench model using SMAC.
@@ -80,23 +82,40 @@ class SMAC4SRBenchInterface:
             y: Training labels.
             n_trials: Number of SMAC trials.
             seed: Random seed for reproducibility.
+            sc_name: Scenario name for SMAC output directory.
+            fn_eval_limit: Target function evaluation limit (override generations).
+            fn_eval_per_gen: Target function evaluation per generation.
         Returns:
             Dictionary of optimized hyperparameters.
         """
 
         def train(config: Configuration, seed: int = 0) -> float:
             # Create a copy of the SRBench instance
-            srbench = copy.deepcopy(self.srbench)
+            bench = copy.deepcopy(self.bench)
             # Apply the SMAC configuration to the hyperparameters
             for param, value in config.items():
-                setattr(srbench.hyperparameters, param, value)
+                setattr(bench.hyperparameters, param, value)
+            # adapt function evaluation limit if applicable
+            if fn_eval_limit > 0:
+                if fn_eval_per_gen == 'pop_size':
+                    bench.hyperparameters.max_gen = fn_eval_limit // bench.config.pop_size
+                elif fn_eval_per_gen == 'lambda':
+                    bench.hyperparameters.max_gen = fn_eval_limit // bench.config.lmbda
+                elif fn_eval_per_gen.isdigit():
+                    bench.hyperparameters.max_gen = fn_eval_limit // int(fn_eval_per_gen)
+                else:
+                    raise ValueError(f"Unknown fn_eval_per_gen: {fn_eval_per_gen}")
             # Fit the model
-            srbench.fit(X, y)
+            bench.fit(X, y)
             # Return the fitness (e.g., negative MSE for minimization)
-            return -srbench.score(X, y)  # SMAC minimizes, so return negative score
+            return -bench.score(X, y)  # SMAC minimizes, so return negative score
 
         # Get the hyperparameter space from the SRBench's hyperparameters
-        paramspace = self.srbench.hyperparameters.space
+        paramspace = self.bench.hyperparameters.space
+        # take out max_gen if function eval limit is set
+        if fn_eval_limit > 0:
+            if 'max_gen' in paramspace:
+                del paramspace['max_gen']
         # Initialize the configuration space
         configspace = ConfigurationSpace(paramspace)
         # Define the SMAC scenario
@@ -111,7 +130,7 @@ class SMAC4SRBenchInterface:
         # Run SMAC optimization
         smac = HyperparameterOptimizationFacade(scenario, train)
         incumbent = smac.optimize()
-        inc_hp = copy.deepcopy(self.srbench.hyperparameters)
+        inc_hp = copy.deepcopy(self.bench.hyperparameters)
         for c in incumbent.keys():
             setattr(inc_hp, c, incumbent[c])
         return inc_hp
