@@ -4,15 +4,15 @@
 #SBATCH --mem-per-cpu=2541
 #SBATCH --cpus-per-task=1
 #SBATCH --array=0-0
-#SBATCH --time=01:00:00
-#SBATCH --account=rwth1938
-#SBATCH --partition=c23ms
+#SBATCH --time=04:00:00
+# --account=rwth1938
+# --partition=c23ms
 
 # if you installed Miniforge to a different location, change the path accordingly
-export CONDA_ROOT=$HOME/miniconda3
-source $CONDA_ROOT/etc/profile.d/conda.sh
-export PATH="$CONDA_ROOT/bin:$PATH"
-conda activate tinyverse
+#export CONDA_ROOT=$HOME/miniconda3
+#source $CONDA_ROOT/etc/profile.d/conda.sh
+#export PATH="$CONDA_ROOT/bin:$PATH"
+#conda activate tinyverse
 
 # List of datasets
 datasets=('add4' 'mul3' 'alu4' 'count4' 'dec4' 'enc8' 'epar8' 'mcomp4' 'icomp5')

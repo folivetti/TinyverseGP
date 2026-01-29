@@ -17,6 +17,7 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument('--maxtime', dest='maxtime', type=int, default=3600)
 parser.add_argument('--maxgen', dest='maxgen', type=int, default=100)
+parser.add_argument('--maxevals', dest='maxevals', type=int, default=10000)
 parser.add_argument('--popsize', dest='popsize', type=int, default=100)
 parser.add_argument('--algo', dest='algo', type=str, default="TGP")
 parser.add_argument('-d', '--dataset', dest='dataset', type=str, default="")
@@ -241,7 +242,9 @@ for bm in benchmarks:
             tt.outputs,
             n_trials=trials,
             seed=args.seed,
-            sc_name=f'{args.dataset}_{args.algo}'
+            sc_name=f'{args.dataset}_{args.algo}',
+            fn_eval_limit=args.maxevals,
+            fn_eval_per_gen='lambda'
         )
         
         # rerun with optimised hyperparameters
@@ -260,11 +263,11 @@ for bm in benchmarks:
             writer.writeheader()
             writer.writerow(
                 {
-                    "dataset_name": d,
+                    "dataset_name": args.dataset,
                     "algo_name": args.algo,
                     "nb_trials": trials,
                     "def_parameters": str(hyperparams.__dict__),
-                    "opt_parameters": str(opt_hyperparameters_srbench.__dict__),
+                    "opt_parameters": str(opt_hyperparameters_lsbench.__dict__),
                     "default": default_score,
                     "optimised": optimised_score,
                     "seed": args.seed,
