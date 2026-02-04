@@ -244,7 +244,7 @@ for bm in benchmarks:
             seed=args.seed,
             sc_name=f'{args.dataset}_{args.algo}',
             fn_eval_limit=args.maxevals,
-            fn_eval_per_gen='lambda'
+            fn_eval_per_gen=('lambda' if args.algo == 'CGP' else (2 if args.algo == 'LGP' else 'pop_size')),
         )
         
         # rerun with optimised hyperparameters

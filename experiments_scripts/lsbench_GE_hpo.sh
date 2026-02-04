@@ -3,8 +3,8 @@
 #SBATCH --output=scenario_lsbench_GE_hpo_%a.txt
 #SBATCH --mem-per-cpu=2541
 #SBATCH --cpus-per-task=1
-#SBATCH --array=0-0
-#SBATCH --time=01:00:00
+#SBATCH --array=1-1
+#SBATCH --time=1-00:00:00
 #SBATCH --account=rwth1938
 #SBATCH --partition=c23ms
 
