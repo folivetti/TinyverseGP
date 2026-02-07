@@ -19,12 +19,15 @@ from src.gp.tinyverse import Var
 
 
 @dataclass
-class ALEArgs:
+class PLArgs:
+    max_steps: int
+
+@dataclass
+class ALEArgs(PLArgs):
     """
     Arguments for the preprocessing of
     Gymnasium Arcade Learning Environment (A.L.E).
     """
-
     noop_max: int
     frame_skip: int
     screen_size: int
@@ -32,12 +35,19 @@ class ALEArgs:
     terminal_on_life_loss: int
     scale_obs: int
     frame_stack: int
+    frames_per_step: int
+    use_minimal_action_set: bool
+    repeat_action_probability: float
+    difficulty: int
 
-class MinAtarArgs:
+
+@dataclass
+class MinAtarArgs(PLArgs):
     """
     Arguments for the MinAtar benchmarks.
     """
     use_minimal_action_set: bool
+
 
 class PLBenchmark(Benchmark):
     """
@@ -47,13 +57,13 @@ class PLBenchmark(Benchmark):
     """
 
     def __init__(
-            self, env_: gym.Env, ale_=False, ale_args: ALEArgs = None, flatten_obs_=True
+            self, env_: gym.Env, ale_=False, args: PLArgs = None, flatten_obs_=True
     ):
         self.env = env_
         self.wrapped_env = env_
         self.ale = ale_
         self.flatten_obs = flatten_obs_
-        self.generate(args=ale_args)
+        self.generate(args=args)
 
     def generate(self, args: any):
         """
