@@ -43,7 +43,7 @@ def psqrt(x):
 def pexp(x, clip=50.0):
     return np.clip(np.exp(x), -clip, clip)
 
-# Arithmetic Functions
+# Mathematical
 ADD = Function(2, "Add", operator.add)
 SUB = Function(2, "Sub", operator.sub)
 MUL = Function(2, "Mul", operator.mul)
@@ -59,8 +59,15 @@ POWER = Function(2, "Power", operator.pow)
 SIN = Function(1, "SIN", np.sin)
 COS = Function(1, "COS", np.cos)
 TAN = Function(1, "COS", np.tan)
+ARCSIN = Function(1, "ARCSIN", np.arcsin)
+ARCCOS = Function(1, "ARCSIN", np.arccos)
+ARCTAN = Function(1, "ARCSIN", np.arctan)
+ID = Function(1, "ID", lambda x: x)
+CEIL = Function(1, "ID", np.ceil)
+FLOOR = Function(1, "ID", np.floor)
+MOD = Function(2, "MOD", lambda x, y: x % y)
 
-# Logical Functions
+# Logical/Bitwise
 AND = Function(2, "AND", lambda x, y: int(x) & int(y))
 OR = Function(2, "OR", lambda x, y: int(x) | int(y))
 NOT = Function(1, "NOT", lambda x: ~int(x))
@@ -72,6 +79,8 @@ XOR = Function(2, "XOR", lambda x, y: int(x) ^ int(y))
 XNOR = Function(2, "XNOR", lambda x, y: ~(int(x) ^ int(y)))
 BUFA = Function(2, "BUFa", lambda x, y: x)
 BUFB = Function(2, "BUFb", lambda x, y: y)
+SHFTL = Function(1, "SHFTL", lambda x: int(x << 1))
+SHFTR = Function(1, "SHFTR", lambda x: int(x >> 1))
 
 # Comparison
 LT = Function(2, 'LT', lambda x,y : b2f(x < y))
@@ -79,7 +88,7 @@ LTE = Function(2, 'LTE', lambda x,y : b2f(x <= y))
 GT = Function(2, 'GT', lambda x,y : b2f(x > y))
 GTE = Function(2, 'GTE',lambda x,y : b2f(x >= y))
 EQ = Function(2, 'EQ', lambda x,y : b2f(x == y))
-NEG = Function(2, 'NEQ', lambda x,y : b2f(x != y))
+NEQ = Function(2, 'NEQ', lambda x,y : b2f(x != y))
 MIN = Function(2, 'MIN', lambda x,y : min(x,y))
 MAX = Function(2, 'MAX', lambda x,y : max(x,y))
 IF = Function(3, 'IF', lambda x,y,z : y if f2b(x) else z)
