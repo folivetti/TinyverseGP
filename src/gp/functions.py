@@ -79,8 +79,8 @@ XOR = Function(2, "XOR", lambda x, y: int(x) ^ int(y))
 XNOR = Function(2, "XNOR", lambda x, y: ~(int(x) ^ int(y)))
 BUFA = Function(2, "BUFa", lambda x, y: x)
 BUFB = Function(2, "BUFb", lambda x, y: y)
-SHFTL = Function(1, "SHFTL", lambda x: int(x << 1))
-SHFTR = Function(1, "SHFTR", lambda x: int(x >> 1))
+SHFTL = Function(1, "SHFTL", lambda x: int(x) << 1)
+SHFTR = Function(1, "SHFTR", lambda x: int(x) >> 1)
 
 # Comparison
 LT = Function(2, 'LT', lambda x,y : b2f(x < y))

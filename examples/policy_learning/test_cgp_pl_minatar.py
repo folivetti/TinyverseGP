@@ -54,9 +54,9 @@ hyperparameters = CGPHyperparameters(
     mu=1,
     lmbda=1,
     population_size=2,
-    num_function_nodes=50,
+    num_function_nodes=100,
     levels_back=99999,
-    mutation_rate=0.02,
+    mutation_rate=0.01,
     strict_selection=False,
 )
 
