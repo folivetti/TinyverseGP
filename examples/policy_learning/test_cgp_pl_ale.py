@@ -34,12 +34,22 @@ ale_args = ALEArgs(
     terminal_on_life_loss=True,
     scale_obs=False,
     frame_stack=4,
+    repeat_action_probability=0.25,
+    max_steps=2e10,
+    full_action_space=True,
+    difficulty=0,
+    frames_per_step=4
 )
 
-env = gym.make("ALE/Pong-v5", frameskip=1, difficulty=0)
-benchmark = PLBenchmark(env, ale_=True, ale_args=ale_args, flatten_obs_=False)
+env = gym.make("ALE/DoubleDunk-v5", frameskip=1, difficulty=ale_args.difficulty,
+               repeat_action_probability=ale_args.repeat_action_probability,
+               full_action_space = ale_args.full_action_space,)
+benchmark = PLBenchmark(env, ale_=True, args=ale_args, flatten_obs_=False)
 wrapped_env = benchmark.wrapped_env
-functions = [ADD, SUB, MUL, DIV, AND, OR, NAND, NOR, NOT, LT, GT, EQ, MIN, MAX, IF]
+functions_ext = [ADD, MUL, DIV, INV, ABS, SIN, COS, TAN, ARCSIN, ARCCOS, ARCTAN, LOG, SQR, SQRT, CEIL, FLOOR,
+            AND, OR, NAND, NOR, NOTA, NOTB, BUFA, BUFB, XOR, XNOR, SHFTL, SHFTR,
+            LT, GT, EQ, NEQ, MIN, MAX, IF, IFLEZ, IFGTZ]
+functions_min = [ADD, MUL, DIV, AND, OR, NAND, NOR, NOT, LT, GT, EQ, MIN, MAX, IF]
 terminals = benchmark.gen_terminals()
 num_inputs = benchmark.len_observation_space()
 num_outputs = benchmark.len_action_space()
@@ -53,7 +63,7 @@ config = CGPConfig(
     silent_algorithm=False,
     silent_evolver=False,
     minimalistic_output=True,
-    num_functions=len(functions),
+    num_functions=len(functions_ext),
     max_arity=3,
     num_inputs=num_inputs,
     num_outputs=num_outputs,
@@ -70,17 +80,17 @@ hyperparameters = CGPHyperparameters(
     lmbda=1,
     population_size=2,
     levels_back=100,
-    num_function_nodes=100,
-    mutation_rate=0.05,
+    num_function_nodes=50,
+    mutation_rate=0.02,
     strict_selection=True,
 )
 
 problem = PolicySearch(env=wrapped_env, ideal_=100, minimizing_=False)
-cgp = TinyCGP(functions, terminals, config, hyperparameters)
+cgp = TinyCGP(functions_ext, terminals, config, hyperparameters)
 policy = cgp.evolve(problem)
 env.close()
 
-env = gym.make("ALE/Pong-v5", render_mode="human")
+env = gym.make("ALE/Pong-v5", render_mode="human", full_action_space = ale_args.full_action_space)
 problem = PolicySearch(env=env, ideal_=100, minimizing_=False)
 problem.evaluate(policy.genome, cgp, num_episodes=1, wait_key=True)
 env.close()

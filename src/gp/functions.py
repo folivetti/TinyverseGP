@@ -43,7 +43,7 @@ def psqrt(x):
 def pexp(x, clip=50.0):
     return np.clip(np.exp(x), -clip, clip)
 
-# Mathematical
+# Mathematical/Arithmetic
 ADD = Function(2, "Add", operator.add)
 SUB = Function(2, "Sub", operator.sub)
 MUL = Function(2, "Mul", operator.mul)
@@ -66,6 +66,7 @@ ID = Function(1, "ID", lambda x: x)
 CEIL = Function(1, "ID", np.ceil)
 FLOOR = Function(1, "ID", np.floor)
 MOD = Function(2, "MOD", lambda x, y: x % y)
+NEG = Function(1, "NEG", lambda x: -x)
 
 # Logical/Bitwise
 AND = Function(2, "AND", lambda x, y: int(x) & int(y))

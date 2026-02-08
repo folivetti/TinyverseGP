@@ -17,8 +17,8 @@ NUM_EPISODES = 30
 MAX_STEPS = 2e10
 GAME = 'breakout'
 
-env = gym.BaseEnv(game=GAME, render_mode="rgb_array")
-benchmark = PLBenchmark(env, ale_=False, args=None, flatten_obs_=True)
+env = gym.BaseEnv(game=GAME, use_minimal_action_set=True, render_mode="grayscale")
+benchmark = PLBenchmark(env, ale_=False, args=None, flatten_obs_=False)
 wrapped_env = benchmark.wrapped_env
 num_inputs = benchmark.len_observation_space()
 num_outputs = benchmark.len_action_space()
@@ -31,7 +31,7 @@ terminals = [Var(i) for i in range(num_inputs)]
 
 config = CGPConfig(
     num_jobs=1,
-    max_generations=100000,
+    max_generations=99999999,
     stopping_criteria=100.0,
     minimizing_fitness=False,
     ideal_fitness=100.0,
@@ -43,7 +43,7 @@ config = CGPConfig(
     num_inputs=num_inputs,
     num_outputs=num_outputs,
     report_interval=200,
-    max_time=999999,
+    max_time=99999999,
     global_seed=42,
     checkpoint_interval=1,
     checkpoint_dir='checkpoint',
@@ -54,9 +54,9 @@ hyperparameters = CGPHyperparameters(
     mu=1,
     lmbda=1,
     population_size=2,
-    num_function_nodes=100,
+    num_function_nodes=50,
     levels_back=99999,
-    mutation_rate=0.01,
+    mutation_rate=0.02,
     strict_selection=False,
 )
 

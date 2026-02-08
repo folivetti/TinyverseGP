@@ -36,7 +36,7 @@ class ALEArgs(PLArgs):
     scale_obs: int
     frame_stack: int
     frames_per_step: int
-    use_minimal_action_set: bool
+    full_action_space: bool
     repeat_action_probability: float
     difficulty: int
 

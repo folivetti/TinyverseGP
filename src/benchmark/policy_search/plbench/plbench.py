@@ -13,7 +13,7 @@ class PLBenchConfig:
     flatten_obs: bool
     difficulty: int
     ale_args: ALEArgs
-    ma_args: MinAtarArgs
+    minatar_args: MinAtarArgs
 
 strfun = {
     "+": ADD,
@@ -72,15 +72,15 @@ class PLBench(Benchmark):
     class AtariFive:
         def __init__(self, ale_args: ALEArgs):
             self.problems = {
-                "battle_zone": PLBenchmark(env_=gymnasium.make("ALE/BattleZone-v5"), ale_=True, ale_args=ale_args,
+                "battle_zone": PLBenchmark(env_=gymnasium.make("ALE/BattleZone-v5"), ale_=True, args=ale_args,
                                            flatten_obs_=False),
-                "double_dunk" : PLBenchmark(env_=gymnasium.make("ALE/DoubleDunk-v5"), ale_=True, ale_args=ale_args,
+                "double_dunk" : PLBenchmark(env_=gymnasium.make("ALE/DoubleDunk-v5"), ale_=True, args=ale_args,
                                             flatten_obs_=False),
-                "name_this_game": PLBenchmark(env_=gymnasium.make("ALE/NameThisGame-v5"), ale_=True, ale_args=ale_args,
+                "name_this_game": PLBenchmark(env_=gymnasium.make("ALE/NameThisGame-v5"), ale_=True, args=ale_args,
                                               flatten_obs_=False),
-                "phoenix": PLBenchmark(env_=gymnasium.make("ALE/Phoenix-v5"), ale_=True, ale_args=ale_args,
+                "phoenix": PLBenchmark(env_=gymnasium.make("ALE/Phoenix-v5"), ale_=True, args=ale_args,
                                        flatten_obs_=False),
-                "qbert": PLBenchmark(env_=gymnasium.make("ALE/Qbert-v5"), ale_=True, ale_args=ale_args,
+                "qbert": PLBenchmark(env_=gymnasium.make("ALE/Qbert-v5"), ale_=True, args=ale_args,
                                      flatten_obs_=False),
             }
 
