@@ -2,7 +2,6 @@
 Implementation of arithmetic, logical and comparative functions
 that are commonly used to curate the GP function set.
 """
-import math
 
 from src.gp.tinyverse import Function
 import operator
@@ -20,6 +19,13 @@ def b2f(input: bool) -> float:
     """
     return 1.0 if input else -1.0
 
+def p2i(x):
+    if isinstance(x, int):
+        return x
+    if np.isinf(x) or np.isneginf(x):
+        x = np.nan
+    return np.int64(np.nan_to_num(x)) if np.isnan(x) else np.int64(x)
+
 def pdiv(x, y, eps=1e-8):
     return np.divide(x, y + (np.abs(y) < eps) * eps)
 
@@ -28,6 +34,9 @@ def square(x, clip=1e100):
 
 def cube(x, clip=1e100):
     return np.clip(np.power(x, 3), -clip, clip)
+
+def pow(x, y, clip=1e100):
+    return np.clip(np.pow(x,y), -clip, clip)
 
 def inv(x):
     return pdiv(1.0,x)
@@ -43,6 +52,8 @@ def psqrt(x):
 def pexp(x, clip=50.0):
     return np.clip(np.exp(x), -clip, clip)
 
+
+
 # Mathematical/Arithmetic
 ADD = Function(2, "Add", operator.add)
 SUB = Function(2, "Sub", operator.sub)
@@ -50,12 +61,12 @@ MUL = Function(2, "Mul", operator.mul)
 DIV = Function(2, "Div", pdiv)
 INV = Function(1, "INV", inv)
 ABS =  Function(1, "ABS", np.abs)
-EXP = Function(1, "EXP", np.exp)
+EXP = Function(1, "EXP", pexp)
 LOG = Function(1, "LOG", plog)
 SQRT = Function(1, "SQRT", psqrt)
 SQR = Function(1, "SQR", square)
 CUBE = Function(1, "CUBE", cube)
-POWER = Function(2, "Power", operator.pow)
+POW = Function(2, "Power", pow)
 SIN = Function(1, "SIN", np.sin)
 COS = Function(1, "COS", np.cos)
 TAN = Function(1, "COS", np.tan)
@@ -69,19 +80,19 @@ MOD = Function(2, "MOD", lambda x, y: x % y)
 NEG = Function(1, "NEG", lambda x: -x)
 
 # Logical/Bitwise
-AND = Function(2, "AND", lambda x, y: int(x) & int(y))
-OR = Function(2, "OR", lambda x, y: int(x) | int(y))
-NOT = Function(1, "NOT", lambda x: ~int(x))
-NOTA = Function(2, "NOTa", lambda x,y: ~int(x))
-NOTB = Function(2, "NOTb", lambda x,y: ~int(y))
-NAND = Function(2, "NAND", lambda x, y: ~(int(x) & int(y)))
-NOR = Function(2, "NOR", lambda x, y: ~(int(x) | int(y)))
-XOR = Function(2, "XOR", lambda x, y: int(x) ^ int(y))
-XNOR = Function(2, "XNOR", lambda x, y: ~(int(x) ^ int(y)))
+AND = Function(2, "AND", lambda x, y: p2i(x) & p2i(y))
+OR = Function(2, "OR", lambda x, y: p2i(x) | p2i(y))
+NOT = Function(1, "NOT", lambda x: ~p2i(x))
+NOTA = Function(2, "NOTa", lambda x,y: ~p2i(x))
+NOTB = Function(2, "NOTb", lambda x,y: ~p2i(y))
+NAND = Function(2, "NAND", lambda x, y: ~(p2i(x) & p2i(y)))
+NOR = Function(2, "NOR", lambda x, y: ~(p2i(x) | p2i(y)))
+XOR = Function(2, "XOR", lambda x, y: p2i(x) ^ p2i(y))
+XNOR = Function(2, "XNOR", lambda x, y: ~(p2i(x) ^ p2i(y)))
 BUFA = Function(2, "BUFa", lambda x, y: x)
 BUFB = Function(2, "BUFb", lambda x, y: y)
-SHFTL = Function(1, "SHFTL", lambda x: int(x) << 1)
-SHFTR = Function(1, "SHFTR", lambda x: int(x) >> 1)
+SHFTL = Function(1, "SHFTL", lambda x: p2i(x) << 1)
+SHFTR = Function(1, "SHFTR", lambda x: p2i(x) >> 1)
 
 # Comparison
 LT = Function(2, 'LT', lambda x,y : b2f(x < y))
