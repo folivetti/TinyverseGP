@@ -1,4 +1,4 @@
-from src.benchmark.policy_search.pl_benchmark import PLBenchmark
+from src.benchmark.policy_search.pl_benchmark import PLBenchmark, ALEArgs
 from src.gp.tiny_cgp import *
 from src.gp.problem import PolicySearch
 from src.gp.functions import *
@@ -6,20 +6,23 @@ from src.gp.tinyverse import Var
 import warnings
 import numpy
 
-from minatar import gym
+from minatar import gym as gym_ma
+import gymnasium as gym
 
-gym.register_envs()
+gym_ma.register_envs()
 
 if numpy.version.version[0] == "2":
     warnings.warn("Using NumPy version >=2 can lead to overflow.")
 
-NUM_EPISODES = 10
+NUM_GENERATIONS = 10000
+NUM_EPISODES = 1000
 MAX_STEPS = 2e10
-GAME = 'breakout'
+GAME = 'MinAtar/Breakout-v1'
 IDEAL = 100
 
-env = gym.BaseEnv(game=GAME, use_minimal_action_set=True, render_mode="array", display_time=500)
-benchmark = PLBenchmark(env, ale_=False, args=None, flatten_obs_=False)
+#env = gym.BaseEnv(game=GAME, use_minimal_action_set=True, render_mode="rgb_array")
+env = gym.make(id=GAME, max_episode_steps = 5000)
+benchmark = PLBenchmark(env, ale_=False, args=None, flatten_obs_=True)
 wrapped_env = benchmark.wrapped_env
 num_inputs = benchmark.len_observation_space()
 num_outputs = benchmark.len_action_space()
@@ -33,7 +36,7 @@ terminals = [Var(i) for i in range(num_inputs)]
 
 config = CGPConfig(
     num_jobs=1,
-    max_generations=5000,
+    max_generations=NUM_GENERATIONS,
     stopping_criteria=IDEAL,
     minimizing_fitness=False,
     ideal_fitness=IDEAL,
@@ -44,7 +47,7 @@ config = CGPConfig(
     max_arity=3,
     num_inputs=num_inputs,
     num_outputs=num_outputs,
-    report_interval=1,
+    report_interval=10,
     max_time=99999999,
     global_seed=42,
     checkpoint_interval=1,
@@ -54,11 +57,11 @@ config = CGPConfig(
 
 hyperparameters = CGPHyperparameters(
     mu=1,
-    lmbda=4096,
-    population_size=4097,
-    num_function_nodes=100,
+    lmbda=1,
+    population_size=2,
+    num_function_nodes=20,
     levels_back=100,
-    mutation_rate=0.01,
+    mutation_rate=0.1,
     strict_selection=False,
 )
 
@@ -68,7 +71,7 @@ cgp = TinyCGP(functions_ext, terminals, config, hyperparameters)
 policy = cgp.evolve(problem)
 env.close()
 
-env = gym.BaseEnv(game=GAME, render_mode="human")
+env = gym.make(id=GAME, render_mode="human")
 problem = PolicySearch(env=env, ideal_=config.ideal_fitness, minimizing_=False)
 problem.evaluate(policy.genome, cgp, num_episodes=1, wait_key=True)
 env.close()

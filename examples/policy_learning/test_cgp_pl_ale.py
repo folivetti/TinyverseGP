@@ -14,7 +14,6 @@ Action space: Discrete(6)
 
 Observation space: Box(0, 255, (210, 160, 3), uint8)
 """
-
 from src.benchmark.policy_search.pl_benchmark import PLBenchmark, ALEArgs
 from src.gp.tiny_cgp import *
 import gymnasium as gym
@@ -26,29 +25,38 @@ import numpy
 if numpy.version.version[0] == "2":
     warnings.warn("Using NumPy version >=2 can lead to overflow.")
 
+MAX_GENERATIONS = 9999999
+IDEAL = 1000
+GAME = "ALE/Breakout-v5"
+NUM_EPISODES = 10
+MAX_STEPS = 2e20
+
 ale_args = ALEArgs(
     noop_max=30,
-    frame_skip=4,
-    screen_size=32,
+    frame_skip=1,
+    screen_size=84,
     grayscale_obs=True,
-    terminal_on_life_loss=True,
+    terminal_on_life_loss=False,
     scale_obs=False,
-    frame_stack=4,
-    repeat_action_probability=0.25,
-    max_steps=2e10,
-    full_action_space=True,
+    frame_stack=1,
+    repeat_action_probability=0.0,
+    max_steps=MAX_STEPS,
+    full_action_space=False,
     difficulty=0,
-    frames_per_step=4
+    frames_per_step=4,
+    max_episode_steps=2500
 )
 
-env = gym.make("ALE/DoubleDunk-v5", frameskip=1, difficulty=ale_args.difficulty,
+env = gym.make(id=GAME, frameskip=1, difficulty=ale_args.difficulty,
                repeat_action_probability=ale_args.repeat_action_probability,
-               full_action_space = ale_args.full_action_space,)
+               full_action_space = ale_args.full_action_space,
+               max_episode_steps = ale_args.max_episode_steps, render_mode='rgb_array')
 benchmark = PLBenchmark(env, ale_=True, args=ale_args, flatten_obs_=False)
 wrapped_env = benchmark.wrapped_env
-functions_ext = [ADD, MUL, DIV, INV, ABS, SIN, COS, TAN, ARCSIN, ARCCOS, ARCTAN, LOG, SQR, SQRT, CEIL, FLOOR,
-            AND, OR, NAND, NOR, NOTA, NOTB, BUFA, BUFB, XOR, XNOR, SHFTL, SHFTR,
-            LT, GT, EQ, NEQ, MIN, MAX, IF, IFLEZ, IFGTZ]
+functions_ext = [ADD, MUL, DIV, INV, ABS, SIN, COS, TAN, ARCSIN, ARCCOS, ARCTAN, LOG, SQR, SQRT,
+                 CEIL, FLOOR, SQR,
+                 AND, OR, NAND, NOR, NOTA, NOTB, BUFA, BUFB, XOR, XNOR, SHFTL, SHFTR,
+                 LT, GT, EQ, NEQ, MIN, MAX, IF, IFLEZ, IFGTZ]
 functions_min = [ADD, MUL, DIV, AND, OR, NAND, NOR, NOT, LT, GT, EQ, MIN, MAX, IF]
 terminals = benchmark.gen_terminals()
 num_inputs = benchmark.len_observation_space()
@@ -56,10 +64,10 @@ num_outputs = benchmark.len_action_space()
 
 config = CGPConfig(
     num_jobs=1,
-    max_generations=100,
-    stopping_criteria=100,
+    max_generations=MAX_GENERATIONS,
+    stopping_criteria=IDEAL,
     minimizing_fitness=False,
-    ideal_fitness=100,
+    ideal_fitness=IDEAL,
     silent_algorithm=False,
     silent_evolver=False,
     minimalistic_output=True,
@@ -68,7 +76,7 @@ config = CGPConfig(
     num_inputs=num_inputs,
     num_outputs=num_outputs,
     report_interval=1,
-    max_time=99999,
+    max_time=9999999,
     global_seed=42,
     checkpoint_interval=10,
     checkpoint_dir='checkpoint',
@@ -77,20 +85,21 @@ config = CGPConfig(
 
 hyperparameters = CGPHyperparameters(
     mu=1,
-    lmbda=1,
-    population_size=2,
+    lmbda=8,
+    population_size=9,
     levels_back=100,
     num_function_nodes=50,
     mutation_rate=0.02,
     strict_selection=True,
 )
 
-problem = PolicySearch(env=wrapped_env, ideal_=100, minimizing_=False)
+problem = PolicySearch(env=wrapped_env, ideal_=IDEAL, minimizing_=False, num_episodes_=NUM_EPISODES,
+                       max_steps_=MAX_STEPS)
 cgp = TinyCGP(functions_ext, terminals, config, hyperparameters)
 policy = cgp.evolve(problem)
 env.close()
 
-env = gym.make("ALE/Pong-v5", render_mode="human", full_action_space = ale_args.full_action_space)
-problem = PolicySearch(env=env, ideal_=100, minimizing_=False)
+env = gym.make(id=GAME, render_mode="human", full_action_space = ale_args.full_action_space)
+problem = PolicySearch(env=env, ideal_=IDEAL, minimizing_=False)
 problem.evaluate(policy.genome, cgp, num_episodes=1, wait_key=True)
 env.close()

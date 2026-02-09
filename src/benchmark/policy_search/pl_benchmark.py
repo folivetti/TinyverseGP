@@ -39,6 +39,7 @@ class ALEArgs(PLArgs):
     full_action_space: bool
     repeat_action_probability: float
     difficulty: int
+    max_episode_steps: int
 
 
 @dataclass
