@@ -54,10 +54,11 @@ env = gym.make(id=GAME, frameskip=1, difficulty=ale_args.difficulty,
 benchmark = PLBenchmark(env, ale_=True, args=ale_args, flatten_obs_=False)
 wrapped_env = benchmark.wrapped_env
 functions_ext = [ADD, MUL, DIV, INV, ABS, SIN, COS, TAN, ARCSIN, ARCCOS, ARCTAN, LOG, SQR, SQRT,
-                 CEIL, FLOOR, SQR,
+                 CEIL, FLOOR,
                  AND, OR, NAND, NOR, NOTA, NOTB, BUFA, BUFB, XOR, XNOR, SHFTL, SHFTR,
-                 LT, GT, EQ, NEQ, MIN, MAX, IF, IFLEZ, IFGTZ]
-functions_min = [ADD, MUL, DIV, AND, OR, NAND, NOR, NOT, LT, GT, EQ, MIN, MAX, IF]
+                 LT, LTE, GT, GTE, EQ, NEQ, MIN, MAX, IF, IFLEZ, IFGTZ]
+functions_red = [ADD, MUL, DIV, AND, OR, NAND, NOR, NOT, LT, GT, EQ, MIN, MAX, IF]
+functions = functions_ext
 terminals = benchmark.gen_terminals()
 num_inputs = benchmark.len_observation_space()
 num_outputs = benchmark.len_action_space()
@@ -71,7 +72,7 @@ config = CGPConfig(
     silent_algorithm=False,
     silent_evolver=False,
     minimalistic_output=True,
-    num_functions=len(functions_ext),
+    num_functions=len(functions),
     max_arity=3,
     num_inputs=num_inputs,
     num_outputs=num_outputs,
@@ -95,7 +96,7 @@ hyperparameters = CGPHyperparameters(
 
 problem = PolicySearch(env=wrapped_env, ideal_=IDEAL, minimizing_=False, num_episodes_=NUM_EPISODES,
                        max_steps_=MAX_STEPS)
-cgp = TinyCGP(functions_ext, terminals, config, hyperparameters)
+cgp = TinyCGP(functions, terminals, config, hyperparameters)
 policy = cgp.evolve(problem)
 env.close()
 
