@@ -1,7 +1,6 @@
 import warnings
 import numpy
 
-from examples.policy_learning.test_cgp_pl_ale import MAX_STEPS
 from src.benchmark.policy_search.pl_benchmark import ALEArgs
 from src.benchmark.policy_search.plbench.plbench import PLBench, PLRegressor
 from src.gp.functions import *
