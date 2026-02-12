@@ -1,37 +1,18 @@
 from dataclasses import dataclass
 from sklearn.base import RegressorMixin
 from src.benchmark.benchmark import Benchmark
-from minatar import gym
-import gymnasium as gymnasium
+from minatar import gym as gym_ma
+import ale_py
+import gymnasium as gym
 from src.benchmark.policy_search.pl_benchmark import PLBenchmark, ALEArgs, MinAtarArgs
 from src.gp import util
-from src.gp.functions import ADD, SUB, MUL, DIV, AND, OR, NAND, NOR, NOTA, LT, GT, EQ, MIN, MAX, IF
 from src.gp.problem import PolicySearch
+
 
 @dataclass
 class PLBenchConfig:
-    flatten_obs: bool
-    difficulty: int
     ale_args: ALEArgs
     minatar_args: MinAtarArgs
-
-strfun = {
-    "+": ADD,
-    "-": SUB,
-    "*": MUL,
-    "/": DIV,
-    "AND": AND,
-    "OR": OR,
-    "NOTA": NOTA,
-    "NAND": NAND,
-    "NOR": NOR,
-    "LT": LT,
-    "GT": GT,
-    "EQ": EQ,
-    "MIN": MIN,
-    "MAX": MAX,
-    "IF": IF
-}
 
 
 class PLBench(Benchmark):
@@ -45,8 +26,9 @@ class PLBench(Benchmark):
             - https://arxiv.org/abs/2210.02019
     """
 
-    def __init__(self, ale_args_: ALEArgs):
+    def __init__(self, ale_args_: ALEArgs, minatar_args_: MinAtarArgs):
         self.ale_args = ale_args_
+        self.minatar_args = minatar_args_
         gym.register_envs()
         self.generate(args=None)
 
@@ -55,33 +37,43 @@ class PLBench(Benchmark):
                           "atari_5": PLBench.AtariFive(self.ale_args).problems}
 
     class MinAtar:
-        def __init__(self, use_minimal_action_set_=True):
+        def __init__(self, args: MinAtarArgs):
+            use_minimal_action_set = args.use_minimal_action_set
+            max_episodes_steps = args.max_episode_steps
+
+            gym_ma.register_envs()
+
             self.problems = {
                 "asterix": PLBenchmark(
-                    env_=gym.BaseEnv(game="asterix", use_minimal_action_set=use_minimal_action_set_)),
+                    env_=gym.make(id='MinAtar/Asterix-v1', max_episode_steps=max_episodes_steps,
+                                  use_minimal_action_set=use_minimal_action_set, render_mode="rgb_array"),
+                    args_=args),
                 "breakout": PLBenchmark(
-                    env_=gym.BaseEnv(game="breakout", use_minimal_action_set=use_minimal_action_set_)),
+                    env_=gym.make(id='MinAtar/Breakout-v1', max_episode_steps=max_episodes_steps,
+                                  use_minimal_action_set=use_minimal_action_set, render_mode="rgb_array"),
+                    args_=args),
                 "freeway": PLBenchmark(
-                    env_=gym.BaseEnv(game="freeway", use_minimal_action_set=use_minimal_action_set_)),
+                    env_=gym.make(id='MinAtar/Freeway-v1', max_episode_steps=max_episodes_steps,
+                                  use_minimal_action_set=use_minimal_action_set, render_mode="rgb_array"),
+                    args_=args),
                 "seaquest": PLBenchmark(
-                    env_=gym.BaseEnv(game="seaquest", use_minimal_action_set=use_minimal_action_set_)),
+                    env_=gym.make(id='MinAtar/Seaquest-v1', max_episode_steps=max_episodes_steps,
+                                  use_minimal_action_set=use_minimal_action_set, render_mode="rgb_array"),
+                    args_ = args),
                 "space_invaders": PLBenchmark(
-                    env_=gym.BaseEnv(game="space_invaders", use_minimal_action_set=use_minimal_action_set_))
+                    env_=gym.make(id='MinAtar/SpaceInvaders-v1', max_episode_steps=max_episodes_steps,
+                                  use_minimal_action_set=use_minimal_action_set, render_mode="rgb_array"),
+                    args_=args),
             }
 
     class AtariFive:
-        def __init__(self, ale_args: ALEArgs):
+        def __init__(self, args: ALEArgs):
             self.problems = {
-                "battle_zone": PLBenchmark(env_=gymnasium.make("ALE/BattleZone-v5"), ale_=True, args=ale_args,
-                                           flatten_obs_=False),
-                "double_dunk" : PLBenchmark(env_=gymnasium.make("ALE/DoubleDunk-v5"), ale_=True, args=ale_args,
-                                            flatten_obs_=False),
-                "name_this_game": PLBenchmark(env_=gymnasium.make("ALE/NameThisGame-v5"), ale_=True, args=ale_args,
-                                              flatten_obs_=False),
-                "phoenix": PLBenchmark(env_=gymnasium.make("ALE/Phoenix-v5"), ale_=True, args=ale_args,
-                                       flatten_obs_=False),
-                "qbert": PLBenchmark(env_=gymnasium.make("ALE/Qbert-v5"), ale_=True, args=ale_args,
-                                     flatten_obs_=False),
+                "battle_zone": PLBenchmark(env_=gym.make("ALE/BattleZone-v5"), args_=args),
+                "double_dunk": PLBenchmark(env_=gym.make("ALE/DoubleDunk-v5"), args_=args),
+                "name_this_game": PLBenchmark(env_=gym.make("ALE/NameThisGame-v5"), args_=args),
+                "phoenix": PLBenchmark(env_=gym.make("ALE/Phoenix-v5"), args_=args),
+                "qbert": PLBenchmark(env_=gym.make("ALE/Qbert-v5"), args_=args),
             }
 
 
@@ -116,9 +108,11 @@ class PLRegressor(RegressorMixin):
         # Ensure grammar uses uppercase function names matching Function objects
         return {
             "<expr>": ["[" + ', '.join([f"<lexpr>" for _ in range(num_outputs)]) + "]"],
-            "<lexpr>": [f"{f.name.upper()}(<vexpr>, <vexpr>)" for f in functions if f.arity == 2]
+            "<lexpr>": [f"{f.name.upper()}(<vexpr>, <vexpr>, <vexpr>)" for f in functions if f.arity == 3]
+                       + [f"{f.name.upper()}(<vexpr>, <vexpr>)" for f in functions if f.arity == 2]
                        + [f"{f.name.upper()}(<vexpr>)" for f in functions if f.arity == 1],
-            "<vexpr>": [f"{f.name.upper()}(<vexpr>, <vexpr>)" for f in functions if f.arity == 2]
+            "<vexpr>": [f"{f.name.upper()}(<vexpr>, <vexpr>, <vexpr>)" for f in functions if f.arity == 3]
+                       + [f"{f.name.upper()}(<vexpr>, <vexpr>)" for f in functions if f.arity == 2]
                        + [f"{f.name.upper()}(<vexpr>)" for f in functions if f.arity == 1]
                        + ["<var>"],
             "<var>": arguments

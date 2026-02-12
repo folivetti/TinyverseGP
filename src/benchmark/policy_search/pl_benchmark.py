@@ -12,7 +12,6 @@ import gymnasium as gym
 
 from src.benchmark.benchmark import Benchmark
 from gymnasium.wrappers import FlattenObservation
-from ale_py import ALEInterface
 from functools import reduce
 
 from src.gp.tinyverse import Var
@@ -21,6 +20,9 @@ from src.gp.tinyverse import Var
 @dataclass
 class PLArgs:
     max_steps: int
+    max_episode_steps: int
+    difficulty: int
+    flatten_obs: bool
 
 @dataclass
 class ALEArgs(PLArgs):
@@ -38,8 +40,6 @@ class ALEArgs(PLArgs):
     frames_per_step: int
     full_action_space: bool
     repeat_action_probability: float
-    difficulty: int
-    max_episode_steps: int
 
 
 @dataclass
@@ -58,13 +58,13 @@ class PLBenchmark(Benchmark):
     """
 
     def __init__(
-            self, env_: gym.Env, ale_=False, args: PLArgs = None, flatten_obs_=True
+            self, env_: gym.Env, args_: PLArgs
     ):
         self.env = env_
         self.wrapped_env = env_
-        self.ale = ale_
-        self.flatten_obs = flatten_obs_
-        self.generate(args=args)
+        self.ale = True if isinstance(args_, ALEArgs) else False
+        self.flatten_obs = args_.flatten_obs
+        self.generate(args=args_)
 
     def generate(self, args: any):
         """

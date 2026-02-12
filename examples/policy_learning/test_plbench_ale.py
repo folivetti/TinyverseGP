@@ -5,32 +5,53 @@ Evolves a policy for Battle Zone onother games from Atari5:
 """
 
 import warnings
-from math import sqrt, pi
-
 import numpy
 from src.benchmark.policy_search.pl_benchmark import ALEArgs
 from src.benchmark.policy_search.plbench.plbench import PLBench
-from src.gp.functions import ADD, SUB, MUL, DIV, AND, OR, NAND, NOR, NOTA, IF, LT, GT, BUFA, XOR, XNOR, NOT, EQ, MIN, \
-    MAX
+from src.gp.functions import *
 from src.gp.problem import PolicySearch
 from src.gp.tiny_cgp import CGPHyperparameters, CGPConfig, TinyCGP
-from src.gp.tinyverse import Const
+import ale_py
 import gymnasium as gym
 
 if numpy.version.version[0] == "2":
     warnings.warn("Using NumPy version >=2 can lead to overflow.")
 
-MAXTIME = 3600  # 1 hour
-MAXGEN = 1000
-LAMBDA = 4
-IDEAL = 100000
+MAX_TIME = 3600  # 1 hour
+MAX_GENERATIONS = 9999999
+IDEAL = 1000
+GAME = "battle_zone"
 NUM_EPISODES = 10
+MAX_STEPS = 2e8
+LAMBDA = 1
 
-functions = [ADD, SUB, MUL, DIV, AND, OR, NAND, NOR, NOT, LT, GT, EQ, MIN, MAX, IF]
+ale_args = ALEArgs(
+    noop_max=30,
+    frame_skip=1,
+    screen_size=84,
+    grayscale_obs=True,
+    terminal_on_life_loss=False,
+    scale_obs=False,
+    frame_stack=1,
+    repeat_action_probability=0.0,
+    max_steps=MAX_STEPS,
+    full_action_space=False,
+    difficulty=0,
+    frames_per_step=4,
+    max_episode_steps=2500,
+    flatten_obs=True
+)
+
+functions_ext = [ADD, MUL, DIV, INV, ABS, SIN, COS, TAN, ARCSIN, ARCCOS, ARCTAN, LOG, SQR, SQRT,
+                 CEIL, FLOOR,
+                 AND, OR, NAND, NOR, NOTA, NOTB, BUFA, BUFB, XOR, XNOR, SHFTL, SHFTR,
+                 LT, LTE, GT, GTE, EQ, NEQ, MIN, MAX, IF, IFLEZ, IFGTZ]
+functions_red = [ADD, MUL, DIV, AND, OR, NAND, NOR, NOT, LT, GT, EQ, MIN, MAX, IF]
+functions = functions_ext
 
 config = CGPConfig(
     num_jobs=1,
-    max_generations=MAXGEN,
+    max_generations=MAX_GENERATIONS,
     stopping_criteria=IDEAL,
     minimizing_fitness=False,
     ideal_fitness=IDEAL,
@@ -42,7 +63,7 @@ config = CGPConfig(
     num_inputs=None,
     num_outputs=None,
     report_interval=1,
-    max_time=MAXTIME,
+    max_time=MAX_TIME,
     global_seed=42,
     checkpoint_interval=10,
     checkpoint_dir='checkpoint',
@@ -59,19 +80,9 @@ hyperparameters = CGPHyperparameters(
     strict_selection=False,
 )
 
-ale_args = ALEArgs(
-    noop_max=30,
-    frame_skip=1,
-    screen_size=32,
-    grayscale_obs=True,
-    terminal_on_life_loss=True,
-    scale_obs=False,
-    frame_stack=4,
-)
 
-plbench = PLBench(ale_args)
-problems = plbench.benchmark["atari_5"]
-benchmark = problems["battle_zone"]
+atari_five = PLBench.AtariFive(args=ale_args)
+benchmark = atari_five.problems["battle_zone"]
 
 env = benchmark.wrapped_env
 

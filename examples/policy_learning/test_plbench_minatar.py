@@ -1,24 +1,46 @@
-from math import sqrt, pi
+import warnings
+import numpy
+from src.benchmark.policy_search.pl_benchmark import MinAtarArgs
 from src.benchmark.policy_search.plbench.plbench import PLBench, PLRegressor
-from src.gp.functions import ADD, SUB, MUL, DIV, AND, OR, NAND, NOR, NOTA, IF, LT, GT, BUFA, XOR, XNOR
+from src.gp.functions import *
 from src.gp.tiny_cgp import CGPHyperparameters, CGPConfig
 from src.gp.tiny_ge import GEHyperparameters
 from src.gp.tiny_lgp import LGPHyperparameters, LGPConfig
 from src.gp.tiny_tgp import TGPHyperparameters, TGPConfig
-from src.gp.tinyverse import Var, GPConfig, Const
+from src.gp.tinyverse import Var, GPConfig
 
-FUNCTIONS = [ADD, MUL, DIV, AND, OR, NAND, NOR, NOTA, BUFA, XOR, XNOR, IF, LT, GT]
-CONSTANTS = [Const(1), Const(2), Const(sqrt(2)), Const(pi), Const(0.5)]
-MAXTIME = 3600  # 1 hour
-MAXGEN = 10
-POPSIZE = 50
+if numpy.version.version[0] == "2":
+    warnings.warn("Using NumPy version >=2 can lead to overflow.")
 
-plbench = PLBench()
+functions_ext = [ADD, MUL, DIV, INV, ABS, SIN, COS, TAN, ARCSIN, ARCCOS, ARCTAN, LOG, SQR, SQRT,
+                 CEIL, FLOOR,
+                 AND, OR, NAND, NOR, NOTA, NOTB, BUFA, BUFB, XOR, XNOR, SHFTL, SHFTR,
+                 LT, LTE, GT, GTE, EQ, NEQ, MIN, MAX, IF, IFLEZ, IFGTZ]
+functions_red = [ADD, MUL, DIV, AND, OR, NAND, NOR, NOT, LT, GT, EQ, MIN, MAX, IF]
+functions = functions_ext
+
+NUM_GENERATIONS = 10
+MAX_TIME = 3600
+IDEAL = 100
+NUM_EPISODES = 10
+MAX_EPISODE_STEPS = 2500
+MAX_STEPS = 2e8
+POP_SIZE = 50
+
+
+minatar_args = MinAtarArgs(
+    max_steps=MAX_STEPS,
+    max_episode_steps=MAX_EPISODE_STEPS,
+    difficulty=0,
+    flatten_obs=True,
+    use_minimal_action_set=True)
+
+minatar = PLBench.MinAtar(args=minatar_args)
 
 tgp_hyperparams = TGPHyperparameters(
     max_depth=4,
     max_size=50,
-    pop_size=POPSIZE,
+    pop_size=POP_SIZE,
     tournament_size=4,
     mutation_rate=0.2,
     cx_rate=0.9,
@@ -36,7 +58,7 @@ cgp_hyperparams = CGPHyperparameters(
 )
 
 lgp_hyperparams = LGPHyperparameters(
-    mu=POPSIZE,
+    mu=POP_SIZE,
     macro_variation_rate=0.75,
     micro_variation_rate=0.25,
     insertion_rate=0.5,
@@ -54,7 +76,7 @@ lgp_hyperparams = LGPHyperparameters(
 )
 
 ge_hyperparams = GEHyperparameters(
-    pop_size=POPSIZE,
+    pop_size=POP_SIZE,
     genome_length=100,
     codon_size=1000,
     cx_rate=0.9,
@@ -65,7 +87,7 @@ ge_hyperparams = GEHyperparameters(
 
 tgp_config = TGPConfig(
     num_jobs=1,
-    max_generations=MAXGEN,
+    max_generations=NUM_GENERATIONS ,
     stopping_criteria=100,
     minimizing_fitness=False,
     ideal_fitness=100,
@@ -74,7 +96,7 @@ tgp_config = TGPConfig(
     minimalistic_output=True,
     num_outputs=1,
     report_interval=1,
-    max_time=MAXTIME,
+    max_time=MAX_TIME,
     global_seed=42,
     checkpoint_interval=10,
     checkpoint_dir="examples/checkpoint",
@@ -83,19 +105,19 @@ tgp_config = TGPConfig(
 
 cgp_config = CGPConfig(
     num_jobs=1,
-    max_generations=MAXGEN,
+    max_generations=NUM_GENERATIONS ,
     stopping_criteria=100,
     minimizing_fitness=False,
     ideal_fitness=100,
     silent_algorithm=True,
     silent_evolver=True,
     minimalistic_output=True,
-    num_functions=len(FUNCTIONS),
+    num_functions=len(functions),
     max_arity=3,
     num_inputs=1,
     num_outputs=1,
     report_interval=1,
-    max_time=MAXTIME,
+    max_time=MAX_TIME,
     global_seed=42,
     checkpoint_interval=10,
     checkpoint_dir="examples/checkpoint",
@@ -104,7 +126,7 @@ cgp_config = CGPConfig(
 
 lgp_config = LGPConfig(
     num_jobs=1,
-    max_generations=MAXGEN,
+    max_generations=NUM_GENERATIONS,
     stopping_criteria=100,
     minimizing_fitness=False,
     ideal_fitness=100,
@@ -112,7 +134,7 @@ lgp_config = LGPConfig(
     silent_evolver=True,
     minimalistic_output=True,
     report_interval=1,
-    max_time=500,
+    max_time=MAX_TIME,
     num_registers=8,
     global_seed=42,
     checkpoint_interval=1,
@@ -122,7 +144,7 @@ lgp_config = LGPConfig(
 
 ge_config = GPConfig(
     num_jobs=1,
-    max_generations=MAXGEN,
+    max_generations=NUM_GENERATIONS,
     stopping_criteria=100,
     minimizing_fitness=False,
     ideal_fitness=100,
@@ -131,16 +153,14 @@ ge_config = GPConfig(
     minimalistic_output=True,
     num_outputs=1,
     report_interval=1,
-    max_time=60,
+    max_time=MAX_TIME,
     global_seed=42,
     checkpoint_interval=10,
     checkpoint_dir='examples/checkpoint',
     experiment_name='sr_ge'
 )
 
-problems = plbench.benchmark["minatar"]
-
-for name, p in problems.items():
+for name, p in minatar.problems.items():
 
     print(f"Running benchmark: {name}")
 
@@ -165,7 +185,7 @@ for name, p in problems.items():
         representation_="TGP",
         config_=tgp_config,
         hyperparameters_=tgp_hyperparams,
-        functions_=FUNCTIONS,
+        functions_=functions,
         terminals_=terminals
     )
 
@@ -173,7 +193,7 @@ for name, p in problems.items():
         representation_="CGP",
         config_=cgp_config,
         hyperparameters_=cgp_hyperparams,
-        functions_=FUNCTIONS,
+        functions_=functions,
         terminals_=terminals
     )
 
@@ -181,7 +201,7 @@ for name, p in problems.items():
         representation_="LGP",
         config_=lgp_config,
         hyperparameters_=lgp_hyperparams,
-        functions_=FUNCTIONS,
+        functions_=functions,
         terminals_=terminals,
         num_episodes_=10
     )
@@ -190,7 +210,7 @@ for name, p in problems.items():
         representation_="GE",
         config_=ge_config,
         hyperparameters_=ge_hyperparams,
-        functions_=FUNCTIONS,
+        functions_=functions,
         terminals_=terminals,
         num_episodes_=10
     )

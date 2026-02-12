@@ -16,20 +16,23 @@ Observation space: Box(0, 255, (210, 160, 3), uint8)
 """
 from src.benchmark.policy_search.pl_benchmark import PLBenchmark, ALEArgs
 from src.gp.tiny_cgp import *
-import gymnasium as gym
 from src.gp.problem import PolicySearch
 from src.gp.functions import *
+import ale_py
 import warnings
 import numpy
+import gymnasium as gym
 
 if numpy.version.version[0] == "2":
     warnings.warn("Using NumPy version >=2 can lead to overflow.")
+
+gym.envs.registry.keys()
 
 MAX_GENERATIONS = 9999999
 IDEAL = 1000
 GAME = "ALE/Breakout-v5"
 NUM_EPISODES = 10
-MAX_STEPS = 2e20
+MAX_STEPS = 2e8
 
 ale_args = ALEArgs(
     noop_max=30,
@@ -44,14 +47,15 @@ ale_args = ALEArgs(
     full_action_space=False,
     difficulty=0,
     frames_per_step=4,
-    max_episode_steps=2500
+    max_episode_steps=2500,
+    flatten_obs=True
 )
 
 env = gym.make(id=GAME, frameskip=1, difficulty=ale_args.difficulty,
                repeat_action_probability=ale_args.repeat_action_probability,
                full_action_space = ale_args.full_action_space,
                max_episode_steps = ale_args.max_episode_steps, render_mode='rgb_array')
-benchmark = PLBenchmark(env, ale_=True, args=ale_args, flatten_obs_=False)
+benchmark = PLBenchmark(env, args_=ale_args)
 wrapped_env = benchmark.wrapped_env
 functions_ext = [ADD, MUL, DIV, INV, ABS, SIN, COS, TAN, ARCSIN, ARCCOS, ARCTAN, LOG, SQR, SQRT,
                  CEIL, FLOOR,
