@@ -1,12 +1,11 @@
 #!/bin/bash
 #SBATCH --job-name=scenario_lsbench_TGP_hpo
 #SBATCH --output=scenario_lsbench_TGP_hpo_%a.txt
-#SBATCH --mem-per-cpu=2541
+#SBATCH --mem-per-cpu=6000
 #SBATCH --cpus-per-task=1
-#SBATCH --array=1-1
-#SBATCH --time=1-00:00:00
-#SBATCH --account=rwth1938
-#SBATCH --partition=c23ms
+#SBATCH --array=1-90
+#SBATCH --time=7-00:00:00
+#SBATCH --qos=long
 
 # List of datasets
 datasets=('add4' 'mul3' 'alu4' 'count4' 'dec4' 'enc8' 'epar8' 'mcomp4' 'icomp5')
