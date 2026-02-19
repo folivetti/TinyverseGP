@@ -226,7 +226,7 @@ for bm in benchmarks:
         ## Perform HPO via SMAC
         config.silent_algorithm=True
         config.silent_evolver=True
-        trials = 5
+        trials = 200
         
         # try LSBench HPO
         algo = LSRegressor(

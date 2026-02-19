@@ -209,3 +209,4 @@ __marimo__/
 wd/
 checkpoints/
 experiments_scripts/output_data
+experiments_scripts/archive

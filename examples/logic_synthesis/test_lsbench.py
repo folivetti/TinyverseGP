@@ -9,7 +9,7 @@ MAXTIME = 3600  # 1 hour
 MAXGEN = 100
 POPSIZE = 100
 
-lsbench = LSBench(data_dir_='../../data/logic_synthesis')
+lsbench = LSBench(data_dir_='./data/logic_synthesis')
 benchmarks = [lsbench.add4(),
               lsbench.mul3(),
               lsbench.alu4(),

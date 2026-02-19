@@ -71,7 +71,8 @@ class SMAC4BenchInterface:
         y: np.ndarray,
         n_trials: int = 10,
         seed: int = 42,
-        sc_name: str = "default",
+        output_directory: str = "default",
+        restore: bool = False,
         fn_eval_limit: int = -1,
         fn_eval_per_gen: str = "pop_size"
     ) -> GPHyperparameters:
@@ -98,11 +99,11 @@ class SMAC4BenchInterface:
             # adapt function evaluation limit if applicable
             if fn_eval_limit > 0:
                 if fn_eval_per_gen == 'pop_size':
-                    bench.hyperparameters.max_gen = fn_eval_limit // bench.config.pop_size
+                    bench.hyperparameters.max_gen = fn_eval_limit // bench.config.population_size
                 elif fn_eval_per_gen == 'lambda':
                     bench.hyperparameters.max_gen = fn_eval_limit // bench.hyperparameters.lmbda
-                elif fn_eval_per_gen.isdigit():
-                    bench.hyperparameters.max_gen = fn_eval_limit // int(fn_eval_per_gen)
+                elif isinstance(fn_eval_per_gen, int):
+                    bench.hyperparameters.max_gen = fn_eval_limit // fn_eval_per_gen
                 else:
                     raise ValueError(f"Unknown fn_eval_per_gen: {fn_eval_per_gen}")
             # Fit the model
@@ -118,15 +119,11 @@ class SMAC4BenchInterface:
                 del paramspace['max_gen']
         # Initialize the configuration space
         configspace = ConfigurationSpace(paramspace)
-        # Define the SMAC scenario
-        output_dir = f"experiments_scripts/smac3-output_{sc_name}_{seed}"
-        scenario = Scenario(
-            configspace,
-            deterministic=True,
-            n_trials=n_trials,
-            seed=seed,
-            output_directory=output_dir
-        )
+        if not restore:
+            # Define the SMAC scenario
+            scenario = Scenario(configspace, deterministic=True, n_trials=n_trials, seed=seed, output_directory=output_directory)
+        else:
+            scenario = Scenario.load(output_directory)
         # Run SMAC optimization
         smac = HyperparameterOptimizationFacade(scenario, train)
         incumbent = smac.optimize()

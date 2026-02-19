@@ -13,17 +13,15 @@ from src.benchmark.symbolic_regression.srbench import SRBench
 import numpy as np
 from pmlb import fetch_data
 from sklearn.model_selection import train_test_split
-from src.gp.tiny_cgp import CGPConfig, CGPHyperparameters, TinyCGP
-from src.gp.tiny_tgp import TGPHyperparameters, TGPConfig, TinyTGP
-from src.gp.tiny_ge import GPConfig, GEHyperparameters, TinyGE
-from src.gp.tiny_lgp import LGPConfig, LGPHyperparameters, TinyLGP
+from src.gp.tiny_cgp import CGPConfig, CGPHyperparameters
+from src.gp.tiny_tgp import TGPHyperparameters, TGPConfig
+from src.gp.tiny_ge import GPConfig, GEHyperparameters
+from src.gp.tiny_lgp import LGPConfig, LGPHyperparameters
 import argparse
 import csv
-from src.gp.problem import Problem, BlackBox
-from src.gp.loss import mean_squared_error, linear_scaling_mse
 from src.gp.functions import ADD, SUB, MUL, DIV, EXP, LOG, SQR, CUBE
-from src.hpo.hpo import SMAC4BenchInterface, SMACInterface
-from src.gp.tinyverse import Const
+from src.hpo.hpo import SMAC4BenchInterface
+import pathlib
 
 parser = argparse.ArgumentParser(
                                 prog='SRBench Test Scenario',
@@ -245,14 +243,31 @@ for g in group_datasets:
                 
                 # try SRBench HPO
                 algo = SRBench(args.algo, config, hyperparams, functions=functions, terminals=terminals, scaling_=scaling)
-                interface_srbench = SMAC4SRBenchInterface(algo)
-                opt_hyperparameters_srbench = interface_srbench.optimise(
-                    train_X,
-                    train_y,
-                    n_trials=trials,
-                    seed=args.seed,
-                    sc_name=f'{d}_{args.algo}'
-                )
+                interface_srbench = SMAC4BenchInterface(algo)
+                output_directory = f"experiments_scripts/smac3-output_{d}_{args.algo}_{args.seed}"
+                subdirs = [d for d in pathlib.Path(output_directory).resolve().glob(output_directory+"/*") if d.is_dir()]
+                if subdirs:
+                    base_path = subdirs[0]
+                    subdirs = [d for d in base_path.iterdir() if d.is_dir()]
+                    if subdirs:
+                        output_directory = subdirs[0]
+                        opt_hyperparameters_srbench = interface_srbench.optimise(
+                            train_X,
+                            train_y,
+                            n_trials=trials,
+                            seed=args.seed,
+                            output_directory=output_directory,
+                            restore=True,
+                        )
+                else:
+                    opt_hyperparameters_srbench = interface_srbench.optimise(
+                        train_X,
+                        train_y,
+                        n_trials=trials,
+                        seed=args.seed,
+                        output_directory=output_directory,
+                        restore=False,
+                    )
                 
                 algo = SRBench(args.algo, config, opt_hyperparameters_srbench, functions=functions, terminals=terminals, scaling_=scaling)
                 algo.fit(train_X, train_y) 

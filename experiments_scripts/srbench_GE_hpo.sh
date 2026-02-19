@@ -3,7 +3,9 @@
 #SBATCH --output=scenario_srbench_GE_hpo_%a.txt
 #SBATCH --mem-per-cpu=6000
 #SBATCH --cpus-per-task=1
-#SBATCH --array=0-119
+#SBATCH --array=40-49,70-79
+#SBATCH --time=14-00:00:00
+#SBATCH --qos=long
 
 # List of datasets
 datasets=('522_pm10' '678_visualizing_environmental' '192_vineyard' '1028_SWD'
