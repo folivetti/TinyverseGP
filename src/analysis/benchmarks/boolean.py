@@ -27,6 +27,12 @@ class BooleanFunction(Problem):
                     training_set[r][c] = 1
         return rows, cols, training_set
 
+    def random_training_subset(self, n) -> np.array:
+        rand_indices = np.random.choice(self.training_set.shape[0],
+                         size=n,
+                         replace=False)
+        return self.training_set[rand_indices, :]
+
     def init_training_set(self):
         rows, cols, training_set = self.init_variables()
 
@@ -45,3 +51,6 @@ class Conjunction(BooleanFunction):
 class ExclusiveDisjunction(BooleanFunction):
     def __init__(self, n):
         super().__init__(n_in=n, n_out=1, operator=lambda x, y: x ^ y)
+
+and_ = Conjunction(n=4)
+print(and_.random_training_subset(6))
