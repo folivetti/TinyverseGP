@@ -59,7 +59,7 @@ class PLBench(Benchmark):
                 "seaquest": PLBenchmark(
                     env_=gym.make(id='MinAtar/Seaquest-v1', max_episode_steps=max_episodes_steps,
                                   use_minimal_action_set=use_minimal_action_set, render_mode="rgb_array"),
-                    args_ = args),
+                    args_=args),
                 "space_invaders": PLBenchmark(
                     env_=gym.make(id='MinAtar/SpaceInvaders-v1', max_episode_steps=max_episodes_steps,
                                   use_minimal_action_set=use_minimal_action_set, render_mode="rgb_array"),
@@ -107,13 +107,16 @@ class PLRegressor(RegressorMixin):
     def _make_default_grammar(self, functions, arguments, num_outputs):
         # Ensure grammar uses uppercase function names matching Function objects
         return {
-            "<expr>": ["[" + ', '.join([f"<lexpr>" for _ in range(num_outputs)]) + "]"],
-            "<lexpr>": [f"{f.name.upper()}(<vexpr>, <vexpr>, <vexpr>)" for f in functions if f.arity == 3]
-                       + [f"{f.name.upper()}(<vexpr>, <vexpr>)" for f in functions if f.arity == 2]
-                       + [f"{f.name.upper()}(<vexpr>)" for f in functions if f.arity == 1],
-            "<vexpr>": [f"{f.name.upper()}(<vexpr>, <vexpr>, <vexpr>)" for f in functions if f.arity == 3]
-                       + [f"{f.name.upper()}(<vexpr>, <vexpr>)" for f in functions if f.arity == 2]
-                       + [f"{f.name.upper()}(<vexpr>)" for f in functions if f.arity == 1]
+            "<start>": ["<expr_list>"],
+
+            "<expr_list>": [
+            "<expr>",
+            "<expr>,<expr_list>"
+            ],
+
+            "<expr>": [f"{f.name.upper()}(<expr>, <expr>, <expr>)" for f in functions if f.arity == 3]
+                       + [f"{f.name.upper()}(<expr>, <expr>)" for f in functions if f.arity == 2]
+                       + [f"{f.name.upper()}(<expr>)" for f in functions if f.arity == 1]
                        + ["<var>"],
             "<var>": arguments
         }
@@ -132,12 +135,14 @@ class PLRegressor(RegressorMixin):
         self.program = self.model.evolve(self.problem)
         self.fitted_ = True
 
+
     def is_valid(self):
         if not self.fitted_:
             raise ValueError("Model not fitted")
         if not self.representation == "GE":
             raise ValueError("Method only works for GE")
         return self.model.is_valid(self.program.genome)
+
 
     def evaluate(self, num_episodes=10):
         if not self.fitted_:

@@ -186,7 +186,8 @@ for name, p in minatar.problems.items():
         config_=tgp_config,
         hyperparameters_=tgp_hyperparams,
         functions_=functions,
-        terminals_=terminals
+        terminals_=terminals,
+        num_episodes_=NUM_EPISODES
     )
 
     cgp = PLRegressor(
@@ -194,7 +195,8 @@ for name, p in minatar.problems.items():
         config_=cgp_config,
         hyperparameters_=cgp_hyperparams,
         functions_=functions,
-        terminals_=terminals
+        terminals_=terminals,
+        num_episodes_=NUM_EPISODES
     )
 
     lgp = PLRegressor(
@@ -203,7 +205,7 @@ for name, p in minatar.problems.items():
         hyperparameters_=lgp_hyperparams,
         functions_=functions,
         terminals_=terminals,
-        num_episodes_=10
+        num_episodes_=NUM_EPISODES
     )
 
     ge = PLRegressor(
@@ -212,7 +214,7 @@ for name, p in minatar.problems.items():
         hyperparameters_=ge_hyperparams,
         functions_=functions,
         terminals_=terminals,
-        num_episodes_=10
+        num_episodes_=NUM_EPISODES
     )
 
     tgp.fit(env=p.env)
