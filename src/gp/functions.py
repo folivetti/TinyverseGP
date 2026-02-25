@@ -22,9 +22,11 @@ def b2f(input: bool) -> float:
 def p2i(x):
     if isinstance(x, int):
         return x
-    if np.isinf(x) or np.isneginf(x):
+    if not isinstance(x, float):
+        x = int(x)
+    if np.isinf(x):
         x = np.nan
-    return np.int64(np.nan_to_num(x)) if np.isnan(x) else np.int64(x)
+    return np.int64(np.nan_to_num(x)) if np.isnan(x) else x
 
 def pdiv(x, y, eps=1e-8):
     return np.divide(x, y + (np.abs(y) < eps) * eps)
