@@ -130,7 +130,11 @@ class SRBench(RegressorMixin):
     def predict(self, X):
         if not self.fitted_:
             raise ValueError("Model not fitted")
-        return np.array([self.model.predict(self.program.genome, x)[0] for x in X])
+        yhat = np.array([self.model.predict(self.program.genome, x)[0] for x in X])
+        # replace NaNs and Infs to calculate score
+        yhat[np.isnan(yhat)] = 1e50
+        yhat[np.isinf(yhat)] = 1e50
+        return yhat
 
     def get_model(self, X=None):
         if not self.fitted_:
