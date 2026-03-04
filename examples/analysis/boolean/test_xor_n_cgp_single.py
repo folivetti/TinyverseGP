@@ -1,8 +1,5 @@
-import sys
-
-from src.analysis.benchmarks.boolean import Conjunction, NegVar, ExclusiveDisjunction
+from src.analysis.benchmarks.boolean import NegVar, ExclusiveDisjunction
 from src.analysis.models.simple_cgp import SimpleCGP, SimpleCGPConfig, MutationType
-from src.analysis.problems import MaxPlusMul
 from src.gp.tiny_cgp import *
 from src.gp.functions import AND, XOR
 
@@ -12,8 +9,13 @@ N = 5
 MAX_ARITY = 2
 NUM_GENES = (MAX_ARITY + 1) * N  + 1
 MUTATION_RATE = 1 / NUM_GENES
+USE_NEGATED_VARIABLES = True
+
 functions = [XOR]
 terminals = [Var(i) for i in range(N)]
+
+if USE_NEGATED_VARIABLES:
+    terminals += [NegVar(i) for i in range(N)]
 
 config = SimpleCGPConfig(
     num_jobs=1,
@@ -48,9 +50,12 @@ hyperparameters = CGPHyperparameters(
 )
 
 
-problem = ExclusiveDisjunction(n = N, use_complete_training_set=True)
+problem = ExclusiveDisjunction(n = N, use_complete_training_set=False)
 config.ideal_fitness = problem.ideal
 config.global_seed = int(time.time_ns())
 cgp = SimpleCGP(functions, terminals, config, hyperparameters)
-cgp.evolve(problem)
+program = cgp.evolve(problem)
+
 print(f"{N},simple_cgp,{cgp.generation_number}")
+print(f"Generalization error: {problem.calc_generalization_error(program.genome, cgp)}")
+

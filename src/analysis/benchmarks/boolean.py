@@ -89,18 +89,22 @@ class BooleanFunction(BlackBox):
 
         return TrainingSet(data=training_set, cols=cols, rows=rows)
 
-    def random_training_subset(self, s) -> np.array:
+    def sample_training_subset(self, s) -> np.array:
         rand_indices = np.random.choice(self.training_set.rows,
                                         size=s,
                                         replace=False)
         return self.training_set.data[rand_indices, :]
 
-    def get_training_set(self) -> tuple:
-        if not self.use_complete_training_set:
-            training_subset = self.random_training_subset(self.training_set_size)
-            return training_subset[:, : self.training_set.cols - 1], training_subset[:, self.training_set.cols - 1]
+    def calc_generalization_error(self, program, model) -> float:
+        self.observations, self.actual = self.get_training_set(complete=True)
+        return self.evaluate(program, model)
+
+    def get_training_set(self, complete = None) -> tuple:
+        if complete or self.use_complete_training_set:
+            return self.training_set.get_observations(), self.training_set.get_actual()
         else:
-            return self.observations, self.actual
+            training_subset = self.sample_training_subset(self.training_set_size)
+            return training_subset[:, : self.training_set.cols - 1], training_subset[:, self.training_set.cols - 1]
 
     @override
     def cost(self, predictions: list) -> float:

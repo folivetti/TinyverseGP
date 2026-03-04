@@ -1,5 +1,3 @@
-import sys
-
 from src.analysis.benchmarks.boolean import Conjunction, NegVar
 from src.analysis.models.simple_tgp import SimpleTGPHyperparameters, SimpleTGP
 from src.gp.tiny_cgp import *
@@ -8,9 +6,14 @@ from src.gp.tiny_tgp import TGPConfig
 
 MAX_GENERATIONS = 1000000
 MAX_TIME = 9999999
-N = 5
+N = 15
+USE_NEGATED_VARIABLES = True
+
 functions = [AND]
-terminals = [Var(i) for i in range(N)] + [NegVar(i) for i in range(N)]
+terminals = [Var(i) for i in range(N)]
+
+if USE_NEGATED_VARIABLES:
+    terminals += [NegVar(i) for i in range(N)]
 
 config = TGPConfig(
     num_jobs=1,
@@ -22,12 +25,12 @@ config = TGPConfig(
     silent_evolver=True,
     minimalistic_output=True,
     num_outputs=1,
-    report_interval=1000,
+    report_interval=1,
     max_time=MAX_TIME,
     global_seed=None,
     checkpoint_interval=9999999,
     checkpoint_dir='../checkpoint',
-    experiment_name='max_tgp'
+    experiment_name='and_cgp'
 )
 
 hyperparameters = SimpleTGPHyperparameters(
@@ -45,10 +48,11 @@ else:
     appendix = "single"
 
 
-problem = Conjunction(n = N, use_complete_training_set=True)
+problem = Conjunction(n = N, use_complete_training_set=False)
 config.ideal_fitness = problem.ideal
 config.global_seed = int(time.time_ns())
 tgp = SimpleTGP(functions, terminals, config, hyperparameters)
-tgp.evolve(problem)
+program = tgp.evolve(problem)
 
 print(f"{N},simple_tgp_{appendix},{tgp.generation_number}")
+print(f"Generalization error: {problem.calc_generalization_error(program.genome, tgp)}")
