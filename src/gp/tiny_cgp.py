@@ -40,8 +40,8 @@ class CGPHyperparameters(Hyperparameters):
 
     def __post_init__(self):
         Hyperparameters.__post_init__(self)
-        self.space["mu"] = (1, 4)
-        self.space["lmbda"] = (1, 1024)
+        self.space["mu"] = (1, 128)
+        self.space["lmbda"] = (1, 4096)
         self.space["num_function_nodes"] = (10, 10000)
         self.space["levels_back"] = (1, 10000)
         self.space["strict_selection"] = [True, False]
