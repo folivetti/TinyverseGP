@@ -99,7 +99,7 @@ class SMAC4BenchInterface:
             # adapt function evaluation limit if applicable
             if fn_eval_limit > 0:
                 if fn_eval_per_gen == 'pop_size':
-                    bench.hyperparameters.max_gen = fn_eval_limit // bench.config.population_size
+                    bench.hyperparameters.max_gen = fn_eval_limit // bench.config.pop_size
                 elif fn_eval_per_gen == 'lambda':
                     bench.hyperparameters.max_gen = fn_eval_limit // bench.hyperparameters.lmbda
                 elif isinstance(fn_eval_per_gen, int):

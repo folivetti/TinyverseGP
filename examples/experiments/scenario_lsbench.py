@@ -219,7 +219,7 @@ for bm in benchmarks:
     )
 
     algo.fit(X=tt.inputs, y=tt.outputs)
-    default_score = algo.score(tt.inputs, tt.outputs)
+    default_score = algo.model.best_individual.fitness #algo.score(tt.inputs, tt.outputs)
     print(f"{args.algo} default score: {default_score}")
     
     if args.optimise:
@@ -237,15 +237,34 @@ for bm in benchmarks:
             terminals_=terminals
         )
         interface_lsbench = SMAC4BenchInterface(algo)
-        opt_hyperparameters_lsbench = interface_lsbench.optimise(
-            tt.inputs,
-            tt.outputs,
-            n_trials=trials,
-            seed=args.seed,
-            sc_name=f'{args.dataset}_{args.algo}',
-            fn_eval_limit=args.maxevals,
-            fn_eval_per_gen=('lambda' if args.algo == 'CGP' else (2 if args.algo == 'LGP' else 'pop_size')),
-        )
+        output_directory = f"experiments_scripts/smac3-output_{args.dataset}_{args.algo}_{args.seed}"
+        subdirs = [d for d in pathlib.Path(output_directory).resolve().glob(output_directory+"/*") if d.is_dir()]
+        if subdirs:
+            base_path = subdirs[0]
+            subdirs = [d for d in base_path.iterdir() if d.is_dir()]
+            if subdirs:
+                output_directory = subdirs[0]
+                opt_hyperparameters_lsbench = interface_lsbench.optimise(
+                    tt.inputs,
+                    tt.outputs,
+                    n_trials=trials,
+                    seed=args.seed,
+                    output_directory=output_directory,
+                    restore=True,
+                    fn_eval_limit=args.maxevals,
+                    fn_eval_per_gen=("lambda" if args.algo == "CGP" else (2 if args.algo == "LGP" else "pop_size")),
+                )
+        else:
+            opt_hyperparameters_lsbench = interface_lsbench.optimise(
+                tt.inputs,
+                tt.outputs,
+                n_trials=trials,
+                seed=args.seed,
+                output_directory=output_directory,
+                restore=False,
+                fn_eval_limit=args.maxevals,
+                fn_eval_per_gen=("lambda" if args.algo == "CGP" else (2 if args.algo == "LGP" else "pop_size")),
+            )
         
         # rerun with optimised hyperparameters
         algo = LSRegressor(
@@ -256,7 +275,7 @@ for bm in benchmarks:
             terminals_=terminals
         )
         algo.fit(X=tt.inputs, y=tt.outputs)
-        optimised_score = algo.score(tt.inputs, tt.outputs)
+        optimised_score = algo.model.best_individual.fitness
         with open(csv_filename, mode="w+", newline="") as csv_file:
             fieldnames = ["dataset_name", "algo_name", "nb_trials", "def_parameters", "opt_parameters", "default", "optimised", "seed"]
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
