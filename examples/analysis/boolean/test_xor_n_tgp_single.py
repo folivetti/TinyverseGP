@@ -1,3 +1,5 @@
+import sys
+
 from src.analysis.benchmarks.boolean import NegVar, ExclusiveDisjunction
 from src.analysis.models.simple_tgp import SimpleTGPHyperparameters, SimpleTGP
 from src.gp.tiny_cgp import *
@@ -6,8 +8,9 @@ from src.gp.tiny_tgp import TGPConfig
 
 MAX_GENERATIONS = 1000000
 MAX_TIME = 9999999
-N = 5
-USE_NEGATED_VARIABLES = True
+N = int(sys.argv[1])
+USE_NEGATED_VARIABLES = False
+USE_COMPLETE_TRAINING_SET = True
 
 functions = [XOR]
 terminals = [Var(i) for i in range(N)]
@@ -21,7 +24,7 @@ config = TGPConfig(
     stopping_criteria=0,
     minimizing_fitness=True,
     ideal_fitness=0,
-    silent_algorithm=False,
+    silent_algorithm=True,
     silent_evolver=True,
     minimalistic_output=True,
     num_outputs=1,
@@ -48,11 +51,10 @@ else:
     appendix = "single"
 
 
-problem = ExclusiveDisjunction(n = N, use_complete_training_set=False)
+problem = ExclusiveDisjunction(n = N, use_complete_training_set=USE_COMPLETE_TRAINING_SET)
 config.ideal_fitness = problem.ideal
 config.global_seed = int(time.time_ns())
 tgp = SimpleTGP(functions, terminals, config, hyperparameters)
 program = tgp.evolve(problem)
 
-print(f"{N},simple_tgp_{appendix},{tgp.generation_number}")
-print(f"Generalization error: {problem.calc_generalization_error(program.genome, tgp)}")
+print(f"{N},simple_tgp,{tgp.generation_number}, {problem.calc_generalization_error(program.genome, tgp)}")

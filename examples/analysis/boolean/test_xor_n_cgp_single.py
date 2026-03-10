@@ -1,3 +1,5 @@
+import sys
+
 from src.analysis.benchmarks.boolean import NegVar, ExclusiveDisjunction
 from src.analysis.models.simple_cgp import SimpleCGP, SimpleCGPConfig, MutationType
 from src.gp.tiny_cgp import *
@@ -5,11 +7,12 @@ from src.gp.functions import AND, XOR
 
 MAX_GENERATIONS = 1000000
 MAX_TIME = 9999999
-N = 5
+N = int(sys.argv[1])
 MAX_ARITY = 2
 NUM_GENES = (MAX_ARITY + 1) * N  + 1
 MUTATION_RATE = 1 / NUM_GENES
-USE_NEGATED_VARIABLES = True
+USE_NEGATED_VARIABLES = False
+USE_COMPLETE_TRAINING_SET = True
 
 functions = [XOR]
 terminals = [Var(i) for i in range(N)]
@@ -23,7 +26,7 @@ config = SimpleCGPConfig(
     stopping_criteria=None,
     minimizing_fitness=True,
     ideal_fitness=None,
-    silent_algorithm=False,
+    silent_algorithm=True,
     silent_evolver=True,
     minimalistic_output=True,
     num_functions=len(functions),
@@ -32,7 +35,7 @@ config = SimpleCGPConfig(
     num_outputs=1,
     report_interval=1,
     max_time=MAX_TIME,
-    mutation_type=MutationType.PROB,
+    mutation_type=MutationType.SAM,
     global_seed=None,
     checkpoint_interval=9999999,
     checkpoint_dir='../checkpoint',
@@ -50,12 +53,10 @@ hyperparameters = CGPHyperparameters(
 )
 
 
-problem = ExclusiveDisjunction(n = N, use_complete_training_set=False)
+problem = ExclusiveDisjunction(n = N, use_complete_training_set=USE_COMPLETE_TRAINING_SET)
 config.ideal_fitness = problem.ideal
 config.global_seed = int(time.time_ns())
 cgp = SimpleCGP(functions, terminals, config, hyperparameters)
 program = cgp.evolve(problem)
 
-print(f"{N},simple_cgp,{cgp.generation_number}")
-print(f"Generalization error: {problem.calc_generalization_error(program.genome, cgp)}")
-
+print(f"{N},simple_cgp,{cgp.generation_number}, {problem.calc_generalization_error(program.genome, cgp)}")
