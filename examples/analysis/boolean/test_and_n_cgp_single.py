@@ -3,7 +3,7 @@ import sys
 from src.analysis.benchmarks.boolean import Conjunction, NegVar
 from src.analysis.models.simple_cgp import SimpleCGP, SimpleCGPConfig, MutationType
 from src.gp.tiny_cgp import *
-from src.gp.functions import AND
+from src.gp.functions import AND, NOTA
 
 MAX_GENERATIONS = 1000000
 MAX_TIME = 9999999
@@ -11,14 +11,16 @@ N = int(sys.argv[1])
 MAX_ARITY = 2
 NUM_GENES = (MAX_ARITY + 1) * N + 1
 MUTATION_RATE = 1 / NUM_GENES
-USE_NEGATED_VARIABLES = False
+NEGATED_VARIABLES = True
 USE_COMPLETE_TRAINING_SET = True
 
-functions = [AND]
-terminals = [Var(i) for i in range(N)]
+if NEGATED_VARIABLES:
+    N_TERM = 2 * N
+else:
+    N_TERM = N
 
-if USE_NEGATED_VARIABLES:
-    terminals += [NegVar(i) for i in range(N)]
+functions = [AND]
+terminals = [Var(i) for i in range(N_TERM)]
 
 config = SimpleCGPConfig(
     num_jobs=1,
@@ -26,7 +28,7 @@ config = SimpleCGPConfig(
     stopping_criteria=0,
     minimizing_fitness=True,
     ideal_fitness=0,
-    silent_algorithm=True,
+    silent_algorithm=False,
     silent_evolver=True,
     minimalistic_output=True,
     num_functions=len(functions),
@@ -57,7 +59,7 @@ if config.mutation_type == MutationType.SAM:
 else:
     appendix = "prob"
 
-problem = Conjunction(n=N, use_complete_training_set=USE_COMPLETE_TRAINING_SET)
+problem = Conjunction(n=N, use_complete_training_set=USE_COMPLETE_TRAINING_SET, negated_vars = NEGATED_VARIABLES)
 config.ideal_fitness = problem.ideal
 config.global_seed = int(time.time_ns())
 cgp = SimpleCGP(functions, terminals, config, hyperparameters)

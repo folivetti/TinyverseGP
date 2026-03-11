@@ -11,14 +11,17 @@ N = int(sys.argv[1])
 MAX_ARITY = 2
 NUM_GENES = (MAX_ARITY + 1) * N  + 1
 MUTATION_RATE = 1 / NUM_GENES
-USE_NEGATED_VARIABLES = False
+NEGATED_VARIABLES = False
 USE_COMPLETE_TRAINING_SET = True
 
-functions = [XOR]
-terminals = [Var(i) for i in range(N)]
+if NEGATED_VARIABLES:
+    N_TERM = 2 * N
+else:
+    N_TERM = N
 
-if USE_NEGATED_VARIABLES:
-    terminals += [NegVar(i) for i in range(N)]
+
+functions = [XOR]
+terminals = [Var(i) for i in range(N_TERM)]
 
 config = SimpleCGPConfig(
     num_jobs=1,
@@ -57,7 +60,7 @@ if config.mutation_type == MutationType.SAM:
 else:
     appendix = "prob"
 
-problem = ExclusiveDisjunction(n = N, use_complete_training_set=USE_COMPLETE_TRAINING_SET)
+problem = ExclusiveDisjunction(n = N, use_complete_training_set=USE_COMPLETE_TRAINING_SET, negated_vars=NEGATED_VARIABLES)
 config.ideal_fitness = problem.ideal
 config.global_seed = int(time.time_ns())
 cgp = SimpleCGP(functions, terminals, config, hyperparameters)

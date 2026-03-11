@@ -3,20 +3,22 @@ import sys
 from src.analysis.benchmarks.boolean import Conjunction, NegVar
 from src.analysis.models.simple_tgp import SimpleTGPHyperparameters, SimpleTGP
 from src.gp.tiny_cgp import *
-from src.gp.functions import AND
+from src.gp.functions import AND, NOTA
 from src.gp.tiny_tgp import TGPConfig
 
 MAX_GENERATIONS = 1000000
 MAX_TIME = 9999999
 N = int(sys.argv[1])
-USE_NEGATED_VARIABLES = False
+NEGATED_VARIABLES = True
 USE_COMPLETE_TRAINING_SET = True
 
-functions = [AND]
-terminals = [Var(i) for i in range(N)]
+if NEGATED_VARIABLES:
+    N_TERM = 2 * N
+else:
+    N_TERM = N
 
-if USE_NEGATED_VARIABLES:
-    terminals += [NegVar(i) for i in range(N)]
+functions = [AND]
+terminals = [Var(i) for i in range(N_TERM)]
 
 config = TGPConfig(
     num_jobs=1,
@@ -50,8 +52,7 @@ if hyperparameters.multi:
 else:
     appendix = "single"
 
-
-problem = Conjunction(n = N, use_complete_training_set=USE_COMPLETE_TRAINING_SET)
+problem = Conjunction(n = N, use_complete_training_set=USE_COMPLETE_TRAINING_SET, negated_vars=NEGATED_VARIABLES)
 config.ideal_fitness = problem.ideal
 config.global_seed = int(time.time_ns())
 tgp = SimpleTGP(functions, terminals, config, hyperparameters)
