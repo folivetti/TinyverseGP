@@ -44,9 +44,9 @@ class BooleanFunction(BlackBox):
     k: float
 
     def __init__(self, n_in: int, n_out: int, operator: callable, use_complete_training_set: bool = True,
-                 k: float = 1.5):
+                 negated_vars = False, k: float = 1.5):
 
-        training_set = BooleanFunction.init_training_set(n_in, n_out, operator)
+        training_set = BooleanFunction.init_training_set(n_in, n_out, operator, negated_vars)
         super().__init__(actual_=training_set.get_actual(),
                          observations_=training_set.get_observations(),
                          loss_=hamming_distance_bitwise,
@@ -57,6 +57,7 @@ class BooleanFunction(BlackBox):
         self.operator = operator
         self.training_set = training_set
         self.use_complete_training_set = use_complete_training_set
+        self.negated_vars = negated_vars
         self.k = k
 
         if use_complete_training_set:
@@ -65,25 +66,34 @@ class BooleanFunction(BlackBox):
             self.training_set_size = ceil(pow(self.n_in, self.k))
 
     @staticmethod
-    def init_variables(n_in, n_out) -> np.array:
+    def init_variables(n_in, n_out, negated_vars = False) -> np.array:
         rows = int(pow(2, n_in))
-        cols = n_in + 1
-        vars = cols - n_out
-        training_set = np.zeros(shape=(rows, cols), dtype=np.uint8)
+        if not negated_vars:
+            cols = n_in + 1
+        else:
+            cols = (2 * n_in) + 1
+        n_vars = n_in
+        training_set = np.zeros(shape=(rows, cols), dtype=np.int8)
 
-        for c in range(vars):
-            d = pow(2, vars - c)
+        for c in range(n_vars):
+            d = pow(2, n_vars - c)
             for r in range(rows):
                 if r % d >= d / 2:
                     training_set[r][c] = 1
+
+        if negated_vars:
+            for r in range(rows):
+                for c in range(n_vars):
+                    training_set[r][n_vars + c] = 1 if training_set[r][c] == 0 else 0
+
         return rows, cols, training_set
 
     @staticmethod
-    def init_training_set(n_in, n_out, operator) -> TrainingSet:
-        rows, cols, training_set = BooleanFunction.init_variables(n_in, n_out)
+    def init_training_set(n_in, n_out, operator, negated_vars = False) -> TrainingSet:
+        rows, cols, training_set = BooleanFunction.init_variables(n_in, n_out, negated_vars)
 
         for row in training_set:
-            args = row[0:cols - n_out]
+            args = row[0:n_in]
             res = reduce(operator, args)
             row[cols - 1] = res
 
@@ -113,12 +123,14 @@ class BooleanFunction(BlackBox):
 
 
 class Conjunction(BooleanFunction):
-    def __init__(self, n, use_complete_training_set=True):
+    def __init__(self, n, use_complete_training_set=True, negated_vars = False):
         super().__init__(n_in=n, n_out=1, operator=lambda x, y: x & y,
-                         use_complete_training_set=use_complete_training_set)
+                         use_complete_training_set=use_complete_training_set,
+                         negated_vars=negated_vars)
 
 
 class ExclusiveDisjunction(BooleanFunction):
-    def __init__(self, n, use_complete_training_set=True):
+    def __init__(self, n, use_complete_training_set=True, negated_vars = False):
         super().__init__(n_in=n, n_out=1, operator=lambda x, y: x ^ y,
-                         use_complete_training_set=use_complete_training_set)
+                         use_complete_training_set=use_complete_training_set,
+                         negated_vars=negated_vars)
