@@ -52,6 +52,10 @@ hyperparameters = CGPHyperparameters(
     strict_selection=False
 )
 
+if config.mutation_type == MutationType.SAM:
+    appendix = "sam"
+else:
+    appendix = "prob"
 
 problem = ExclusiveDisjunction(n = N, use_complete_training_set=USE_COMPLETE_TRAINING_SET)
 config.ideal_fitness = problem.ideal
@@ -59,4 +63,4 @@ config.global_seed = int(time.time_ns())
 cgp = SimpleCGP(functions, terminals, config, hyperparameters)
 program = cgp.evolve(problem)
 
-print(f"{N},simple_cgp,{cgp.generation_number}, {problem.calc_generalization_error(program.genome, cgp)}")
+print(f"{N},simple_cgp_{appendix},{cgp.generation_number}, {problem.calc_generalization_error(program.genome, cgp)}")
