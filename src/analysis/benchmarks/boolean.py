@@ -4,18 +4,7 @@ from typing_extensions import override
 from src.gp.loss import hamming_distance_bitwise
 from src.gp.problem import BlackBox
 from functools import reduce
-from src.gp.tinyverse import Var
 import numpy as np
-
-
-class NegVar(Var):
-
-    def __init__(self, index: int = None, name_: str = None):
-        super().__init__(index, name_="NegVar")
-
-    @override
-    def __call__(self, *args, **kwargs):
-        return ~(super().__call__())
 
 
 @dataclass

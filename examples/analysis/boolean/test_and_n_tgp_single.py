@@ -1,6 +1,5 @@
 import sys
-
-from src.analysis.benchmarks.boolean import Conjunction, NegVar
+from src.analysis.benchmarks.boolean import Conjunction
 from src.analysis.models.simple_tgp import SimpleTGPHyperparameters, SimpleTGP
 from src.gp.tiny_cgp import *
 from src.gp.functions import AND, NOTA

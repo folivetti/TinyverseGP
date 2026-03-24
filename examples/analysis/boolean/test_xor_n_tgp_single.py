@@ -1,6 +1,6 @@
 import sys
 
-from src.analysis.benchmarks.boolean import NegVar, ExclusiveDisjunction
+from src.analysis.benchmarks.boolean import ExclusiveDisjunction
 from src.analysis.models.simple_tgp import SimpleTGPHyperparameters, SimpleTGP
 from src.gp.tiny_cgp import *
 from src.gp.functions import XOR

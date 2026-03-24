@@ -1,6 +1,6 @@
 import sys
 
-from src.analysis.benchmarks.boolean import NegVar, ExclusiveDisjunction
+from src.analysis.benchmarks.boolean import ExclusiveDisjunction
 from src.analysis.models.simple_cgp import SimpleCGP, SimpleCGPConfig, MutationType
 from src.gp.tiny_cgp import *
 from src.gp.functions import AND, XOR
@@ -11,6 +11,8 @@ N = int(sys.argv[1])
 MAX_ARITY = 2
 NUM_GENES = (MAX_ARITY + 1) * N  + 1
 MUTATION_RATE = 1 / NUM_GENES
+NUM_FUNCTION_NODES = N + 1
+LEVELS_BACK = NUM_FUNCTION_NODES
 NEGATED_VARIABLES = False
 USE_COMPLETE_TRAINING_SET = True
 
