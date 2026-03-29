@@ -8,8 +8,9 @@ from src.gp.tiny_tgp import TGPConfig
 MAX_GENERATIONS = 1000000
 MAX_TIME = 9999999
 N = int(sys.argv[1])
+K = 2
 NEGATED_VARIABLES = True
-USE_COMPLETE_TRAINING_SET = True
+USE_COMPLETE_TRAINING_SET = False
 
 if NEGATED_VARIABLES:
     N_TERM = 2 * N
@@ -42,7 +43,7 @@ hyperparameters = SimpleTGPHyperparameters(
     k=1,
     strict_selection=False,
     check_size=False,
-    max_depth=N*N,
+    max_depth=N * N,
     multi=True
 )
 
@@ -51,7 +52,7 @@ if hyperparameters.multi:
 else:
     appendix = "single"
 
-problem = Conjunction(n = N, use_complete_training_set=USE_COMPLETE_TRAINING_SET, negated_vars=NEGATED_VARIABLES)
+problem = Conjunction(n=N, use_complete_training_set=USE_COMPLETE_TRAINING_SET, negated_vars=NEGATED_VARIABLES, k=K)
 config.ideal_fitness = problem.ideal
 config.global_seed = int(time.time_ns())
 tgp = SimpleTGP(functions, terminals, config, hyperparameters)

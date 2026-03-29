@@ -7,13 +7,14 @@ from src.gp.functions import AND, NOTA
 MAX_GENERATIONS = 1000000
 MAX_TIME = 9999999
 N = int(sys.argv[1])
+K = 2
 MAX_ARITY = 2
 NUM_GENES = (MAX_ARITY + 1) * N + 1
 NUM_FUNCTION_NODES = N + 1
 LEVELS_BACK = NUM_FUNCTION_NODES
 MUTATION_RATE = 1 / NUM_GENES
 NEGATED_VARIABLES = False
-USE_COMPLETE_TRAINING_SET = True
+USE_COMPLETE_TRAINING_SET = False
 
 if NEGATED_VARIABLES:
     N_TERM = 2 * N
@@ -49,7 +50,7 @@ hyperparameters = CGPHyperparameters(
     mu=1,
     lmbda=1,
     population_size=2,
-    num_function_nodes=NUM_FUNCTION_NODES ,
+    num_function_nodes=NUM_FUNCTION_NODES,
     levels_back=LEVELS_BACK,
     mutation_rate=MUTATION_RATE,
     strict_selection=False
@@ -60,7 +61,7 @@ if config.mutation_type == MutationType.SAM:
 else:
     appendix = "prob"
 
-problem = Conjunction(n=N, use_complete_training_set=USE_COMPLETE_TRAINING_SET, negated_vars = NEGATED_VARIABLES)
+problem = Conjunction(n=N, use_complete_training_set=USE_COMPLETE_TRAINING_SET, negated_vars=NEGATED_VARIABLES, k=K)
 config.ideal_fitness = problem.ideal
 config.global_seed = int(time.time_ns())
 cgp = SimpleCGP(functions, terminals, config, hyperparameters)

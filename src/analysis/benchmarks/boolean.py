@@ -33,7 +33,7 @@ class BooleanFunction(BlackBox):
     k: float
 
     def __init__(self, n_in: int, n_out: int, operator: callable, use_complete_training_set: bool = True,
-                 negated_vars = False, k: float = 1.5):
+                 negated_vars = False, k: float = None):
 
         training_set = BooleanFunction.init_training_set(n_in, n_out, operator, negated_vars)
         super().__init__(actual_=training_set.get_actual(),
@@ -52,6 +52,7 @@ class BooleanFunction(BlackBox):
         if use_complete_training_set:
             self.training_set_size = len(self.training_set)
         else:
+            assert k is not None
             self.training_set_size = ceil(pow(self.n_in, self.k))
 
     @staticmethod
@@ -112,14 +113,16 @@ class BooleanFunction(BlackBox):
 
 
 class Conjunction(BooleanFunction):
-    def __init__(self, n, use_complete_training_set=True, negated_vars = False):
+    def __init__(self, n, use_complete_training_set=True, negated_vars = False, k = 1.5):
         super().__init__(n_in=n, n_out=1, operator=lambda x, y: x & y,
                          use_complete_training_set=use_complete_training_set,
-                         negated_vars=negated_vars)
+                         negated_vars=negated_vars,
+                         k=k)
 
 
 class ExclusiveDisjunction(BooleanFunction):
-    def __init__(self, n, use_complete_training_set=True, negated_vars = False):
+    def __init__(self, n, use_complete_training_set=True, negated_vars = False, k = 1.5):
         super().__init__(n_in=n, n_out=1, operator=lambda x, y: x ^ y,
                          use_complete_training_set=use_complete_training_set,
-                         negated_vars=negated_vars)
+                         negated_vars=negated_vars,
+                         k=k)
