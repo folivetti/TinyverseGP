@@ -299,7 +299,7 @@ class GPModel(ABC):
         self.config = config_
         self.hyperparameters = hyperparameters_
         self.erc = []
-        self.checkpointer = Checkpointer(self.config, self.hyperparameters)
+        # self.checkpointer = Checkpointer(self.config, self.hyperparameters)
         self.generation_number = 0
         self.num_evaluations = 0
         #if self.config.global_seed is not None:

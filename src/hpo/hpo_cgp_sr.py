@@ -36,7 +36,6 @@ X, y = fetch_data(dataset, return_X_y=True)
 cgp_config = CGPConfig(
     num_jobs=1,
     max_generations=200,
-    max_generations=200,
     stopping_criteria=1e-6,
     minimizing_fitness=True,
     ideal_fitness=1e-6,
@@ -50,16 +49,11 @@ cgp_config = CGPConfig(
     report_interval=1,
     max_time=600,
     global_seed=smac_seed
-    max_time=600,
-    global_seed=smac_seed
 )
 
 # Hyperparameter settings for CGP initialisation
 cgp_hyperparams = CGPHyperparameters(
     mu=1,
-    lmbda=99,
-    population_size=1,
-    levels_back=100,
     lmbda=99,
     population_size=1,
     levels_back=100,

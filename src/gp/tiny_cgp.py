@@ -21,7 +21,7 @@ from src.gp.tinyverse import (
     GPIndividual,
     GPHyperparameters,
 )
-
+from src.gp.problem import Problem
 
 @dataclass(kw_only=True)
 class CGPHyperparameters(Hyperparameters):
@@ -65,7 +65,7 @@ class CGPConfig(GPConfig):
     report_every_improvement: bool = False
     global_seed: int = None
 
-    def __post_init__(self):
+    def init(self):
         self.genes_per_node = self.max_arity + 1
 
 class CGPIndividual(GPIndividual):
@@ -122,6 +122,7 @@ class TinyCGP(GPModel):
 
     def __init__(
         self,
+        problem_: Problem,
         functions_: list,
         terminals_: list,
         config_: CGPConfig,

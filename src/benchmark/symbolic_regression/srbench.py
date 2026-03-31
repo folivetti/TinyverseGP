@@ -55,7 +55,7 @@ class SRBench(RegressorMixin):
             )
         elif self.representation == "CGP":
             self.model = TinyCGP(
-                self.functions, self.terminals, self.config, self.hyperparameters
+                problem, self.functions, self.terminals, self.config, self.hyperparameters
             )
         else:
             raise ValueError("Invalid representation type")
