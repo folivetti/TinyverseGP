@@ -4,6 +4,7 @@ TinyCGP: A minimalistic implementation of Cartesian Genetic Programming for
 
          Genome representation: Standard integer-based CGP
          Mutation operator: Point mutation
+         Recombination operators: Subgraph crossover, discrete phenotypic recombination
          Search algorithm: 1+lambda ES with non-strict selection option
 """
 
@@ -53,7 +54,7 @@ class CGPConfig(GPConfig):
     max_arity: int
     max_time: int
     report_every_improvement: bool = False
-    global_seed: int = 42
+    global_seed: int = None
 
     def init(self):
         self.genes_per_node = self.max_arity + 1
@@ -109,7 +110,8 @@ class TinyCGP(GPModel):
         self.terminals = terminals_
         self.problem = problem_
         self.config = config_
-        random.seed(self.config.global_seed)
+        if self.config.global_seed is not None:
+            random.seed(self.config.global_seed)
         self.hyperparameters = hyperparameters_
         self.inputs = dict()
         self.current_paths = None
@@ -695,9 +697,17 @@ class TinyCGP(GPModel):
         max_active = max(m_1_len, m_2_len)
 
         i = 0
+
+        # Iterate over smaller number of active function nodes
         while i < min_active:
+
+            # Swap function genes with probability of 50%
             if random.choice([0, 1]) == 1:
+
+                # Check if conditions for boundary extension are met
                 if i == min_active - 1 and m_1_len != m_2_len:
+
+                    # Choose one node among candidate nodes for boundary extension
                     random_offset = random.choice(range(0, max_active - i))
                     if m_1_len < m_2_len:
                         node1 = m_1[i]
@@ -709,6 +719,7 @@ class TinyCGP(GPModel):
                     node1 = m_1[i]
                     node2 = m_2[i]
                 
+                # Update offspring genome
                 offspring1.genome[self.node_position(node1)], offspring2.genome[self.node_position(node2)] = self.node_function(node2, offspring2.genome), self.node_function(node1, offspring1.genome)
 
             i += 1

@@ -1,5 +1,5 @@
 """
-Script for performing HPO via SMAC3 for CGP on symbolic regression problems with subsequent evaluation.  
+Script for the evaluation of CGP on symbolic regression problems using a baseline configuration (100 function nodes).
 """
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -16,15 +16,11 @@ import sys
 import copy
 
 # Seed for HPO
-smac_seed = 42
+seed = 42
 
 # Get input for seed, genetic operator, dataset
-seed = int(sys.argv[1])
-operator_ = str(sys.argv[2])
-dataset = str(sys.argv[3])
-
-print(f"This is job number {seed}")
-print(f"Dataset: {dataset}")
+operator_ = str(sys.argv[1])
+dataset = str(sys.argv[2])
 
 # Set function set and terminal set
 functions = ['+','-','*','/','exp','log','square','cube']
@@ -48,49 +44,33 @@ cgp_config = CGPConfig(
     num_outputs=1,
     report_interval=1,
     max_time=600,
-    global_seed=smac_seed
+    global_seed=seed
 )
 
-# Hyperparameter settings for CGP initialisation
+# Baseline settings
 cgp_hyperparams = CGPHyperparameters(
     mu=1,
     lmbda=99,
-    population_size=1,
+    population_size=50,
     levels_back=100,
     mutation_rate=0.1,
     strict_selection=True,
     cx_rate = 0.7,
-    tournament_size = 7,
-    num_function_nodes = 10,
+    tournament_size = 4,
+    num_function_nodes = 100,
     operator = operator_
 )
 
 # Set the number of genes per node and the total number of genes
 cgp_config.init() 
 
-train_X, test_X, train_y, test_y = train_test_split(X, y, train_size=0.75, random_state=smac_seed)
-
-# SMAC3 settings
-n_trials = 200
-n_splits = 5 # Number of splits for k-fold CV
-
-# CGP initialisation
-cgp = SRBench('CGP', cgp_config, cgp_hyperparams, functions=functions, terminals=terminals, scaling_=False)
-cgp.fit(train_X, train_y)
-
-# HPO
-interface = SMACInterface()
-opt_hyperparameters = interface.optimise(gpmodel_=cgp.model, dataset_=dataset, train_X_=train_X, train_y_=train_y, n_trials_=n_trials, seed_=seed, n_splits_=n_splits)
-
-print("="*50)
-print(f"Final incumbent: {opt_hyperparameters}")
-print("="*50)
+train_X, test_X, train_y, test_y = train_test_split(X, y, train_size=0.75, random_state=seed)
 
 # CGP runs
 n_runs = 30
 
-# Test SMAC3 optimised configuration over n_runs runs
-print("OPTIMISED HYPERPARAMETERS' PERFORMANCE")
+# Test (old) baseline configuration over n_runs runs
+print("BASELINE PERFORMANCE")
 print("="*50)
 
 results_train = {
@@ -104,38 +84,38 @@ results_test = {
 }
 
 for i in range(n_runs):
-    cgp_opt = SRBench(
+    cgp_old = SRBench(
             "CGP",
             cgp_config,
-            opt_hyperparameters, # Use SMAC3-optimised configuration
+            cgp_hyperparams, # Use baseline configuration
             functions=functions,
             terminals=terminals,
             scaling_=False
         )
     
-    cgp_opt.config.global_seed = i + 1 # Use different seeds for every run
+    cgp_old.config.global_seed = i + 1 # Use different seeds for every run
 
-    cgp_opt.fit(train_X, train_y) # Evolve on training set 
+    cgp_old.fit(train_X, train_y) # Evolve on train set 
 
     # Assess train performance
-    results_train["fitness"].append(cgp_opt.model.best_individual.fitness)
-    results_train["r2_score"].append(cgp_opt.score(train_X, train_y))
+    results_train["fitness"].append(cgp_old.model.best_individual.fitness)
+    results_train["r2_score"].append(cgp_old.score(train_X, train_y))
 
     # Evaluate best individual on test set
-    cgp_ = copy.deepcopy(cgp_opt.model)
-    best_individual_genome = cgp_opt.model.best_individual.genome
+    cgp_ = copy.deepcopy(cgp_old.model)
+    best_individual_genome = cgp_old.model.best_individual.genome
     problem  = BlackBox(test_X, test_y, mean_squared_error, 1e-16, True)
     test_fitness = problem.evaluate(best_individual_genome, cgp_)
 
     # Assess test performance
     results_test["fitness"].append(test_fitness)
-    results_test["r2_score"].append(cgp_opt.score(test_X, test_y))
+    results_test["r2_score"].append(cgp_old.score(test_X, test_y))
 
 print(f"Results (train set): {results_train}")
 print(f"Results (test set): {results_test}")
 print("="*50)
 
-# Calculate fitness-related measures for the training set
+# Calculate fitness-related measures for the train set
 mean_best_fitness = np.mean(results_train["fitness"])
 best_fitness_var = np.var(results_train["fitness"])
 best_fitness_std = np.std(results_train["fitness"])
@@ -159,8 +139,7 @@ print(f"Standard deviation of fitness (old config, test set): {fitness_std}")
 print(f"Quartiles of fitness (old config, test set): {fitness_quart}")
 print("="*50)
 
-print(f"The following seed was used: {seed}")
-print(f"The following number of trials was used: {n_trials}")
+print(f"This is base config 1")
 print(f"The following operator was used: {operator_}")
 print(f"The following dataset was used: {dataset}")
 print("="*50)
