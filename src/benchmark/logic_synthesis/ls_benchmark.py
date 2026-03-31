@@ -5,6 +5,7 @@ Benchmark representation module for logic synthesis.
 from src.benchmark.benchmark import Benchmark
 import src.benchmark.logic_synthesis.boolean_benchmark_tools.benchmark_reader as BenchmarkReader
 
+
 class LSBenchmark(Benchmark):
     """
     Class for representing logic synthesis benchmarks. Receives

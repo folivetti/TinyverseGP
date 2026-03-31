@@ -36,27 +36,30 @@ config = CGPConfig(
     num_inputs=1,
     num_outputs=1,
     report_interval=1,
-    max_time=60
+    max_time=60,
+    global_seed=42,
+    checkpoint_interval=10,
+    checkpoint_dir='checkpoint',
+    experiment_name='sr_cgp'
 )
 
 hyperparameters = CGPHyperparameters(
     mu=1,
     lmbda=32,
     population_size=33,
+    num_function_nodes=10,
     levels_back=len(terminals),
     mutation_rate=0.1,
     strict_selection=True,
     cx_rate = 0.9,
-    tournament_size = 7,
-    num_function_nodes = 10
+    tournament_size = 7
 )
-config.init()
 
 loss = absolute_distance
 benchmark = SRBenchmark()
-data, actual = benchmark.generate('KOZA3')
+data, actual = benchmark.generate("KOZA3")
 
 problem = BlackBox(data, actual, loss, 1e-6, True)
 
-cgp = TinyCGP(problem, functions, terminals, config, hyperparameters)
-cgp.evolve()
+cgp = TinyCGP(functions, terminals, config, hyperparameters)
+cgp.evolve(problem)

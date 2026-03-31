@@ -1,0 +1,209 @@
+{
+  "stats": {
+    "submitted": 10,
+    "finished": 10,
+    "running": 0
+  },
+  "data": [
+    {
+      "config_id": 1,
+      "instance": null,
+      "seed": 209652396,
+      "budget": null,
+      "cost": Infinity,
+      "time": 0.0,
+      "cpu_time": 7.711129,
+      "status": 2,
+      "starttime": 1758321180.026251,
+      "endtime": 1758321180.0282712,
+      "additional_info": {
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 190, in run\n    rval = self(config_copy, target_function, kwargs)\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 264, in __call__\n    return algorithm(config, **algorithm_kwargs)\n  File \"/Users/long/Documents/6_Semester/BA/tinyverseGP/TinyverseGP/src/hpo/hpo.py\", line 38, in train\n    gpmodel.evolve(problem)\nNameError: name 'problem' is not defined\n",
+        "error": "NameError(\"name 'problem' is not defined\")"
+      }
+    },
+    {
+      "config_id": 1,
+      "instance": null,
+      "seed": 398764591,
+      "budget": null,
+      "cost": Infinity,
+      "time": 0.0,
+      "cpu_time": 7.714025,
+      "status": 2,
+      "starttime": 1758321180.029515,
+      "endtime": 1758321180.0312881,
+      "additional_info": {
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 190, in run\n    rval = self(config_copy, target_function, kwargs)\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 264, in __call__\n    return algorithm(config, **algorithm_kwargs)\n  File \"/Users/long/Documents/6_Semester/BA/tinyverseGP/TinyverseGP/src/hpo/hpo.py\", line 38, in train\n    gpmodel.evolve(problem)\nNameError: name 'problem' is not defined\n",
+        "error": "NameError(\"name 'problem' is not defined\")"
+      }
+    },
+    {
+      "config_id": 2,
+      "instance": null,
+      "seed": 209652396,
+      "budget": null,
+      "cost": Infinity,
+      "time": 0.0,
+      "cpu_time": 7.717071,
+      "status": 2,
+      "starttime": 1758321180.032694,
+      "endtime": 1758321180.034179,
+      "additional_info": {
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 190, in run\n    rval = self(config_copy, target_function, kwargs)\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 264, in __call__\n    return algorithm(config, **algorithm_kwargs)\n  File \"/Users/long/Documents/6_Semester/BA/tinyverseGP/TinyverseGP/src/hpo/hpo.py\", line 38, in train\n    gpmodel.evolve(problem)\nNameError: name 'problem' is not defined\n",
+        "error": "NameError(\"name 'problem' is not defined\")"
+      }
+    },
+    {
+      "config_id": 2,
+      "instance": null,
+      "seed": 398764591,
+      "budget": null,
+      "cost": Infinity,
+      "time": 0.0,
+      "cpu_time": 7.719563,
+      "status": 2,
+      "starttime": 1758321180.03565,
+      "endtime": 1758321180.0370822,
+      "additional_info": {
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 190, in run\n    rval = self(config_copy, target_function, kwargs)\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 264, in __call__\n    return algorithm(config, **algorithm_kwargs)\n  File \"/Users/long/Documents/6_Semester/BA/tinyverseGP/TinyverseGP/src/hpo/hpo.py\", line 38, in train\n    gpmodel.evolve(problem)\nNameError: name 'problem' is not defined\n",
+        "error": "NameError(\"name 'problem' is not defined\")"
+      }
+    },
+    {
+      "config_id": 1,
+      "instance": null,
+      "seed": 924231285,
+      "budget": null,
+      "cost": Infinity,
+      "time": 0.0,
+      "cpu_time": 7.722541,
+      "status": 2,
+      "starttime": 1758321180.0386372,
+      "endtime": 1758321180.040035,
+      "additional_info": {
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 190, in run\n    rval = self(config_copy, target_function, kwargs)\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 264, in __call__\n    return algorithm(config, **algorithm_kwargs)\n  File \"/Users/long/Documents/6_Semester/BA/tinyverseGP/TinyverseGP/src/hpo/hpo.py\", line 38, in train\n    gpmodel.evolve(problem)\nNameError: name 'problem' is not defined\n",
+        "error": "NameError(\"name 'problem' is not defined\")"
+      }
+    },
+    {
+      "config_id": 3,
+      "instance": null,
+      "seed": 209652396,
+      "budget": null,
+      "cost": Infinity,
+      "time": 0.0,
+      "cpu_time": 8.065702,
+      "status": 2,
+      "starttime": 1758321180.39566,
+      "endtime": 1758321180.3970351,
+      "additional_info": {
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 190, in run\n    rval = self(config_copy, target_function, kwargs)\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 264, in __call__\n    return algorithm(config, **algorithm_kwargs)\n  File \"/Users/long/Documents/6_Semester/BA/tinyverseGP/TinyverseGP/src/hpo/hpo.py\", line 38, in train\n    gpmodel.evolve(problem)\nNameError: name 'problem' is not defined\n",
+        "error": "NameError(\"name 'problem' is not defined\")"
+      }
+    },
+    {
+      "config_id": 3,
+      "instance": null,
+      "seed": 398764591,
+      "budget": null,
+      "cost": Infinity,
+      "time": 0.0,
+      "cpu_time": 8.068328,
+      "status": 2,
+      "starttime": 1758321180.398317,
+      "endtime": 1758321180.399565,
+      "additional_info": {
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 190, in run\n    rval = self(config_copy, target_function, kwargs)\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 264, in __call__\n    return algorithm(config, **algorithm_kwargs)\n  File \"/Users/long/Documents/6_Semester/BA/tinyverseGP/TinyverseGP/src/hpo/hpo.py\", line 38, in train\n    gpmodel.evolve(problem)\nNameError: name 'problem' is not defined\n",
+        "error": "NameError(\"name 'problem' is not defined\")"
+      }
+    },
+    {
+      "config_id": 3,
+      "instance": null,
+      "seed": 924231285,
+      "budget": null,
+      "cost": Infinity,
+      "time": 0.0,
+      "cpu_time": 8.070641,
+      "status": 2,
+      "starttime": 1758321180.400657,
+      "endtime": 1758321180.40186,
+      "additional_info": {
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 190, in run\n    rval = self(config_copy, target_function, kwargs)\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 264, in __call__\n    return algorithm(config, **algorithm_kwargs)\n  File \"/Users/long/Documents/6_Semester/BA/tinyverseGP/TinyverseGP/src/hpo/hpo.py\", line 38, in train\n    gpmodel.evolve(problem)\nNameError: name 'problem' is not defined\n",
+        "error": "NameError(\"name 'problem' is not defined\")"
+      }
+    },
+    {
+      "config_id": 4,
+      "instance": null,
+      "seed": 209652396,
+      "budget": null,
+      "cost": Infinity,
+      "time": 0.0,
+      "cpu_time": 8.07359,
+      "status": 2,
+      "starttime": 1758321180.4035368,
+      "endtime": 1758321180.405031,
+      "additional_info": {
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 190, in run\n    rval = self(config_copy, target_function, kwargs)\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 264, in __call__\n    return algorithm(config, **algorithm_kwargs)\n  File \"/Users/long/Documents/6_Semester/BA/tinyverseGP/TinyverseGP/src/hpo/hpo.py\", line 38, in train\n    gpmodel.evolve(problem)\nNameError: name 'problem' is not defined\n",
+        "error": "NameError(\"name 'problem' is not defined\")"
+      }
+    },
+    {
+      "config_id": 4,
+      "instance": null,
+      "seed": 398764591,
+      "budget": null,
+      "cost": Infinity,
+      "time": 0.0,
+      "cpu_time": 8.076207,
+      "status": 2,
+      "starttime": 1758321180.40626,
+      "endtime": 1758321180.407576,
+      "additional_info": {
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 190, in run\n    rval = self(config_copy, target_function, kwargs)\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 264, in __call__\n    return algorithm(config, **algorithm_kwargs)\n  File \"/Users/long/Documents/6_Semester/BA/tinyverseGP/TinyverseGP/src/hpo/hpo.py\", line 38, in train\n    gpmodel.evolve(problem)\nNameError: name 'problem' is not defined\n",
+        "error": "NameError(\"name 'problem' is not defined\")"
+      }
+    }
+  ],
+  "configs": {
+    "1": {
+      "cx_rate": 0.2668785210699,
+      "levels_back": 62,
+      "mutation_rate": 0.1075078817084,
+      "num_function_nodes": 29,
+      "population_size": 438,
+      "tournament_size": 5
+    },
+    "2": {
+      "cx_rate": 0.6414948515594,
+      "levels_back": 12,
+      "mutation_rate": 0.9892357727513,
+      "num_function_nodes": 84,
+      "population_size": 226,
+      "tournament_size": 8
+    },
+    "3": {
+      "cx_rate": 0.556145473045,
+      "levels_back": 83,
+      "mutation_rate": 0.7974607612759,
+      "num_function_nodes": 66,
+      "population_size": 200,
+      "tournament_size": 5
+    },
+    "4": {
+      "cx_rate": 0.1128062516646,
+      "levels_back": 72,
+      "mutation_rate": 0.6233943971703,
+      "num_function_nodes": 52,
+      "population_size": 232,
+      "tournament_size": 4
+    }
+  },
+  "config_origins": {
+    "1": "Initial Design: Sobol",
+    "2": "Initial Design: Sobol",
+    "3": "Acquisition Function Maximizer: Local Search",
+    "4": "Acquisition Function Maximizer: Local Search"
+  }
+}

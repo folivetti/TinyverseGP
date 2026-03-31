@@ -17,7 +17,7 @@ from src.gp.functions import *
 from src.gp.loss import *
 from src.gp.problem import BlackBox
 
-benchmark = LSBenchmark('data/logic_synthesis/plu/add3.plu')
+benchmark = LSBenchmark("data/logic_synthesis/plu/add3.plu")
 benchmark.generate()
 truth_table = benchmark.get_truth_table()
 num_inputs = benchmark.benchmark.num_inputs
@@ -26,26 +26,30 @@ num_outputs = benchmark.benchmark.num_outputs
 
 config = GPConfig(
     num_jobs=1,
-    max_generations=100,
+    max_generations=500_00,
     stopping_criteria=1e-6,
     minimizing_fitness=True,  # this should be used from the problem instance
-    ideal_fitness=1e-6,  # this should be used from the problem instance
+    ideal_fitness=0,  # this should be used from the problem instance
     silent_algorithm=False,
     silent_evolver=False,
     minimalistic_output=True,
     num_outputs=num_outputs,
-    report_interval=1,
-    max_time=60
+    report_interval=100,
+    max_time=500,
+    global_seed=None,
+    checkpoint_interval=100000,
+    checkpoint_dir='examples/checkpoint',
+    experiment_name='logic_ge'
 )
 
 hyperparameters = GEHyperparameters(
-    pop_size=100,
-    genome_length=40,
-    codon_size=1000,
-    cx_rate=0.9,
-    mutation_rate=0.1,
-    tournament_size=2,
-    penalty_value=99999
+    pop_size=1000,
+    genome_length=60,
+    codon_size=100,
+    cx_rate=0.95,
+    mutation_rate=0.25,
+    tournament_size=3,
+    penalty_value=99999,
 )
 
 loss = hamming_distance_bitwise
@@ -53,15 +57,31 @@ data = truth_table.inputs
 actual = truth_table.outputs
 problem = BlackBox(data, actual, loss, 0, True)
 
-functions = [AND, OR, NAND, NOR, NOT]
-arguments = ['x']
+functions = [AND, OR, NAND, NOR, XOR, NOT]
+arguments = ["a", "b", "c", "d", "e", "f", "g"]
 grammar = {
-    '<expr>': [
-        'AND(<expr>, <expr>)', 'OR(<expr>, <expr>)', 'NAND(<expr>, <expr>)', 'NOR(<expr>, <expr>)', 'NOT(<expr>)',
-        '<d>', 'x'
+    "<expr>": ["[<lexpr>, <lexpr>, <lexpr>, <lexpr>]"],
+    "<lexpr>": [
+        "AND(<vexpr>, <vexpr>)",
+        "OR(<vexpr>, <vexpr>)",
+        "NAND(<vexpr>, <vexpr>)",
+        "NOR(<vexpr>, <vexpr>)",
+        "XOR(<vexpr>, <vexpr>)",
+        "NOT(<vexpr>)",
     ],
-    '<d>': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
+    "<vexpr>": [
+        "AND(<vexpr>, <vexpr>)",
+        "OR(<vexpr>, <vexpr>)",
+        "NAND(<vexpr>, <vexpr>)",
+        "NOR(<vexpr>, <vexpr>)",
+        "XOR(<vexpr>, <vexpr>)",
+        "NOT(<vexpr>)",
+        "<var>"
+    ],
+    "<var>": ["a", "b", "c", "d", "e", "f", "g"]
 }
 
-ge = TinyGE(problem, functions, grammar, arguments, config, hyperparameters)
-ge.evolve()
+
+ge = TinyGE(functions, grammar, arguments, config, hyperparameters)
+result = ge.evolve(problem)
+print(ge.expression(result.genome))

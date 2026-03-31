@@ -1,0 +1,209 @@
+{
+  "stats": {
+    "submitted": 10,
+    "finished": 10,
+    "running": 0
+  },
+  "data": [
+    {
+      "config_id": 1,
+      "instance": null,
+      "seed": 209652396,
+      "budget": null,
+      "cost": Infinity,
+      "time": 0.0,
+      "cpu_time": 7.324367,
+      "status": 2,
+      "starttime": 1758320875.301795,
+      "endtime": 1758320875.3041239,
+      "additional_info": {
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 190, in run\n    rval = self(config_copy, target_function, kwargs)\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 264, in __call__\n    return algorithm(config, **algorithm_kwargs)\n  File \"/Users/long/Documents/6_Semester/BA/tinyverseGP/TinyverseGP/src/hpo/hpo.py\", line 38, in train\n    gpmodel.evolve()\nTypeError: GPModel.evolve() missing 1 required positional argument: 'problem'\n",
+        "error": "TypeError(\"GPModel.evolve() missing 1 required positional argument: 'problem'\")"
+      }
+    },
+    {
+      "config_id": 1,
+      "instance": null,
+      "seed": 398764591,
+      "budget": null,
+      "cost": Infinity,
+      "time": 0.0,
+      "cpu_time": 7.327675,
+      "status": 2,
+      "starttime": 1758320875.305418,
+      "endtime": 1758320875.306877,
+      "additional_info": {
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 190, in run\n    rval = self(config_copy, target_function, kwargs)\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 264, in __call__\n    return algorithm(config, **algorithm_kwargs)\n  File \"/Users/long/Documents/6_Semester/BA/tinyverseGP/TinyverseGP/src/hpo/hpo.py\", line 38, in train\n    gpmodel.evolve()\nTypeError: GPModel.evolve() missing 1 required positional argument: 'problem'\n",
+        "error": "TypeError(\"GPModel.evolve() missing 1 required positional argument: 'problem'\")"
+      }
+    },
+    {
+      "config_id": 2,
+      "instance": null,
+      "seed": 209652396,
+      "budget": null,
+      "cost": Infinity,
+      "time": 0.0,
+      "cpu_time": 7.330184,
+      "status": 2,
+      "starttime": 1758320875.30801,
+      "endtime": 1758320875.30933,
+      "additional_info": {
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 190, in run\n    rval = self(config_copy, target_function, kwargs)\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 264, in __call__\n    return algorithm(config, **algorithm_kwargs)\n  File \"/Users/long/Documents/6_Semester/BA/tinyverseGP/TinyverseGP/src/hpo/hpo.py\", line 38, in train\n    gpmodel.evolve()\nTypeError: GPModel.evolve() missing 1 required positional argument: 'problem'\n",
+        "error": "TypeError(\"GPModel.evolve() missing 1 required positional argument: 'problem'\")"
+      }
+    },
+    {
+      "config_id": 2,
+      "instance": null,
+      "seed": 398764591,
+      "budget": null,
+      "cost": Infinity,
+      "time": 0.0,
+      "cpu_time": 7.332384,
+      "status": 2,
+      "starttime": 1758320875.31024,
+      "endtime": 1758320875.3114529,
+      "additional_info": {
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 190, in run\n    rval = self(config_copy, target_function, kwargs)\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 264, in __call__\n    return algorithm(config, **algorithm_kwargs)\n  File \"/Users/long/Documents/6_Semester/BA/tinyverseGP/TinyverseGP/src/hpo/hpo.py\", line 38, in train\n    gpmodel.evolve()\nTypeError: GPModel.evolve() missing 1 required positional argument: 'problem'\n",
+        "error": "TypeError(\"GPModel.evolve() missing 1 required positional argument: 'problem'\")"
+      }
+    },
+    {
+      "config_id": 1,
+      "instance": null,
+      "seed": 924231285,
+      "budget": null,
+      "cost": Infinity,
+      "time": 0.0,
+      "cpu_time": 7.335143,
+      "status": 2,
+      "starttime": 1758320875.3131971,
+      "endtime": 1758320875.3144388,
+      "additional_info": {
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 190, in run\n    rval = self(config_copy, target_function, kwargs)\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 264, in __call__\n    return algorithm(config, **algorithm_kwargs)\n  File \"/Users/long/Documents/6_Semester/BA/tinyverseGP/TinyverseGP/src/hpo/hpo.py\", line 38, in train\n    gpmodel.evolve()\nTypeError: GPModel.evolve() missing 1 required positional argument: 'problem'\n",
+        "error": "TypeError(\"GPModel.evolve() missing 1 required positional argument: 'problem'\")"
+      }
+    },
+    {
+      "config_id": 3,
+      "instance": null,
+      "seed": 209652396,
+      "budget": null,
+      "cost": Infinity,
+      "time": 0.0,
+      "cpu_time": 7.664513,
+      "status": 2,
+      "starttime": 1758320875.648486,
+      "endtime": 1758320875.6501288,
+      "additional_info": {
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 190, in run\n    rval = self(config_copy, target_function, kwargs)\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 264, in __call__\n    return algorithm(config, **algorithm_kwargs)\n  File \"/Users/long/Documents/6_Semester/BA/tinyverseGP/TinyverseGP/src/hpo/hpo.py\", line 38, in train\n    gpmodel.evolve()\nTypeError: GPModel.evolve() missing 1 required positional argument: 'problem'\n",
+        "error": "TypeError(\"GPModel.evolve() missing 1 required positional argument: 'problem'\")"
+      }
+    },
+    {
+      "config_id": 3,
+      "instance": null,
+      "seed": 398764591,
+      "budget": null,
+      "cost": Infinity,
+      "time": 0.0,
+      "cpu_time": 7.667402,
+      "status": 2,
+      "starttime": 1758320875.652398,
+      "endtime": 1758320875.653651,
+      "additional_info": {
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 190, in run\n    rval = self(config_copy, target_function, kwargs)\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 264, in __call__\n    return algorithm(config, **algorithm_kwargs)\n  File \"/Users/long/Documents/6_Semester/BA/tinyverseGP/TinyverseGP/src/hpo/hpo.py\", line 38, in train\n    gpmodel.evolve()\nTypeError: GPModel.evolve() missing 1 required positional argument: 'problem'\n",
+        "error": "TypeError(\"GPModel.evolve() missing 1 required positional argument: 'problem'\")"
+      }
+    },
+    {
+      "config_id": 3,
+      "instance": null,
+      "seed": 924231285,
+      "budget": null,
+      "cost": Infinity,
+      "time": 0.0,
+      "cpu_time": 7.669723,
+      "status": 2,
+      "starttime": 1758320875.654835,
+      "endtime": 1758320875.656127,
+      "additional_info": {
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 190, in run\n    rval = self(config_copy, target_function, kwargs)\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 264, in __call__\n    return algorithm(config, **algorithm_kwargs)\n  File \"/Users/long/Documents/6_Semester/BA/tinyverseGP/TinyverseGP/src/hpo/hpo.py\", line 38, in train\n    gpmodel.evolve()\nTypeError: GPModel.evolve() missing 1 required positional argument: 'problem'\n",
+        "error": "TypeError(\"GPModel.evolve() missing 1 required positional argument: 'problem'\")"
+      }
+    },
+    {
+      "config_id": 4,
+      "instance": null,
+      "seed": 209652396,
+      "budget": null,
+      "cost": Infinity,
+      "time": 0.0,
+      "cpu_time": 7.672533,
+      "status": 2,
+      "starttime": 1758320875.6576588,
+      "endtime": 1758320875.658918,
+      "additional_info": {
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 190, in run\n    rval = self(config_copy, target_function, kwargs)\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 264, in __call__\n    return algorithm(config, **algorithm_kwargs)\n  File \"/Users/long/Documents/6_Semester/BA/tinyverseGP/TinyverseGP/src/hpo/hpo.py\", line 38, in train\n    gpmodel.evolve()\nTypeError: GPModel.evolve() missing 1 required positional argument: 'problem'\n",
+        "error": "TypeError(\"GPModel.evolve() missing 1 required positional argument: 'problem'\")"
+      }
+    },
+    {
+      "config_id": 4,
+      "instance": null,
+      "seed": 398764591,
+      "budget": null,
+      "cost": Infinity,
+      "time": 0.0,
+      "cpu_time": 7.67483,
+      "status": 2,
+      "starttime": 1758320875.6599839,
+      "endtime": 1758320875.6612558,
+      "additional_info": {
+        "traceback": "Traceback (most recent call last):\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 190, in run\n    rval = self(config_copy, target_function, kwargs)\n  File \"/Users/long/.pyenv/versions/3.10.18/lib/python3.10/site-packages/smac/runner/target_function_runner.py\", line 264, in __call__\n    return algorithm(config, **algorithm_kwargs)\n  File \"/Users/long/Documents/6_Semester/BA/tinyverseGP/TinyverseGP/src/hpo/hpo.py\", line 38, in train\n    gpmodel.evolve()\nTypeError: GPModel.evolve() missing 1 required positional argument: 'problem'\n",
+        "error": "TypeError(\"GPModel.evolve() missing 1 required positional argument: 'problem'\")"
+      }
+    }
+  ],
+  "configs": {
+    "1": {
+      "cx_rate": 0.2668785210699,
+      "levels_back": 62,
+      "mutation_rate": 0.1075078817084,
+      "num_function_nodes": 29,
+      "population_size": 438,
+      "tournament_size": 5
+    },
+    "2": {
+      "cx_rate": 0.6414948515594,
+      "levels_back": 12,
+      "mutation_rate": 0.9892357727513,
+      "num_function_nodes": 84,
+      "population_size": 226,
+      "tournament_size": 8
+    },
+    "3": {
+      "cx_rate": 0.556145473045,
+      "levels_back": 83,
+      "mutation_rate": 0.7974607612759,
+      "num_function_nodes": 66,
+      "population_size": 200,
+      "tournament_size": 5
+    },
+    "4": {
+      "cx_rate": 0.1128062516646,
+      "levels_back": 72,
+      "mutation_rate": 0.6233943971703,
+      "num_function_nodes": 52,
+      "population_size": 232,
+      "tournament_size": 4
+    }
+  },
+  "config_origins": {
+    "1": "Initial Design: Sobol",
+    "2": "Initial Design: Sobol",
+    "3": "Acquisition Function Maximizer: Local Search",
+    "4": "Acquisition Function Maximizer: Local Search"
+  }
+}
