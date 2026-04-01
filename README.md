@@ -5,7 +5,6 @@
     - Discrete Phenotypic Recombination
     - Subgraph Crossover
 - The operators have been implemented in TinyCGP:
-  - [src/gp/tiny_cgp.py](https://github.com/GPBench/TinyverseGP/blob/cgp-bsc-thesis/src/gp/tiny_cgp.py)
+  - [src/gp/tiny_cgp.py](https://github.com/GPBench/TinyverseGP/blob/recombination-based-cgp/src/gp/tiny_cgp.py)
   - [subgraph_crossover](https://github.com/GPBench/TinyverseGP/blob/1573e8eb387f17343d31a0d8cb580bfa8cd9f59d/src/gp/tiny_cgp.py#L670)
   - [discrete_recombination](https://github.com/GPBench/TinyverseGP/blob/1573e8eb387f17343d31a0d8cb580bfa8cd9f59d/src/gp/tiny_cgp.py#L737)
-
